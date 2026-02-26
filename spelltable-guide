@@ -1,0 +1,1299 @@
+
+
+
+- Fireball : type=Fireball
+spellName (SpellName) = Fireball
+description (String) = Ball of fire that deals moderate damage and knockback.
+animationName (String) = Attack
+cooldown (Single) = 3.5
+windUp (Single) = 0.3
+windDown (Single) = 0.25
+element (Element) = Fire
+spellButton (SpellButton) = Primary
+curveMultiplier (Single) = 1.5
+initialVelocity (Single) = 35
+minRange (Single) = 0
+maxRange (Single) = 28
+spellRadius (Single) = 1
+uses (SpellUses) = Attack
+reactivate (Int32) = 0
+
+
+- Gust : type=Gust
+spellName (SpellName) = Gust
+description (String) = Gust of wind that deals minor damage and knockback. Lowest cast time and longest range.
+animationName (String) = Attack
+cooldown (Single) = 3
+windUp (Single) = 0.2
+windDown (Single) = 0.15
+element (Element) = Air
+spellButton (SpellButton) = Primary
+curveMultiplier (Single) = 1.5
+initialVelocity (Single) = 40
+minRange (Single) = 0
+maxRange (Single) = 37
+spellRadius (Single) = 1
+uses (SpellUses) = Attack
+reactivate (Int32) = 0
+
+
+- Hinder : type=Hinder
+spellName (SpellName) = Hinder
+description (String) = Torrent of water that deals minor damage and minor knockback, but slows enemies briefly.
+animationName (String) = Attack
+cooldown (Single) = 3.5
+windUp (Single) = 0.25
+windDown (Single) = 0.15
+element (Element) = Water
+spellButton (SpellButton) = Primary
+curveMultiplier (Single) = 1.5
+initialVelocity (Single) = 35
+minRange (Single) = 0
+maxRange (Single) = 40
+spellRadius (Single) = 1
+uses (SpellUses) = Attack
+reactivate (Int32) = 0
+
+
+- Rockshot : type=Rockshot
+spellName (SpellName) = Rockshot
+description (String) = Heavy rock that deals moderate damage and high knockback. Highest cast time.
+animationName (String) = Attack
+cooldown (Single) = 4.5
+windUp (Single) = 0.65
+windDown (Single) = 0.5
+element (Element) = Earth
+spellButton (SpellButton) = Primary
+curveMultiplier (Single) = 1.5
+initialVelocity (Single) = 45
+minRange (Single) = 0
+maxRange (Single) = 45
+spellRadius (Single) = 1.113108
+uses (SpellUses) = Attack
+reactivate (Int32) = 0
+
+
+- BullRush : type=BullRush
+spellName (SpellName) = BullRush
+description (String) = Accelerating charge with high knockback and damage.
+animationName (String) = Walk
+cooldown (Single) = 12
+windUp (Single) = 0.45
+windDown (Single) = 1
+element (Element) = Earth
+spellButton (SpellButton) = Movement
+curveMultiplier (Single) = 1
+initialVelocity (Single) = 20
+minRange (Single) = 0
+maxRange (Single) = 30
+spellRadius (Single) = 1.104
+uses (SpellUses) = AttackAndMove
+reactivate (Int32) = 0
+
+
+- Boomerang : type=Boomerang
+spellName (SpellName) = Boomerang
+description (String) = Boomerang that tries to return to the caster. Collisions with other units cause the boomerang to grow in size.
+animationName (String) = Backhand Spell
+cooldown (Single) = 10
+windUp (Single) = 0.3
+windDown (Single) = 0.5
+element (Element) = Air
+spellButton (SpellButton) = Secondary
+curveMultiplier (Single) = 1
+initialVelocity (Single) = 20
+minRange (Single) = 2
+maxRange (Single) = 50
+spellRadius (Single) = 1
+uses (SpellUses) = Attack
+reactivate (Int32) = 0
+
+
+- RockBlock : type=Stonewall
+spellName (SpellName) = RockBlock
+description (String) = Creates a rock wall in front of the caster to block wizards and spells.
+animationName (String) = Defensive
+cooldown (Single) = 19
+windUp (Single) = 0.03
+windDown (Single) = 0.5
+element (Element) = Earth
+spellButton (SpellButton) = Defensive
+curveMultiplier (Single) = 0
+initialVelocity (Single) = 0
+minRange (Single) = 0
+maxRange (Single) = 0
+spellRadius (Single) = 1
+uses (SpellUses) = Defend
+reactivate (Int32) = 0
+
+
+- JetStream : type=JetStream
+spellName (SpellName) = JetStream
+description (String) = Very thin, long range, fast moving skillshot with a huge area of effect and knockback.
+animationName (String) = Spell Channel
+cooldown (Single) = 35
+windUp (Single) = 1
+windDown (Single) = 0.5
+element (Element) = Air
+spellButton (SpellButton) = Ultimate
+curveMultiplier (Single) = 2
+initialVelocity (Single) = 120
+minRange (Single) = 0
+maxRange (Single) = 96
+spellRadius (Single) = 0.75
+uses (SpellUses) = Attack
+reactivate (Int32) = 0
+
+
+- FlameLeash : type=BurningLeash
+spellName (SpellName) = FlameLeash
+description (String) = Short range leash that when landed successfully will pull an enemy toward caster. If missed, the caster is pulled to the location.
+animationName (String) = Spell 360
+cooldown (Single) = 19
+windUp (Single) = 0.25
+windDown (Single) = 0.09
+element (Element) = Fire
+spellButton (SpellButton) = Utility
+curveMultiplier (Single) = 1
+initialVelocity (Single) = 35
+minRange (Single) = 0
+maxRange (Single) = 35
+spellRadius (Single) = 1
+uses (SpellUses) = AttackAndMove
+reactivate (Int32) = 0
+
+
+- Push : type=Push
+spellName (SpellName) = Push
+description (String) = Fast melee attack with high knockback. If missed, the caster falls over.
+animationName (String) = Melee
+cooldown (Single) = 3
+windUp (Single) = 0.55
+windDown (Single) = 1.5
+element (Element) = Air
+spellButton (SpellButton) = Melee
+curveMultiplier (Single) = 0
+initialVelocity (Single) = 0
+minRange (Single) = 0.5
+maxRange (Single) = 4
+spellRadius (Single) = 1
+uses (SpellUses) = Attack
+reactivate (Int32) = 0
+
+
+- FlameLeap : type=FlameLeap
+spellName (SpellName) = FlameLeap
+description (String) = Short leap that deals high damage in front of caster upon landing.
+animationName (String) = FlameLeap
+cooldown (Single) = 11
+windUp (Single) = 0.45
+windDown (Single) = 1
+element (Element) = Fire
+spellButton (SpellButton) = Movement
+curveMultiplier (Single) = 3
+initialVelocity (Single) = 28
+minRange (Single) = 18
+maxRange (Single) = 23
+spellRadius (Single) = 1
+uses (SpellUses) = AttackAndMove
+reactivate (Int32) = 0
+
+
+- FlashFlood : type=FlashFlood
+spellName (SpellName) = FlashFlood
+description (String) = Short range teleport that resets velocity and primary
+cooldown. Can be
+reactivated to return to casting point.
+animationName (String) = Defensive
+cooldown (Single) = 9
+windUp (Single) = 0.3
+windDown (Single) = 0.3
+element (Element) = Water
+spellButton (SpellButton) = Movement
+curveMultiplier (Single) = 0.0001
+initialVelocity (Single) = 1000
+minRange (Single) = 2
+maxRange (Single) = 20
+spellRadius (Single) = 1
+uses (SpellUses) = AttackAndMove
+reactivate (Int32) = 0
+
+
+- SomerAssault : type=SomAssault
+spellName (SpellName) = SomerAssault
+description (String) = Short dash that can be
+reactivated to jump, dealing damage upon landing.
+animationName (String) = Walk
+cooldown (Single) = 6
+windUp (Single) = 0.2
+windDown (Single) = 0.25
+element (Element) = Air
+spellButton (SpellButton) = Movement
+curveMultiplier (Single) = 2
+initialVelocity (Single) = 30
+minRange (Single) = 0
+maxRange (Single) = 15
+spellRadius (Single) = 1
+uses (SpellUses) = AttackAndMove
+reactivate (Int32) = 0
+
+
+- Ignite : type=Ignite
+spellName (SpellName) = Ignite
+description (String) = Melee attack with low knockback that deals damage over time. If missed, the caster falls over.
+animationName (String) = Melee
+cooldown (Single) = 4
+windUp (Single) = 0.65
+windDown (Single) = 1.7
+element (Element) = Fire
+spellButton (SpellButton) = Melee
+curveMultiplier (Single) = 0
+initialVelocity (Single) = 0
+minRange (Single) = 0.4
+maxRange (Single) = 4
+spellRadius (Single) = 1
+uses (SpellUses) = Attack
+reactivate (Int32) = 0
+
+
+- Geyser : type=Geyser
+spellName (SpellName) = Geyser
+description (String) = Melee attack that launches nearby units into the air. If missed, the caster falls over.
+animationName (String) = Melee
+cooldown (Single) = 5
+windUp (Single) = 0.6
+windDown (Single) = 2
+element (Element) = Water
+spellButton (SpellButton) = Melee
+curveMultiplier (Single) = 0
+initialVelocity (Single) = 0
+minRange (Single) = 0
+maxRange (Single) = 3
+spellRadius (Single) = 1
+uses (SpellUses) = AttackAndDefend
+reactivate (Int32) = 0
+
+
+- Petrify : type=Petrify
+spellName (SpellName) = Petrify
+description (String) = Melee attack that briefly turns nearby enemies to stone. If missed, the caster falls over.
+animationName (String) = Melee
+cooldown (Single) = 5
+windUp (Single) = 0.7
+windDown (Single) = 1.8
+element (Element) = Earth
+spellButton (SpellButton) = Melee
+curveMultiplier (Single) = 0
+initialVelocity (Single) = 0
+minRange (Single) = 0.4
+maxRange (Single) = 4
+spellRadius (Single) = 1
+uses (SpellUses) = Attack
+reactivate (Int32) = 0
+
+
+- Scorch : type=Scorch
+spellName (SpellName) = Scorch
+description (String) = Small fireball that can be activated up to 4 times in a row.
+cooldown increases with each activation.
+animationName (String) = Secondary Spell
+cooldown (Single) = 5.5
+windUp (Single) = 0.2
+windDown (Single) = 0.15
+element (Element) = Fire
+spellButton (SpellButton) = Secondary
+curveMultiplier (Single) = 1.5
+initialVelocity (Single) = 35
+minRange (Single) = 0
+maxRange (Single) = 28
+spellRadius (Single) = 1
+uses (SpellUses) = Attack
+reactivate (Int32) = 0
+
+
+- SevenTears : type=SevenTears
+spellName (SpellName) = SevenTears
+description (String) = Torrent of water that splits into 7 parts, each part dealing half damage.
+animationName (String) = Backhand Spell
+cooldown (Single) = 11
+windUp (Single) = 0.5
+windDown (Single) = 0.75
+element (Element) = Water
+spellButton (SpellButton) = Secondary
+curveMultiplier (Single) = 1.5
+initialVelocity (Single) = 35
+minRange (Single) = 0
+maxRange (Single) = 32
+spellRadius (Single) = 1
+uses (SpellUses) = Attack
+reactivate (Int32) = 0
+
+
+- PetRock : type=PetRock
+spellName (SpellName) = PetRock
+description (String) = Rock golem that summons on contact and chases after the unit it hit last.
+animationName (String) = Backhand Spell
+cooldown (Single) = 14
+windUp (Single) = 0.7
+windDown (Single) = 0.8
+element (Element) = Earth
+spellButton (SpellButton) = Secondary
+curveMultiplier (Single) = 1
+initialVelocity (Single) = 20
+minRange (Single) = 2
+maxRange (Single) = 26
+spellRadius (Single) = 1.54
+uses (SpellUses) = Attack
+reactivate (Int32) = 0
+
+
+- BubbleBreaker : type=BubbleBreaker
+spellName (SpellName) = BubbleBreaker
+description (String) = Creates a bubble around the caster that prevents one instance of damage and heals for that amount instead.
+animationName (String) = Defensive
+cooldown (Single) = 21
+windUp (Single) = 0.2
+windDown (Single) = 0.5
+element (Element) = Water
+spellButton (SpellButton) = Defensive
+curveMultiplier (Single) = 0
+initialVelocity (Single) = 0
+minRange (Single) = 0
+maxRange (Single) = 0
+spellRadius (Single) = 1
+uses (SpellUses) = Defend
+reactivate (Int32) = 0
+
+
+- EarthTomb : type=EarthTomb
+spellName (SpellName) = EarthTomb
+description (String) = Encases a target in 3 stone walls that accelerate toward the caster.
+animationName (String) = Spell 360
+cooldown (Single) = 20
+windUp (Single) = 0.45
+windDown (Single) = 0.2
+element (Element) = Earth
+spellButton (SpellButton) = Utility
+curveMultiplier (Single) = 1.5
+initialVelocity (Single) = 45
+minRange (Single) = 0
+maxRange (Single) = 45
+spellRadius (Single) = 1.113108
+uses (SpellUses) = Attack
+reactivate (Int32) = 0
+
+
+- Vacuum : type=Vacuum
+spellName (SpellName) = Vacuum
+description (String) = Creates a vacuum around a target, pulling in wizards and spells.
+animationName (String) = Spell 360
+cooldown (Single) = 18
+windUp (Single) = 0.35
+windDown (Single) = 0.35
+element (Element) = Air
+spellButton (SpellButton) = Utility
+curveMultiplier (Single) = 1.5
+initialVelocity (Single) = 40
+minRange (Single) = 0
+maxRange (Single) = 40
+spellRadius (Single) = 1
+uses (SpellUses) = Attack
+reactivate (Int32) = 0
+
+
+- WaterCannon : type=WaterCannon
+spellName (SpellName) = WaterCannon
+description (String) = Conjures a jet of water that pushes the caster backward and enemies away.
+animationName (String) = Spell 360
+cooldown (Single) = 15
+windUp (Single) = 0.5
+windDown (Single) = 0.03
+element (Element) = Water
+spellButton (SpellButton) = Utility
+curveMultiplier (Single) = 0
+initialVelocity (Single) = 0
+minRange (Single) = 0
+maxRange (Single) = 1.2
+spellRadius (Single) = 1
+uses (SpellUses) = AttackAndMove
+reactivate (Int32) = 0
+
+
+- Deflect : type=Deflect
+spellName (SpellName) = Deflect
+description (String) = Creates a protective gale around the caster that redirects spells forward.
+animationName (String) = Defensive
+cooldown (Single) = 22
+windUp (Single) = 0.2
+windDown (Single) = 0.3
+element (Element) = Air
+spellButton (SpellButton) = Defensive
+curveMultiplier (Single) = 0
+initialVelocity (Single) = 0
+minRange (Single) = 0
+maxRange (Single) = 0
+spellRadius (Single) = 1
+uses (SpellUses) = Defend
+reactivate (Int32) = 0
+
+
+- PillarOfFire : type=PillarOfFire
+spellName (SpellName) = PillarOfFire
+description (String) = Conjures a pyre that damages wizards and grows as it incinerates other spells.
+animationName (String) = Defensive
+cooldown (Single) = 18
+windUp (Single) = 0.1
+windDown (Single) = 0.2
+element (Element) = Fire
+spellButton (SpellButton) = Defensive
+curveMultiplier (Single) = 1.5
+initialVelocity (Single) = 25
+minRange (Single) = 0
+maxRange (Single) = 23
+spellRadius (Single) = 1
+uses (SpellUses) = Defend
+reactivate (Int32) = 0
+
+
+- Tsunami : type=Tsunami
+spellName (SpellName) = Tsunami
+description (String) = Creates a growing wave that slows and carries your enemies away.
+animationName (String) = Spell Channel
+cooldown (Single) = 35
+windUp (Single) = 1
+windDown (Single) = 0.5
+element (Element) = Water
+spellButton (SpellButton) = Ultimate
+curveMultiplier (Single) = 0.25
+initialVelocity (Single) = 15
+minRange (Single) = 5
+maxRange (Single) = 90
+spellRadius (Single) = 2.86
+uses (SpellUses) = Attack
+reactivate (Int32) = 0
+
+
+- Fissure : type=Fissure
+spellName (SpellName) = Fissure
+description (String) = Invokes a large boulder that petrifies units and creates walls in its wake.
+animationName (String) = Spell Channel
+cooldown (Single) = 35
+windUp (Single) = 1
+windDown (Single) = 0.5
+element (Element) = Earth
+spellButton (SpellButton) = Ultimate
+curveMultiplier (Single) = 2.5
+initialVelocity (Single) = 45
+minRange (Single) = 0
+maxRange (Single) = 80
+spellRadius (Single) = 1.35
+uses (SpellUses) = Attack
+reactivate (Int32) = 0
+
+
+- Spitfire : type=Spitfire
+spellName (SpellName) = Spitfire
+description (String) = Summons an orb of fire that launches a cone of fireballs. If hit with a spell, it can be destroyed.
+animationName (String) = Spell Channel
+cooldown (Single) = 35
+windUp (Single) = 1
+windDown (Single) = 2
+element (Element) = Fire
+spellButton (SpellButton) = Ultimate
+curveMultiplier (Single) = 1.5
+initialVelocity (Single) = 45
+minRange (Single) = 0
+maxRange (Single) = 36
+spellRadius (Single) = 1
+uses (SpellUses) = Attack
+reactivate (Int32) = 0
+
+
+- Echo : type=Echo
+spellName (SpellName) = Echo
+description (String) = Glass shard with a high
+cooldown that refreshes if a unit is hit.
+animationName (String) = Attack
+cooldown (Single) = 5.5
+windUp (Single) = 0.4
+windDown (Single) = 0.35
+element (Element) = Sand
+spellButton (SpellButton) = Primary
+curveMultiplier (Single) = 1.5
+initialVelocity (Single) = 35
+minRange (Single) = 0
+maxRange (Single) = 28
+spellRadius (Single) = 1
+uses (SpellUses) = Attack
+reactivate (Int32) = 0
+
+
+- Wormhole : type=Wormhole
+spellName (SpellName) = Wormhole
+description (String) = Worm that teleports units and spells between its ends. Can be closed if
+reactivated.
+animationName (String) = Secondary Spell
+cooldown (Single) = 15
+windUp (Single) = 0.1
+windDown (Single) = 0.3
+element (Element) = Sand
+spellButton (SpellButton) = Movement
+curveMultiplier (Single) = 2
+initialVelocity (Single) = 40
+minRange (Single) = 0
+maxRange (Single) = 50
+spellRadius (Single) = 1.113108
+uses (SpellUses) = AttackAndMove
+reactivate (Int32) = 0
+
+
+- Relapse : type=Relapse
+spellName (SpellName) = Relapse
+description (String) = Melee attack that rewinds the position of affected wizards. Damage is dealt based on distance from position when initially hit. If missed, the caster falls over.
+animationName (String) = Melee
+cooldown (Single) = 5.5
+windUp (Single) = 0.65
+windDown (Single) = 1.7
+element (Element) = Sand
+spellButton (SpellButton) = Melee
+curveMultiplier (Single) = 0
+initialVelocity (Single) = 0
+minRange (Single) = 0.4
+maxRange (Single) = 4
+spellRadius (Single) = 1
+uses (SpellUses) = Attack
+reactivate (Int32) = 0
+
+
+- TimeBomb : type=TimeBomb
+spellName (SpellName) = TimeBomb
+description (String) = Hourglass that attaches to a unit and detonates with upward force after 3 seconds.
+animationName (String) = Backhand Spell
+cooldown (Single) = 11
+windUp (Single) = 0.35
+windDown (Single) = 0.15
+element (Element) = Sand
+spellButton (SpellButton) = Secondary
+curveMultiplier (Single) = 1.5
+initialVelocity (Single) = 35
+minRange (Single) = 0
+maxRange (Single) = 28
+spellRadius (Single) = 1
+uses (SpellUses) = Attack
+reactivate (Int32) = 0
+
+
+- Rewind : type=Rewind
+spellName (SpellName) = Rewind
+description (String) = Returns your wizard to their current location and health after 3 seconds, dealing damage and knockback along the way.
+animationName (String) = Defensive
+cooldown (Single) = 24
+windUp (Single) = 0.3
+windDown (Single) = 0.15
+element (Element) = Sand
+spellButton (SpellButton) = Defensive
+curveMultiplier (Single) = 0
+initialVelocity (Single) = 0
+minRange (Single) = 0
+maxRange (Single) = 0
+spellRadius (Single) = 1
+uses (SpellUses) = CustomAndDefend
+reactivate (Int32) = 0
+
+
+- Suspend : type=Suspend
+spellName (SpellName) = Suspend
+description (String) = Summons puppet strings that delay all knockback and slow the target. All accumulated knockback is then released at once with a 30% bonus.
+animationName (String) = Spell 360
+cooldown (Single) = 17
+windUp (Single) = 0.3
+windDown (Single) = 0.2
+element (Element) = Sand
+spellButton (SpellButton) = Utility
+curveMultiplier (Single) = 1.5
+initialVelocity (Single) = 35
+minRange (Single) = 0
+maxRange (Single) = 28
+spellRadius (Single) = 1
+uses (SpellUses) = Attack
+reactivate (Int32) = 0
+
+
+- CyClone : type=CyClone
+spellName (SpellName) = CyClone
+description (String) = Casts your previous spell again.
+animationName (String) = Idle
+cooldown (Single) = 10
+windUp (Single) = 0.01
+windDown (Single) = 0.01
+element (Element) = Sand
+spellButton (SpellButton) = Ultimate
+curveMultiplier (Single) = 0
+initialVelocity (Single) = 0
+minRange (Single) = 0
+maxRange (Single) = 0
+spellRadius (Single) = 1
+uses (SpellUses) = AttackMoveAndDefend
+reactivate (Int32) = 0
+
+
+- Tonic : type=Tonic
+spellName (SpellName) = Tonic
+description (String) = Flask that explodes on contact, creating a cloud that hurts enemies and heals allies over time.
+animationName (String) = Attack
+cooldown (Single) = 3.5
+windUp (Single) = 0.25
+windDown (Single) = 0.15
+element (Element) = Nature
+spellButton (SpellButton) = Primary
+curveMultiplier (Single) = 1.5
+initialVelocity (Single) = 35
+minRange (Single) = 0
+maxRange (Single) = 40
+spellRadius (Single) = 1
+uses (SpellUses) = Attack
+reactivate (Int32) = 0
+
+
+- Sustain : type=Sustain
+spellName (SpellName) = Sustain
+description (String) = Melee attack that imprisons units in a tree, preventing all damage and spellcasting. Tree will fall away from its caster. If missed, the caster falls over.
+animationName (String) = Melee
+cooldown (Single) = 5
+windUp (Single) = 0.7
+windDown (Single) = 1.8
+element (Element) = Nature
+spellButton (SpellButton) = Melee
+curveMultiplier (Single) = 0
+initialVelocity (Single) = 0
+minRange (Single) = 0.4
+maxRange (Single) = 4
+spellRadius (Single) = 1
+uses (SpellUses) = Attack
+reactivate (Int32) = 0
+
+
+
+- TowVine : type=TowVine
+spellName (SpellName) = TowVine
+description (String) = Vine that links to a unit or obstacle. If
+reactivated, caster accelerates towards its target, dealing damage and knockback based on speed of impact.
+animationName (String) = Secondary Spell
+cooldown (Single) = 12
+windUp (Single) = 0.2
+windDown (Single) = 0.25
+element (Element) = Nature
+spellButton (SpellButton) = Movement
+curveMultiplier (Single) = 2
+initialVelocity (Single) = 50
+minRange (Single) = 0
+maxRange (Single) = 40
+spellRadius (Single) = 1.2
+uses (SpellUses) = AttackAndMove
+reactivate (Int32) = 0
+
+
+- Vanguard : type=Vanguard
+spellName (SpellName) = Vanguard
+description (String) = Shield that grows as it absorbs spells, then explodes forward with proportional damage and knockback.
+animationName (String) = Defensive
+cooldown (Single) = 21
+windUp (Single) = 0.03
+windDown (Single) = 0.4
+element (Element) = Nature
+spellButton (SpellButton) = Defensive
+curveMultiplier (Single) = 1.5
+initialVelocity (Single) = 45
+minRange (Single) = 0
+maxRange (Single) = 30
+spellRadius (Single) = 4.5
+uses (SpellUses) = Defend
+reactivate (Int32) = 0
+
+
+- Sapshot : type=Sapshot
+spellName (SpellName) = Sapshot
+description (String) = Leech that attaches itself to an enemy, dealing damage over time. If collected, it heals based on the damage done.
+animationName (String) = Secondary Spell
+cooldown (Single) = 15
+windUp (Single) = 0.5
+windDown (Single) = 0.5
+element (Element) = Nature
+spellButton (SpellButton) = Secondary
+curveMultiplier (Single) = 1.5
+initialVelocity (Single) = 35
+minRange (Single) = 0
+maxRange (Single) = 30
+spellRadius (Single) = 1.45
+uses (SpellUses) = Attack
+reactivate (Int32) = 0
+
+
+- Chameleon : type=Chameleon
+
+spellName (SpellName) = Chameleon
+
+description (String) = Summons a chameleon that copies the last spell casted by target wizard. That wizard is slowed and the caster becomes invisible briefly. Reactivate to cast the copied spell.
+
+animationName (String) = Secondary Spell
+
+cooldown (Single) = 13
+
+windUp (Single) = 0.25
+
+windDown (Single) = 0.45
+
+element (Element) = Nature
+
+spellButton (SpellButton) = Utility
+curveMultiplier (Single) = 1.5
+initialVelocity (Single) = 35
+
+minRange (Single) = 0
+
+maxRange (Single) = 40
+
+spellRadius (Single) = 1
+
+uses (SpellUses) = Attack
+
+reactivate (Int32) = 0
+
+
+- FrogOfLife : type=FrogOfLife
+spellName (SpellName) = FrogOfLife
+description (String) = Frog that jumps 3 times, healing and bouncing all nearby wizards. Enemies only receive half healing.
+animationName (String) = Spell Channel
+cooldown (Single) = 35
+windUp (Single) = 1
+windDown (Single) = 0.5
+element (Element) = Nature
+spellButton (SpellButton) = Ultimate
+curveMultiplier (Single) = 1.5
+initialVelocity (Single) = 10
+minRange (Single) = 0
+maxRange (Single) = 20
+spellRadius (Single) = 1
+uses (SpellUses) = Custom
+reactivate (Int32) = 0
+
+
+- Spark : type=Spark
+spellName (SpellName) = Spark
+description (String) = Lightning bolt that deals high damage and very high knockback. High cast time.
+animationName (String) = Attack
+cooldown (Single) = 4
+windUp (Single) = 0.6
+windDown (Single) = 0.5
+element (Element) = Electric
+spellButton (SpellButton) = Primary
+curveMultiplier (Single) = 10
+initialVelocity (Single) = 120
+minRange (Single) = 0
+maxRange (Single) = 12
+spellRadius (Single) = 1.113
+uses (SpellUses) = Attack
+reactivate (Int32) = 0
+
+
+- Static : type=Static
+spellName (SpellName) = Static
+description (String) = Melee attack that deals more damage and knockback the farther the caster travels between swings. If missed, the caster falls over.
+animationName (String) = Melee
+cooldown (Single) = 3
+windUp (Single) = 0.6
+windDown (Single) = 1.6
+element (Element) = Electric
+spellButton (SpellButton) = Melee
+curveMultiplier (Single) = 0
+initialVelocity (Single) = 0
+minRange (Single) = 0.5
+maxRange (Single) = 4
+spellRadius (Single) = 1
+uses (SpellUses) = Attack
+reactivate (Int32) = 0
+
+
+- NorthPull : type=NorthPull
+spellName (SpellName) = NorthPull
+description (String) = Short dash that can be
+reactivated for a very long dash that pulls contacted units with it.
+animationName (String) = Walk
+cooldown (Single) = 7
+windUp (Single) = 0.25
+windDown (Single) = 0.3
+element (Element) = Electric
+spellButton (SpellButton) = Movement
+curveMultiplier (Single) = 3
+initialVelocity (Single) = 30
+minRange (Single) = 0
+maxRange (Single) = 30
+spellRadius (Single) = 1.104
+uses (SpellUses) = AttackAndMove
+reactivate (Int32) = 0
+
+
+- Discharge : type=Discharge
+spellName (SpellName) = Discharge
+description (String) = Creates a static field that prevents half of the damage taken. After 4 seconds, the field discharges, dealing full damage back to each source.
+animationName (String) = Defensive
+cooldown (Single) = 22
+windUp (Single) = 0.5
+windDown (Single) = 0.1
+element (Element) = Electric
+spellButton (SpellButton) = Defensive
+curveMultiplier (Single) = 0
+initialVelocity (Single) = 0
+minRange (Single) = 0
+maxRange (Single) = 0
+spellRadius (Single) = 1
+uses (SpellUses) = CustomAndDefend
+reactivate (Int32) = 0
+
+
+- LightningBug : type=LightningBug
+spellName (SpellName) = LightningBug
+description (String) = Lightning bug that pulls in the nearest unit within its range. After 2 pulls, the bug explodes, launching nearby units upward.
+animationName (String) = Secondary Spell
+cooldown (Single) = 12
+windUp (Single) = 0.5
+windDown (Single) = 0.6
+element (Element) = Electric
+spellButton (SpellButton) = Secondary
+curveMultiplier (Single) = 1.5
+initialVelocity (Single) = 20
+minRange (Single) = 2
+maxRange (Single) = 26
+spellRadius (Single) = 1.54
+uses (SpellUses) = Attack
+reactivate (Int32) = 0
+
+
+- Capacitor : type=Capacitor
+spellName (SpellName) = Capacitor
+description (String) = Hurls a capacitor that attaches itself to a unit and explodes when it comes into contact with another unit.
+animationName (String) = Spell 360
+cooldown (Single) = 15
+windUp (Single) = 0.3
+windDown (Single) = 0.2
+element (Element) = Electric
+spellButton (SpellButton) = Utility
+curveMultiplier (Single) = 1.5
+initialVelocity (Single) = 35
+minRange (Single) = 0
+maxRange (Single) = 28
+spellRadius (Single) = 1
+uses (SpellUses) = Attack
+reactivate (Int32) = 0
+
+
+- ChainLightning : type=ChainLightning
+spellName (SpellName) = ChainLightning
+description (String) = Extra
+
+
+-long dash that chains up to 7 nearby units when successfully hit, pulling all affected units to starting point of dash.
+animationName (String) = Walk
+cooldown (Single) = 35
+windUp (Single) = 1
+windDown (Single) = 1
+element (Element) = Electric
+spellButton (SpellButton) = Ultimate
+curveMultiplier (Single) = 0.6
+initialVelocity (Single) = 20
+minRange (Single) = 0
+maxRange (Single) = 65
+spellRadius (Single) = 1.104
+uses (SpellUses) = AttackAndMove
+reactivate (Int32) = 0
+
+
+- Rocket : type=Rocket
+spellName (SpellName) = Rocket
+description (String) = Rocket that accelerates through units, increasing its damage and knockback with each hit.
+animationName (String) = Attack
+cooldown (Single) = 3.5
+windUp (Single) = 0.45
+windDown (Single) = 0.35
+element (Element) = Steam
+spellButton (SpellButton) = Primary
+curveMultiplier (Single) = 1.5
+initialVelocity (Single) = 25
+minRange (Single) = 0
+maxRange (Single) = 34
+spellRadius (Single) = 1.113108
+uses (SpellUses) = Attack
+reactivate (Int32) = 0
+
+
+- HotSwap : type=HotSwap
+spellName (SpellName) = HotSwap
+description (String) = Hose that attaches on impact. Can be
+reactivated to swap positions with attached unit. Curving the reactivation will apply force.
+animationName (String) = Secondary Spell
+cooldown (Single) = 10
+windUp (Single) = 0.15
+windDown (Single) = 0.2
+element (Element) = Steam
+spellButton (SpellButton) = Movement
+curveMultiplier (Single) = 2
+initialVelocity (Single) = 30
+minRange (Single) = 30
+maxRange (Single) = 36
+spellRadius (Single) = 1
+uses (SpellUses) = AttackAndMove
+reactivate (Int32) = 0
+
+
+- Compound : type=Compound
+spellName (SpellName) = Compound
+description (String) = Melee attack that increases damage and knockback with each successful hit. If missed, the caster falls over and is launched backwards.
+animationName (String) = Melee
+cooldown (Single) = 3
+windUp (Single) = 0.65
+windDown (Single) = 1.5
+element (Element) = Steam
+spellButton (SpellButton) = Melee
+curveMultiplier (Single) = 0
+initialVelocity (Single) = 0
+minRange (Single) = 0.5
+maxRange (Single) = 4
+spellRadius (Single) = 1
+uses (SpellUses) = Attack
+reactivate (Int32) = 0
+
+
+- Decoy : type=Decoy
+spellName (SpellName) = Decoy
+description (String) = Disk that, on contact, summons a clone that mimics your movement and explodes if killed. Can be
+reactivated to swap positions with clone.
+animationName (String) = Secondary Spell
+cooldown (Single) = 12
+windUp (Single) = 0.35
+windDown (Single) = 0.2
+element (Element) = Steam
+spellButton (SpellButton) = Secondary
+curveMultiplier (Single) = 1.5
+initialVelocity (Single) = 35
+minRange (Single) = 0
+maxRange (Single) = 40
+spellRadius (Single) = 1.25
+uses (SpellUses) = AttackAndMove
+reactivate (Int32) = 0
+
+
+- Backup : type=Backup
+spellName (SpellName) = Backup
+description (String) = Life preserver that absorbs one hit and creates a clone in your place, teleporting you behind the damaging wizard. Clones mimic your movement and explode if killed. Reactivate to swap with clone.
+animationName (String) = Defensive
+cooldown (Single) = 20
+windUp (Single) = 0.2
+windDown (Single) = 0.4
+element (Element) = Steam
+spellButton (SpellButton) = Defensive
+curveMultiplier (Single) = 0
+initialVelocity (Single) = 0
+minRange (Single) = 0
+maxRange (Single) = 0
+spellRadius (Single) = 1
+uses (SpellUses) = Defend
+reactivate (Int32) = 0
+
+
+- Bombshell : type=Bombshell
+spellName (SpellName) = Bombshell
+description (String) = Tosses a slow
+
+
+-moving, homing turtle armed with your melee spell.
+animationName (String) = Spell 360
+cooldown (Single) = 12
+windUp (Single) = 0.5
+windDown (Single) = 0.5
+element (Element) = Steam
+spellButton (SpellButton) = Utility
+curveMultiplier (Single) = 1.5
+initialVelocity (Single) = 15
+minRange (Single) = 15
+maxRange (Single) = 55
+spellRadius (Single) = 1
+uses (SpellUses) = Attack
+reactivate (Int32) = 0
+
+
+- Sunder : type=Sunder
+spellName (SpellName) = Sunder
+description (String) = Hurls a device that teleports you and creates 2 clones to surround your enemy. Clones mimic your spell casts and movement and explode if killed.
+animationName (String) = Spell Channel
+cooldown (Single) = 35
+windUp (Single) = 1
+windDown (Single) = 1
+element (Element) = Steam
+spellButton (SpellButton) = Ultimate
+curveMultiplier (Single) = 0.001
+initialVelocity (Single) = 45
+minRange (Single) = 0
+maxRange (Single) = 50
+spellRadius (Single) = 1.35
+uses (SpellUses) = AttackAndMove
+reactivate (Int32) = 0
+
+
+- Glaive : type=Glaive
+spellName (SpellName) = Glaive
+description (String) = Metal star that can bounce to a nearby second target. Can hit caster
+
+
+-owned units.
+animationName (String) = Attack
+cooldown (Single) = 4
+windUp (Single) = 0.35
+windDown (Single) = 0.3
+element (Element) = Metal
+spellButton (SpellButton) = Primary
+curveMultiplier (Single) = 1.5
+initialVelocity (Single) = 28
+minRange (Single) = 0
+maxRange (Single) = 28
+spellRadius (Single) = 1
+uses (SpellUses) = Attack
+reactivate (Int32) = 0
+
+
+- StealTrap : type=StealTrap
+spellName (SpellName) = StealTrap
+description (String) = Short leap that leaves behind a trap which can steal control of a non
+
+
+-player unit if caught. Can be
+reactivated to toss unit, dealing damage on impact.
+animationName (String) = Flying Forward
+cooldown (Single) = 9
+windUp (Single) = 0.08
+windDown (Single) = 0.6
+element (Element) = Metal
+spellButton (SpellButton) = Movement
+curveMultiplier (Single) = 2
+initialVelocity (Single) = 20
+minRange (Single) = 0
+maxRange (Single) = 6
+spellRadius (Single) = 1
+uses (SpellUses) = AttackAndMove
+reactivate (Int32) = 0
+
+
+- Tetherball : type=Tetherball
+spellName (SpellName) = Tetherball
+description (String) = Melee attack that shackles a unit to a ball and chain. If missed, the caster falls over.
+animationName (String) = Melee
+cooldown (Single) = 3.5
+windUp (Single) = 0.7
+windDown (Single) = 1.5
+element (Element) = Metal
+spellButton (SpellButton) = Melee
+curveMultiplier (Single) = 0
+initialVelocity (Single) = 0
+minRange (Single) = 0.5
+maxRange (Single) = 4
+spellRadius (Single) = 1
+uses (SpellUses) = Attack
+reactivate (Int32) = 0
+
+
+- Urchain : type=Urchain
+spellName (SpellName) = Urchain
+description (String) = Sea urchin that attaches itself to a unit. After 4 seconds, it latches to the next nearest unit, pulling it and the attached unit together, dealing damage on collision.
+animationName (String) = Secondary Spell
+cooldown (Single) = 13
+windUp (Single) = 0.3
+windDown (Single) = 0.25
+element (Element) = Metal
+spellButton (SpellButton) = Secondary
+curveMultiplier (Single) = 1.5
+initialVelocity (Single) = 25
+minRange (Single) = 0
+maxRange (Single) = 40
+spellRadius (Single) = 1.45
+uses (SpellUses) = Attack
+reactivate (Int32) = 0
+
+
+- Chainmail : type=Chainmail
+spellName (SpellName) = Chainmail
+description (String) = Summons orbiting metal shields for 2 seconds. If damage would be taken, a shield is hurled at the source of that damage, chaining them to the caster and preventing all damage from that source for 5 seconds.
+animationName (String) = Defensive
+cooldown (Single) = 23
+windUp (Single) = 0.35
+windDown (Single) = 0.55
+element (Element) = Metal
+spellButton (SpellButton) = Defensive
+curveMultiplier (Single) = 0
+initialVelocity (Single) = 0
+minRange (Single) = 0
+maxRange (Single) = 0
+spellRadius (Single) = 1
+uses (SpellUses) = CustomAndDefend
+reactivate (Int32) = 0
+
+
+- Reflex : type=Reflex
+spellName (SpellName) = Reflex
+description (String) = Hammer that forces target wizard to cast the same spell type (e.g. melee, secondary) that the caster used previously, regardless of
+cooldown.
+animationName (String) = Spell 360
+cooldown (Single) = 10
+windUp (Single) = 0.25
+windDown (Single) = 0.8
+element (Element) = Metal
+spellButton (SpellButton) = Utility
+curveMultiplier (Single) = 1.5
+initialVelocity (Single) = 35
+minRange (Single) = 0
+maxRange (Single) = 40
+spellRadius (Single) = 1
+uses (SpellUses) = Attack
+reactivate (Int32) = 0
+
+
+- DoubleStrike : type=DoubleStrike
+spellName (SpellName) = DoubleStrike
+description (String) = Summons a katana that stores all damage the caster deals for the next 5 seconds. The caster then jumps between all damaged units, dealing that damage a second time and applying the caster's melee spell.
+animationName (String) = Katana Summon
+cooldown (Single) = 35
+windUp (Single) = 0.5
+windDown (Single) = 0.8835
+element (Element) = Metal
+spellButton (SpellButton) = Ultimate
+curveMultiplier (Single) = 0
+initialVelocity (Single) = 0
+minRange (Single) = 0
+maxRange (Single) = 0
+spellRadius (Single) = 1
+uses (SpellUses) = CustomAndDefend
+reactivate (Int32) = 0
+
+
+- Snowball : type=Snowball
+spellName (SpellName) = Snowball
+description (String) = Hurls a snowball that becomes more deadly the further it travels and forms a Crystal on impact. On cast, your Crystals become Brittle, exploding on enemy contact.
+animationName (String) = Attack
+cooldown (Single) = 4.25
+windUp (Single) = 0.65
+windDown (Single) = 0.5
+element (Element) = Ice
+spellButton (SpellButton) = Primary
+curveMultiplier (Single) = 1.16668
+initialVelocity (Single) = 35
+minRange (Single) = 0
+maxRange (Single) = 52.5
+spellRadius (Single) = 1.113108
+uses (SpellUses) = Attack
+reactivate (Int32) = 0
+
+
+- IcePack : type=IcePack
+spellName (SpellName) = IcePack
+description (String) = Summons a Crystal below the caster, launching them forward. On reactivation, the caster is pulled on a sled to their newest Crystal. On cast, your Crystals become Feral, following the nearest enemy unit.
+animationName (String) = Flying Forward
+cooldown (Single) = 9
+windUp (Single) = 0.08
+windDown (Single) = 0.6
+element (Element) = Ice
+spellButton (SpellButton) = Movement
+curveMultiplier (Single) = 2
+initialVelocity (Single) = 6.58
+minRange (Single) = 0
+maxRange (Single) = 20
+spellRadius (Single) = 1
+uses (SpellUses) = AttackAndMove
+reactivate (Int32) = 0
+
+
+- ColdShoulder : type=ColdShoulder
+spellName (SpellName) = ColdShoulder
+description (String) = Melee attack that forms a Crystal on impact. If missed, caster falls over. On cast, your Crystals become Cold, slowing and damaging nearby enemy units over time.
+animationName (String) = Melee
+cooldown (Single) = 4.5
+windUp (Single) = 0.7
+windDown (Single) = 2.2
+element (Element) = Ice
+spellButton (SpellButton) = Melee
+curveMultiplier (Single) = 0
+initialVelocity (Single) = 0
+minRange (Single) = 0.4
+maxRange (Single) = 200
+spellRadius (Single) = 1
+uses (SpellUses) = Attack
+reactivate (Int32) = 0
+
+
+- Brrage : type=Brrage
+spellName (SpellName) = Brrage
+description (String) = Fires a barrage of 5 icicles in the cast direction, dealing damage and creating new Crystals after a delay. On cast, your Crystals become Inert, just sitting there.
+animationName (String) = Secondary Spell
+cooldown (Single) = 13
+windUp (Single) = 0.4
+windDown (Single) = 0.2
+element (Element) = Ice
+spellButton (SpellButton) = Secondary
+curveMultiplier (Single) = 1.16668
+initialVelocity (Single) = 35
+minRange (Single) = 0
+maxRange (Single) = 45
+spellRadius (Single) = 1
+uses (SpellUses) = Attack
+reactivate (Int32) = 0
+
+
+- Preserve : type=Preserve
+spellName (SpellName) = Preserve
+description (String) = Summons a Crystal that protects the caster until it’s destroyed or changes form. On cast, your Crystals become Cryogenic, preserving the first spell that damages them. Preserved spells can be picked up and used by the caster.
+animationName (String) = Defensive
+cooldown (Single) = 20
+windUp (Single) = 0.25
+windDown (Single) = 0.5
+element (Element) = Ice
+spellButton (SpellButton) = Defensive
+curveMultiplier (Single) = 0
+initialVelocity (Single) = 0
+minRange (Single) = 0
+maxRange (Single) = 0
+spellRadius (Single) = 1
+uses (SpellUses) = Defend
+reactivate (Int32) = 0
+
+
+- IceHook : type=IceHook
+spellName (SpellName) = IceHook
+description (String) = Casts a Crystal into the air that deals damage upon landing. Cast distance is determined by spell curve. Upon reactivation, the Crystal is reeled in. On cast, your Crystals become Hooked, attaching themselves on contact.
+animationName (String) = Spell 360
+cooldown (Single) = 14
+windUp (Single) = 0.2
+windDown (Single) = 0.2
+element (Element) = Ice
+spellButton (SpellButton) = Utility
+curveMultiplier (Single) = 0.001
+initialVelocity (Single) = 30
+minRange (Single) = 10
+maxRange (Single) = 44
+spellRadius (Single) = 1
+uses (SpellUses) = Attack
+reactivate (Int32) = 0
+
+
+- ColdFusion : type=ColdFusion
+spellName (SpellName) = ColdFusion
+description (String) = Caster leaps high into the air and detonates your Crystals upon landing, dealing heavy damage, creating platforms, and immobilizing units within range.
+animationName (String) = Cold Fusion
+cooldown (Single) = 35
+windUp (Single) = 1
+windDown (Single) = 1
+element (Element) = Ice
+spellButton (SpellButton) = Ultimate
+curveMultiplier (Single) = 0
+initialVelocity (Single) = 0
+minRange (Single) = 0
+maxRange (Single) = 200
+spellRadius (Single) = 6
+uses (SpellUses) = Attack
+reactivate (Int32) = 0

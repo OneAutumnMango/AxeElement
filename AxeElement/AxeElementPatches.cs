@@ -47,6 +47,14 @@ namespace AxeElement
         [HarmonyPostfix]
         public static void Postfix(SpellManager __instance)
         {
+            // Only register on the canonical SpellManager (DontDestroyOnLoad).
+            // Duplicate instances self-destruct before populating spell_table.
+            if (Globals.spell_manager != null && Globals.spell_manager != __instance)
+            {
+                Plugin.Log.LogInfo("[AxePatch] Skipping duplicate SpellManager instance.");
+                return;
+            }
+
             var spellTable = Traverse.Create(__instance)
                 .Field("spell_table")
                 .GetValue<Dictionary<SpellName, Spell>>();
@@ -65,8 +73,15 @@ namespace AxeElement
         [HarmonyPostfix]
         public static void Postfix(WizardStatus __instance, float damage, int owner, int source)
         {
-            IronWardObject.NotifyDamage(owner, damage, __instance);
-            WhirlwindObject.NotifyDamage(owner, damage, __instance as UnitStatus);
+            try
+            {
+                IronWardObject.NotifyDamage(owner, damage, __instance);
+                WhirlwindObject.NotifyDamage(owner, damage, __instance as UnitStatus);
+            }
+            catch (System.Exception ex)
+            {
+                Plugin.Log.LogError($"[AxeDmg] rpcApplyDamage hook failed: damage={damage}, owner={owner}, source={source}: {ex}");
+            }
         }
     }
 

@@ -7,13 +7,22 @@ namespace AxeElement
     {
         public override void Initialize(Identity identity, Vector3 position, Quaternion rotation, float curve, int spellIndex, bool selfCast, SpellName spellNameForCooldown)
         {
-            var go = GameUtility.Instantiate("Objects/Glaive", position + Spell.skillshotOffset, rotation, 0);
-            var original = go.GetComponent<GlaiveObject>();
-            UnityEngine.Object _impact = (original != null) ? original.impact : null;
-            UnityEngine.Object.DestroyImmediate(original);
-            var comp = go.AddComponent<HatchetObject>();
-            comp.impact = _impact;
-            comp.Init(identity, curve * this.curveMultiplier, this.initialVelocity);
+            Plugin.Log.LogInfo($"[Hatchet] Initialize: owner={identity?.owner}, pos={position}, curve={curve}, spellIndex={spellIndex}, curveM={this.curveMultiplier}, vel={this.initialVelocity}");
+            try
+            {
+                var go = GameUtility.Instantiate("Objects/Glaive", position + Spell.skillshotOffset, rotation, 0);
+                var original = go.GetComponent<GlaiveObject>();
+                UnityEngine.Object _impact = (original != null) ? original.impact : null;
+                UnityEngine.Object.DestroyImmediate(original);
+                var comp = go.AddComponent<HatchetObject>();
+                comp.impact = _impact;
+                comp.Init(identity, curve * this.curveMultiplier, this.initialVelocity);
+                Plugin.Log.LogInfo($"[Hatchet] Spawned successfully, effective curve={curve * this.curveMultiplier}, vel={this.initialVelocity}");
+            }
+            catch (System.Exception ex)
+            {
+                Plugin.Log.LogError($"[Hatchet] Initialize FAILED: {ex}");
+            }
         }
 
         public override Vector3? GetAiAim(TargetComponent targetComponent, Vector3 position, Vector3 target, SpellUses use, ref float curve, int owner)

@@ -49,21 +49,27 @@ namespace AxeElement
             }
             registered = true;
 
-            // ── Collect Ice spell icons/videos before reassigning ────────────
+            // ── Collect Metal spell icons/videos to use for Axe spells ──────────
             // Map by SpellButton so we can assign to matching Axe spell slots
-            var iceIcons  = new Dictionary<SpellButton, Sprite>();
-            var iceVideos = new Dictionary<SpellButton, UnityEngine.Video.VideoClip>();
+            var metalIcons  = new Dictionary<SpellButton, Sprite>();
+            var metalVideos = new Dictionary<SpellButton, UnityEngine.Video.VideoClip>();
 
             foreach (var kv in spellTable)
             {
-                if (kv.Value != null && kv.Value.element == Element.Ice)
+                if (kv.Value != null && kv.Value.element == Element.Metal)
                 {
-                    if (kv.Value.icon != null && !iceIcons.ContainsKey(kv.Value.spellButton))
-                        iceIcons[kv.Value.spellButton] = kv.Value.icon;
-                    if (kv.Value.video != null && !iceVideos.ContainsKey(kv.Value.spellButton))
-                        iceVideos[kv.Value.spellButton] = kv.Value.video;
+                    if (kv.Value.icon != null && !metalIcons.ContainsKey(kv.Value.spellButton))
+                        metalIcons[kv.Value.spellButton] = kv.Value.icon;
+                    if (kv.Value.video != null && !metalVideos.ContainsKey(kv.Value.spellButton))
+                        metalVideos[kv.Value.spellButton] = kv.Value.video;
                 }
             }
+
+            Plugin.Log.LogInfo($"[AxeReg] Collected Metal icons: {metalIcons.Count}, videos: {metalVideos.Count}");
+            foreach (var kv in metalIcons)
+                Plugin.Log.LogInfo($"[AxeReg]   Metal icon: btn={kv.Key} sprite={kv.Value.name}");
+            foreach (var kv in metalVideos)
+                Plugin.Log.LogInfo($"[AxeReg]   Metal video: btn={kv.Key} clip={kv.Value.name}");
 
             // Reassign existing Ice spells to Tutorial element slot (11)
             // so the Axe element slot (10) is exclusively Axe.
@@ -89,7 +95,7 @@ namespace AxeElement
             hatchet.maxRange         = 30f;
             hatchet.uses             = SpellUses.Attack;
             hatchet.additionalCasts  = new SubSpell[0];
-            AssignAssets(hatchet, SpellButton.Primary, iceIcons, iceVideos);
+            AssignAssets(hatchet, SpellButton.Primary, metalIcons, metalVideos);
             spellTable[Axe.Hatchet]  = hatchet;
             axeSpellNames.Add(Axe.Hatchet);
 
@@ -126,7 +132,7 @@ namespace AxeElement
                     uses             = SpellUses.Move | SpellUses.Attack
                 }
             };
-            AssignAssets(lunge, SpellButton.Movement, iceIcons, iceVideos);
+            AssignAssets(lunge, SpellButton.Movement, metalIcons, metalVideos);
             spellTable[Axe.Lunge] = lunge;
             axeSpellNames.Add(Axe.Lunge);
 
@@ -146,7 +152,7 @@ namespace AxeElement
             cleave.maxRange         = 4f;
             cleave.uses             = SpellUses.Attack;
             cleave.additionalCasts  = new SubSpell[0];
-            AssignAssets(cleave, SpellButton.Melee, iceIcons, iceVideos);
+            AssignAssets(cleave, SpellButton.Melee, metalIcons, metalVideos);
             spellTable[Axe.Cleave]  = cleave;
             axeSpellNames.Add(Axe.Cleave);
 
@@ -166,7 +172,7 @@ namespace AxeElement
             tomahawk.maxRange        = 40f;
             tomahawk.uses            = SpellUses.Attack;
             tomahawk.additionalCasts = new SubSpell[0];
-            AssignAssets(tomahawk, SpellButton.Secondary, iceIcons, iceVideos);
+            AssignAssets(tomahawk, SpellButton.Secondary, metalIcons, metalVideos);
             spellTable[Axe.Tomahawk] = tomahawk;
             axeSpellNames.Add(Axe.Tomahawk);
 
@@ -186,7 +192,7 @@ namespace AxeElement
             ironWard.maxRange        = 0f;
             ironWard.uses            = SpellUses.Defend | SpellUses.Custom;
             ironWard.additionalCasts = new SubSpell[0];
-            AssignAssets(ironWard, SpellButton.Defensive, iceIcons, iceVideos);
+            AssignAssets(ironWard, SpellButton.Defensive, metalIcons, metalVideos);
             spellTable[Axe.IronWard] = ironWard;
             axeSpellNames.Add(Axe.IronWard);
 
@@ -206,7 +212,7 @@ namespace AxeElement
             shatter.maxRange         = 40f;
             shatter.uses             = SpellUses.Attack;
             shatter.additionalCasts  = new SubSpell[0];
-            AssignAssets(shatter, SpellButton.Utility, iceIcons, iceVideos);
+            AssignAssets(shatter, SpellButton.Utility, metalIcons, metalVideos);
             spellTable[Axe.Shatter]  = shatter;
             axeSpellNames.Add(Axe.Shatter);
 
@@ -226,7 +232,7 @@ namespace AxeElement
             whirlwind.maxRange        = 0f;
             whirlwind.uses            = SpellUses.Attack | SpellUses.Custom;
             whirlwind.additionalCasts = new SubSpell[0];
-            AssignAssets(whirlwind, SpellButton.Ultimate, iceIcons, iceVideos);
+            AssignAssets(whirlwind, SpellButton.Ultimate, metalIcons, metalVideos);
             spellTable[Axe.Whirlwind] = whirlwind;
             axeSpellNames.Add(Axe.Whirlwind);
 
@@ -282,12 +288,12 @@ namespace AxeElement
         private static void AssignAssets(
             Spell spell,
             SpellButton button,
-            Dictionary<SpellButton, Sprite> iceIcons,
-            Dictionary<SpellButton, UnityEngine.Video.VideoClip> iceVideos)
+            Dictionary<SpellButton, Sprite> metalIcons,
+            Dictionary<SpellButton, UnityEngine.Video.VideoClip> metalVideos)
         {
-            if (iceIcons.TryGetValue(button, out var icon))
+            if (metalIcons.TryGetValue(button, out var icon))
                 spell.icon = icon;
-            if (iceVideos.TryGetValue(button, out var video))
+            if (metalVideos.TryGetValue(button, out var video))
                 spell.video = video;
         }
     }

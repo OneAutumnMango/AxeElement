@@ -7,20 +7,30 @@ namespace AxeElement
     {
         public override void Initialize(Identity identity, Vector3 position, Quaternion rotation, float curve, int spellIndex, bool selfCast, SpellName spellNameForCooldown)
         {
-            var go = GameUtility.Instantiate("Objects/Reflex", position + Spell.skillshotOffset, rotation, 0);
-            var original = go.GetComponent<ReflexObject>();
-            UnityEngine.Object _impact = null;
-            UnityEngine.Object _effect = null;
-            if (original != null)
+            Plugin.Log.LogInfo($"[Shatter] Initialize: owner={identity?.owner}, pos={position}, curve={curve}, spellIndex={spellIndex}, curveM={this.curveMultiplier}, vel={this.initialVelocity}");
+            try
             {
-                _impact = original.impact;
-                _effect = original.effect;
+                var go = GameUtility.Instantiate("Objects/Reflex", position + Spell.skillshotOffset, rotation, 0);
+                var original = go.GetComponent<ReflexObject>();
+                UnityEngine.Object _impact = null;
+                UnityEngine.Object _effect = null;
+                if (original != null)
+                {
+                    _impact = original.impact;
+                    _effect = original.effect;
+                }
+                Plugin.Log.LogInfo($"[Shatter] Prefab fields: impact={_impact != null}, effect={_effect != null}");
+                UnityEngine.Object.DestroyImmediate(original);
+                var comp = go.AddComponent<ShatterObject>();
+                comp.impact = _impact;
+                comp.effect = _effect;
+                comp.Init(identity.owner, curve * this.curveMultiplier, this.initialVelocity);
+                Plugin.Log.LogInfo($"[Shatter] Spawned successfully, effective curve={curve * this.curveMultiplier}, vel={this.initialVelocity}");
             }
-            UnityEngine.Object.DestroyImmediate(original);
-            var comp = go.AddComponent<ShatterObject>();
-            comp.impact = _impact;
-            comp.effect = _effect;
-            comp.Init(identity.owner, curve * this.curveMultiplier, this.initialVelocity);
+            catch (System.Exception ex)
+            {
+                Plugin.Log.LogError($"[Shatter] Initialize FAILED: {ex}");
+            }
         }
 
         public override Vector3? GetAiAim(TargetComponent targetComponent, Vector3 position, Vector3 target, SpellUses use, ref float curve, int owner)

@@ -7,48 +7,58 @@ namespace AxeElement
     {
         public override void Initialize(Identity identity, Vector3 position, Quaternion rotation, float curve, int spellIndex, bool selfCast, SpellName spellNameForCooldown)
         {
-            var go = GameUtility.Instantiate("Objects/Steal Trap", position, rotation, 0);
-
-            // Copy inspector-assigned references from the prefab's StealTrapObject
-            // before destroying it — these don't transfer to AddComponent automatically.
-            var original = go.GetComponent<StealTrapObject>();
-            Transform _attach = null, _wizardParticles = null, _targetEffects = null;
-            Transform[] _vineTransforms = null;
-            Animator _anim = null;
-            float _multiplier = 2f;
-            ParticleSystem _dustTrail = null, _trapClose = null, _loveSparkles = null, _gettinSlammed = null, _slam = null;
-            if (original != null)
+            Plugin.Log.LogInfo($"[Lunge] Initialize: owner={identity?.owner}, pos={position}, curve={curve}, spellIndex={spellIndex}, curveM={this.curveMultiplier}, vel={this.initialVelocity}");
+            try
             {
-                _attach = original.attach;
-                _wizardParticles = original.wizardParticles;
-                _targetEffects = original.targetEffects;
-                _vineTransforms = original.vineTransforms;
-                _anim = original.anim;
-                _multiplier = original.multiplier;
-                _dustTrail = original.dustTrail;
-                _trapClose = original.trapClose;
-                _loveSparkles = original.loveSparkles;
-                _gettinSlammed = original.gettinSlammed;
-                _slam = original.slam;
-            }
-            UnityEngine.Object.DestroyImmediate(original);
+                var go = GameUtility.Instantiate("Objects/Steal Trap", position, rotation, 0);
 
-            LungeObject component = go.AddComponent<LungeObject>();
-            component.attach = _attach;
-            component.wizardParticles = _wizardParticles;
-            component.targetEffects = _targetEffects;
-            component.vineTransforms = _vineTransforms;
-            component.anim = _anim;
-            component.multiplier = _multiplier;
-            component.dustTrail = _dustTrail;
-            component.trapClose = _trapClose;
-            component.loveSparkles = _loveSparkles;
-            component.gettinSlammed = _gettinSlammed;
-            component.slam = _slam;
-            if (spellIndex < 0)
-                component.Init(identity, curve * this.curveMultiplier, this.initialVelocity, spellIndex, spellNameForCooldown);
-            else
-                component.Init(identity, curve * this.additionalCasts[0].curveMultiplier, this.additionalCasts[0].initialVelocity, spellIndex, spellNameForCooldown);
+                // Copy inspector-assigned references from the prefab's StealTrapObject
+                // before destroying it — these don't transfer to AddComponent automatically.
+                var original = go.GetComponent<StealTrapObject>();
+                Transform _attach = null, _wizardParticles = null, _targetEffects = null;
+                Transform[] _vineTransforms = null;
+                Animator _anim = null;
+                float _multiplier = 2f;
+                ParticleSystem _dustTrail = null, _trapClose = null, _loveSparkles = null, _gettinSlammed = null, _slam = null;
+                if (original != null)
+                {
+                    _attach = original.attach;
+                    _wizardParticles = original.wizardParticles;
+                    _targetEffects = original.targetEffects;
+                    _vineTransforms = original.vineTransforms;
+                    _anim = original.anim;
+                    _multiplier = original.multiplier;
+                    _dustTrail = original.dustTrail;
+                    _trapClose = original.trapClose;
+                    _loveSparkles = original.loveSparkles;
+                    _gettinSlammed = original.gettinSlammed;
+                    _slam = original.slam;
+                }
+                Plugin.Log.LogInfo($"[Lunge] Prefab fields: attach={_attach != null}, wizardParticles={_wizardParticles != null}, vines={_vineTransforms?.Length ?? -1}, anim={_anim != null}");
+                UnityEngine.Object.DestroyImmediate(original);
+
+                LungeObject component = go.AddComponent<LungeObject>();
+                component.attach = _attach;
+                component.wizardParticles = _wizardParticles;
+                component.targetEffects = _targetEffects;
+                component.vineTransforms = _vineTransforms;
+                component.anim = _anim;
+                component.multiplier = _multiplier;
+                component.dustTrail = _dustTrail;
+                component.trapClose = _trapClose;
+                component.loveSparkles = _loveSparkles;
+                component.gettinSlammed = _gettinSlammed;
+                component.slam = _slam;
+                if (spellIndex < 0)
+                    component.Init(identity, curve * this.curveMultiplier, this.initialVelocity, spellIndex, spellNameForCooldown);
+                else
+                    component.Init(identity, curve * this.additionalCasts[0].curveMultiplier, this.additionalCasts[0].initialVelocity, spellIndex, spellNameForCooldown);
+                Plugin.Log.LogInfo($"[Lunge] Spawned successfully, spellIndex={spellIndex}");
+            }
+            catch (System.Exception ex)
+            {
+                Plugin.Log.LogError($"[Lunge] Initialize FAILED: {ex}");
+            }
         }
 
         public override Vector3? GetAiAim(TargetComponent targetComponent, Vector3 position, Vector3 target, SpellUses use, ref float curve, int owner)
