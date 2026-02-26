@@ -43,7 +43,8 @@ namespace AxeElement
             deathTimer = Time.time + START_TIME;
             if (this.vineTransforms != null)
                 for (int i = 0; i < this.vineTransforms.Length; i++)
-                    this.vineTransforms[i].parent = null;
+                    if (this.vineTransforms[i] != null)
+                        this.vineTransforms[i].parent = null;
         }
 
         public void Init(int owner, int enemyViewId, int ballViewId)
@@ -97,9 +98,14 @@ namespace AxeElement
         private void PositionLine()
         {
             if (this.vineTransforms == null || this.vineTransforms.Length == 0 || this.attach == null) return;
-            this.vineTransforms[0].position = this.attach.position;
-            this.vineTransforms[0].rotation = this.attach.rotation;
-            this.vineTransforms[this.vineTransforms.Length - 1].position = this.ball.position;
+            if (this.vineTransforms[0] != null)
+            {
+                this.vineTransforms[0].position = this.attach.position;
+                this.vineTransforms[0].rotation = this.attach.rotation;
+            }
+            var last = this.vineTransforms[this.vineTransforms.Length - 1];
+            if (last != null && this.ball != null)
+                last.position = this.ball.position;
         }
 
         public override void SpellObjectDeath()
@@ -146,7 +152,8 @@ namespace AxeElement
             base.transform.DOScale(0f, 0.3f);
             if (this.vineTransforms != null)
                 for (int i = 0; i < this.vineTransforms.Length; i++)
-                    this.vineTransforms[i].DOScale(0f, 0.3f);
+                    if (this.vineTransforms[i] != null)
+                        this.vineTransforms[i].DOScale(0f, 0.3f);
             UnityEngine.Object.Destroy(base.gameObject, 0.5f);
         }
 

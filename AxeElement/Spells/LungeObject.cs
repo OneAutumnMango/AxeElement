@@ -75,7 +75,8 @@ namespace AxeElement
             Transform[] array = this.vineTransforms;
             if (array != null)
                 for (int i = 0; i < array.Length; i++)
-                    array[i].parent = null;
+                    if (array[i] != null)
+                        array[i].parent = null;
             if (this.wizardParticles != null)
                 this.wizardParticles.parent = null;
             if (this.targetEffects != null)
@@ -409,7 +410,8 @@ namespace AxeElement
                 base.transform.DOScale(0f, 0.3f).SetEase(Ease.InOutCubic);
                 if (this.vineTransforms != null)
                     for (int i = 0; i < this.vineTransforms.Length; i++)
-                        this.vineTransforms[i].DOScale(0f, 0.3f).SetEase(Ease.InOutCubic);
+                        if (this.vineTransforms[i] != null)
+                            this.vineTransforms[i].DOScale(0f, 0.3f).SetEase(Ease.InOutCubic);
                 if (this.dustTrail != null) { var _em = this.dustTrail.emission; _em.enabled = false; }
                 UnityEngine.Object.Destroy(base.gameObject, 1f);
             }
@@ -467,6 +469,7 @@ namespace AxeElement
             {
                 for (int i = 1; i < this.vineTransforms.Length - 1; i++)
                 {
+                    if (this.vineTransforms[i] == null) continue;
                     this.vineTransforms[i].DOMoveY(base.transform.position.y + 5f, 0.2f, false).SetEase(Ease.OutCubic).SetDelay((float)(4 - i) * 0.1f);
                     this.vineTransforms[i].DOScale(10f, 0.2f).SetEase(Ease.OutCubic).SetDelay((float)(4 - i) * 0.1f);
                     this.vineTransforms[i].DOScale(5f, 0.2f).SetEase(Ease.OutCubic).SetDelay((float)(4 - i) * 0.1f + 0.2f);

@@ -74,7 +74,8 @@ namespace AxeElement
                 this.sp.PlaySoundComponentInstantiate("event:/sfx/metal/chainmail-cast", 5f);
             if (this.vineTransforms != null)
                 for (int i = 0; i < this.vineTransforms.Length; i++)
-                    this.vineTransforms[i].localScale = Vector3.zero;
+                    if (this.vineTransforms[i] != null)
+                        this.vineTransforms[i].localScale = Vector3.zero;
             this.deathTimer = Time.time + this.START_TIME;
         }
 
@@ -183,13 +184,19 @@ namespace AxeElement
         private void PositionLine()
         {
             if (this.vineTransforms == null || this.vineTransforms.Length == 0 || this.attach == null) return;
-            this.vineTransforms[0].position = this.attach.position;
-            this.vineTransforms[0].rotation = this.attach.rotation;
+            if (this.vineTransforms[0] != null)
+            {
+                this.vineTransforms[0].position = this.attach.position;
+                this.vineTransforms[0].rotation = this.attach.rotation;
+            }
             Transform last = this.vineTransforms[this.vineTransforms.Length - 1];
-            if (this.state == IronWardState.Flying && this.shield != null)
-                last.position = this.shield.position;
-            else if (this.blockedTransform != null)
-                last.position = this.blockedTransform.position + Vector3.up;
+            if (last != null)
+            {
+                if (this.state == IronWardState.Flying && this.shield != null)
+                    last.position = this.shield.position;
+                else if (this.blockedTransform != null)
+                    last.position = this.blockedTransform.position + Vector3.up;
+            }
         }
 
         private void FixedUpdate()
@@ -290,7 +297,8 @@ namespace AxeElement
             }
             if (this.vineTransforms != null)
                 for (int i = 0; i < this.vineTransforms.Length; i++)
-                    this.vineTransforms[i].DOScale(0f, 0.3f);
+                    if (this.vineTransforms[i] != null)
+                        this.vineTransforms[i].DOScale(0f, 0.3f);
             UnityEngine.Object.Destroy(base.gameObject, 1f);
         }
 
@@ -346,6 +354,7 @@ namespace AxeElement
                     if (this.vineTransforms != null)
                         foreach (Transform t in this.vineTransforms)
                         {
+                            if (t == null) continue;
                             t.parent = null;
                             t.DOScale(5f, 0.15f);
                         }

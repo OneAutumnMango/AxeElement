@@ -66,10 +66,12 @@ namespace AxeElement
             this.deathTimer = Time.time + this.START_TIME;
             if (this.vineTransforms1 != null)
                 for (int i = 0; i < this.vineTransforms1.Length; i++)
-                    this.vineTransforms1[i].localScale = Vector3.zero;
+                    if (this.vineTransforms1[i] != null)
+                        this.vineTransforms1[i].localScale = Vector3.zero;
             if (this.vineTransforms2 != null)
                 for (int i = 0; i < this.vineTransforms2.Length; i++)
-                    this.vineTransforms2[i].localScale = Vector3.zero;
+                    if (this.vineTransforms2[i] != null)
+                        this.vineTransforms2[i].localScale = Vector3.zero;
             WizardController wizard = GameUtility.GetWizard(this.id.owner);
             this.caster = (wizard != null) ? wizard.transform : null;
             GameUtility.SetWizardColor(this.id.owner, base.gameObject, false);
@@ -279,23 +281,37 @@ namespace AxeElement
         private void PositionLine()
         {
             if (this.vineTransforms1 == null || this.vineTransforms1.Length == 0) return;
-            this.vineTransforms1[0].position = base.transform.position + Vector3.up;
-            this.vineTransforms1[0].rotation = base.transform.rotation;
+            if (this.vineTransforms1[0] != null)
+            {
+                this.vineTransforms1[0].position = base.transform.position + Vector3.up;
+                this.vineTransforms1[0].rotation = base.transform.rotation;
+            }
             if (this.target != null)
-                this.vineTransforms1[this.vineTransforms1.Length - 1].position = this.target.position + Vector3.up;
+            {
+                var last = this.vineTransforms1[this.vineTransforms1.Length - 1];
+                if (last != null)
+                    last.position = this.target.position + Vector3.up;
+            }
         }
 
         private void PositionLine2()
         {
             if (this.vineTransforms2 == null || this.vineTransforms2.Length == 0) return;
-            this.vineTransforms2[0].position = base.transform.position + Vector3.up;
-            this.vineTransforms2[0].rotation = base.transform.rotation;
-            if (this.target2 != null)
-                this.vineTransforms2[this.vineTransforms2.Length - 1].position = this.target2.position + Vector3.up;
-            else if (this.target2Temp != null)
-                this.vineTransforms2[this.vineTransforms2.Length - 1].position = this.target2Temp.position + Vector3.up;
-            else
-                this.vineTransforms2[this.vineTransforms2.Length - 1].position = base.transform.position + Vector3.up;
+            if (this.vineTransforms2[0] != null)
+            {
+                this.vineTransforms2[0].position = base.transform.position + Vector3.up;
+                this.vineTransforms2[0].rotation = base.transform.rotation;
+            }
+            var last2 = this.vineTransforms2[this.vineTransforms2.Length - 1];
+            if (last2 != null)
+            {
+                if (this.target2 != null)
+                    last2.position = this.target2.position + Vector3.up;
+                else if (this.target2Temp != null)
+                    last2.position = this.target2Temp.position + Vector3.up;
+                else
+                    last2.position = base.transform.position + Vector3.up;
+            }
         }
 
         private void OnDestroy()
@@ -361,10 +377,12 @@ namespace AxeElement
             this.state = TomahawkState.End;
             if (this.vineTransforms1 != null)
                 for (int i = 0; i < this.vineTransforms1.Length; i++)
-                    this.vineTransforms1[i].DOScale(0f, 0.3f);
+                    if (this.vineTransforms1[i] != null)
+                        this.vineTransforms1[i].DOScale(0f, 0.3f);
             if (this.vineTransforms2 != null)
                 for (int i = 0; i < this.vineTransforms2.Length; i++)
-                    this.vineTransforms2[i].DOScale(0f, 0.3f);
+                    if (this.vineTransforms2[i] != null)
+                        this.vineTransforms2[i].DOScale(0f, 0.3f);
             UnityEngine.Object.Destroy(base.gameObject, 2.5f);
         }
 
@@ -433,12 +451,14 @@ namespace AxeElement
             if (this.vineTransforms1 != null)
                 foreach (Transform t in this.vineTransforms1)
                 {
+                    if (t == null) continue;
                     t.parent = null;
                     t.DOScale(5f, 0.3f);
                 }
             if (this.vineTransforms2 != null)
                 for (int i = 0; i < this.vineTransforms2.Length; i++)
-                    this.vineTransforms2[i].DOScale(5f, 0.3f);
+                    if (this.vineTransforms2[i] != null)
+                        this.vineTransforms2[i].DOScale(5f, 0.3f);
         }
 
         public void ShowSweat()
@@ -496,6 +516,7 @@ namespace AxeElement
                 if (this.vineTransforms2 != null)
                     foreach (Transform t in this.vineTransforms2)
                     {
+                        if (t == null) continue;
                         t.parent = null;
                         t.DOScale(2f, 0.3f);
                     }
