@@ -4,17 +4,8 @@ using UnityEngine;
 
 namespace AxeElement
 {
-    public class CleaveShackle : global::Photon.MonoBehaviour
+    public class CleaveShackle : SpellObject
     {
-        public float DAMAGE = 3f;
-        protected float RADIUS = 3.5f;
-        protected float POWER = 2.5f;
-        protected float Y_POWER = 1.4f;
-        protected float START_TIME = 7f;
-
-        public float deathTimer;
-        protected Identity id = new Identity();
-
         // Inspector-assigned from Shackle Object prefab
         public Transform[] vineTransforms;
         public Transform attach;
@@ -32,9 +23,24 @@ namespace AxeElement
         private bool dying;
         private bool started;
 
+        public CleaveShackle()
+        {
+            DAMAGE = 3f;
+            RADIUS = 3.5f;
+            POWER = 2.5f;
+            Y_POWER = 1.4f;
+            START_TIME = 7f;
+        }
+
+        protected override void Awake()
+        {
+            base.Awake();
+            if (id == null) id = new Identity();
+        }
+
         private void Start()
         {
-            this.deathTimer = Time.time + this.START_TIME;
+            deathTimer = Time.time + START_TIME;
             if (this.vineTransforms != null)
                 for (int i = 0; i < this.vineTransforms.Length; i++)
                     this.vineTransforms[i].parent = null;
@@ -57,7 +63,7 @@ namespace AxeElement
             if (!this.started) return;
             if (this.ball == null || this.target == null || this.ankle == null)
             {
-                this.SpellObjectDeath();
+                SpellObjectDeath();
                 return;
             }
             if (this.isAnkle)
@@ -66,8 +72,8 @@ namespace AxeElement
                 base.transform.position = this.ankle.position + Vector3.up;
             base.transform.rotation.SetLookRotation((this.ball.position - base.transform.position).WithY(0f), Vector3.up);
             this.PositionLine();
-            if (this.deathTimer < Time.time)
-                this.SpellObjectDeath();
+            if (deathTimer < Time.time)
+                SpellObjectDeath();
         }
 
         private void FixedUpdate()
@@ -96,7 +102,7 @@ namespace AxeElement
             this.vineTransforms[this.vineTransforms.Length - 1].position = this.ball.position;
         }
 
-        public void SpellObjectDeath()
+        public override void SpellObjectDeath()
         {
             base.photonView.RPCLocal(this, "rpcSpellObjectDeath", PhotonTargets.All, Array.Empty<object>());
         }
@@ -113,7 +119,7 @@ namespace AxeElement
 
         public void localSpellObjectStart(int owner, GameObject enemy, GameObject ballObj)
         {
-            this.id.owner = owner;
+            id.owner = owner;
             GameUtility.SetWizardColor(owner, base.gameObject, false);
             if (enemy == null) return;
             this.target = enemy.transform;

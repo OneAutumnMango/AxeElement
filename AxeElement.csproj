@@ -10,7 +10,7 @@
 	</PropertyGroup>
 
 	<PropertyGroup>
-		<LibDir>..\MageKit\lib</LibDir>
+		<LibDir>..\lib</LibDir>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -76,6 +76,10 @@
 
 		<Reference Include="UnityEngine.Physics2DModule">
 			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\MageQuit\MageQuit_Data\Managed\UnityEngine.Physics2DModule.dll</HintPath>
+		</Reference>
+
+		<Reference Include="Unity.Postprocessing.Runtime">
+			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\MageQuit\MageQuit_Data\Managed\Unity.Postprocessing.Runtime.dll</HintPath>
 		</Reference>
 	</ItemGroup>
 

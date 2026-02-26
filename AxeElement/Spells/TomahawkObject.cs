@@ -6,17 +6,8 @@ using UnityEngine;
 
 namespace AxeElement
 {
-    public class TomahawkObject : global::Photon.MonoBehaviour
+    public class TomahawkObject : SpellObject
     {
-        public float DAMAGE = 10f;
-        protected float RADIUS = 3f;
-        protected float POWER = 25f;
-        protected float START_TIME = 2f;
-
-        public float deathTimer;
-        protected Identity id = new Identity();
-        protected SoundPlayer sp;
-
         // Inspector-assigned from Urchain prefab
         public Transform[] vineTransforms1;
         public Transform[] vineTransforms2;
@@ -36,8 +27,8 @@ namespace AxeElement
         private PhotonView targetView;
         private PhotonView target2View;
         private UnitStatus targetStatus;
-        private float curve;
-        private float velocity;
+        private new float curve;
+        private new float velocity;
         private float stateTimer;
         private Collider col;
         private Transform child;
@@ -52,11 +43,18 @@ namespace AxeElement
         private Vector3 urchainOffset = new Vector3(0f, 3f, 0f);
         public TomahawkState state;
 
-        private Vector3 correctObjectPos;
-
-        private void Awake()
+        public TomahawkObject()
         {
-            this.sp = base.GetComponent<SoundPlayer>();
+            DAMAGE = 10f;
+            RADIUS = 3f;
+            POWER = 25f;
+            START_TIME = 2f;
+        }
+
+        protected override void Awake()
+        {
+            base.Awake();
+            if (id == null) id = new Identity();
         }
 
         private void Start()
@@ -247,7 +245,7 @@ namespace AxeElement
             this.PositionLine2();
         }
 
-        public void SpellObjectDeath()
+        public override void SpellObjectDeath()
         {
             base.photonView.RPCLocal(this, "rpcSpellObjectDeath", PhotonTargets.All, Array.Empty<object>());
         }
@@ -340,11 +338,6 @@ namespace AxeElement
                     }
                 }
             }
-        }
-
-        private void BaseClientCorrection()
-        {
-            base.transform.position = Vector3.Lerp(base.transform.position, this.correctObjectPos, 0.5f);
         }
 
         [PunRPC]
@@ -526,16 +519,7 @@ namespace AxeElement
 
         private void OnPhotonSerializeView(PhotonStream stream, PhotonMessageInfo info)
         {
-            if (stream.isWriting)
-            {
-                stream.SendNext(base.transform.position);
-                stream.SendNext(base.transform.rotation);
-            }
-            else
-            {
-                this.correctObjectPos = (Vector3)stream.ReceiveNext();
-                stream.ReceiveNext(); // rotation
-            }
+            BaseSerialize(stream, info);
         }
 
         public enum TomahawkState

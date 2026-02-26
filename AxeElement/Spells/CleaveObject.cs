@@ -6,17 +6,8 @@ using UnityEngine;
 
 namespace AxeElement
 {
-    public class CleaveObject : global::Photon.MonoBehaviour
+    public class CleaveObject : SpellObject
     {
-        public float DAMAGE = 7f;
-        protected float RADIUS = 3f;
-        protected float POWER = 20f;
-        protected float START_TIME = 7f;
-
-        public float deathTimer;
-        protected Identity id = new Identity();
-        protected SoundPlayer sp;
-
         // Inspector-assigned from Shackle prefab
         public UnityEngine.Object impact;
         public Transform ball;
@@ -27,25 +18,34 @@ namespace AxeElement
         private EventInstance aSource;
         private float volume;
 
-        private void Awake()
+        public CleaveObject()
         {
-            this.sp = base.GetComponent<SoundPlayer>();
+            DAMAGE = 7f;
+            RADIUS = 3f;
+            POWER = 20f;
+            START_TIME = 7f;
+        }
+
+        protected override void Awake()
+        {
+            base.Awake();
+            if (id == null) id = new Identity();
         }
 
         private void Start()
         {
             if (this.ball != null)
                 this.ball.localScale = Vector3.zero;
-            this.deathTimer = Time.time + this.START_TIME;
+            deathTimer = Time.time + START_TIME;
             this.lastPos = base.transform.position;
-            if (this.sp != null)
-                this.aSource = this.sp.PlaySound("event:/sfx/metal/tetherball-roll").SetVolume(0f).SetPitch(1f);
+            if (sp != null)
+                this.aSource = sp.PlaySound("event:/sfx/metal/tetherball-roll").SetVolume(0f).SetPitch(1f);
         }
 
         public void Init(Identity identity)
         {
-            this.id.owner = 0;
-            Collider[] allInSphere = GameUtility.GetAllInSphere(base.transform.position, this.RADIUS, identity.owner, new UnitType[1]);
+            id.owner = 0;
+            Collider[] allInSphere = GameUtility.GetAllInSphere(base.transform.position, RADIUS, identity.owner, new UnitType[1]);
             bool hit = allInSphere.Length > 0;
             List<int> viewIds = new List<int>();
             List<GameObject> enemies = new List<GameObject>();
@@ -92,11 +92,11 @@ namespace AxeElement
             if (this.aSource.isValid())
                 this.aSource.SetVolume(this.volume);
             this.lastPos = base.transform.position;
-            if (this.deathTimer < Time.time && !this.dying)
-                this.SpellObjectDeath();
+            if (deathTimer < Time.time && !this.dying)
+                SpellObjectDeath();
         }
 
-        public void SpellObjectDeath()
+        public override void SpellObjectDeath()
         {
             base.photonView.RPCLocal(this, "rpcSpellObjectDeath", PhotonTargets.All, Array.Empty<object>());
         }
@@ -117,7 +117,7 @@ namespace AxeElement
 
         public void localImpact(int owner, bool hit, GameObject[] enemies, int[] viewIds, GameObject caster, int casterViewId)
         {
-            this.id.owner = 0;
+            id.owner = 0;
             GameUtility.SetWizardColor(owner, base.gameObject, false);
             int ballViewId = -1;
             if (Globals.online && base.photonView != null)
@@ -130,8 +130,8 @@ namespace AxeElement
                 if (Globals.online && enemy.GetPhotonView().IsConnectedAndNotLocal()) continue;
 
                 enemy.GetComponent<PhysicsBody>().AddForce(
-                    GameUtility.GetForceVector(base.transform.position, enemy.transform.position, this.POWER));
-                enemy.GetComponent<UnitStatus>().ApplyDamage(this.DAMAGE, owner, 58);
+                    GameUtility.GetForceVector(base.transform.position, enemy.transform.position, POWER));
+                enemy.GetComponent<UnitStatus>().ApplyDamage(DAMAGE, owner, 58);
 
                 GameObject shackleGo = GameUtility.Instantiate("Objects/Shackle Object",
                     enemy.transform.position,
@@ -150,8 +150,8 @@ namespace AxeElement
                     this.ball.DOScale(14.36213f, 0.3f).SetEase(Ease.InOutCubic);
                 SphereCollider sc = base.GetComponent<SphereCollider>();
                 if (sc != null) sc.enabled = true;
-                if (this.sp != null)
-                    this.sp.PlaySoundComponentInstantiate("event:/sfx/metal/tetherball-cast", 5f);
+                if (sp != null)
+                    sp.PlaySoundComponentInstantiate("event:/sfx/metal/tetherball-cast", 5f);
                 if (this.impact != null)
                     UnityEngine.Object.Instantiate(this.impact, base.transform.position, Globals.sideways);
                 if (caster != null && caster.GetComponent<SpellHandler>() != null)

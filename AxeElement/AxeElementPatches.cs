@@ -1,219 +1,209 @@
+using System.Collections.Generic;
+using System.Reflection;
+using FMOD.Studio;
+using FMODUnity;
 using HarmonyLib;
 using MageQuitModFramework.Data;
-using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
+using UnityEngine.Rendering.PostProcessing;
 using UnityEngine.UI;
 
 namespace AxeElement
 {
-    /// <summary>
-    /// Axe Element Patches for MageQuit.
-    /// Replaces kill-based scoring with placement-based scoring:
-    ///  - 1st place (last alive): 3 points
-    ///  - 2nd place: 2 points
-    ///  - 3rd place: 1 point
-    ///  - 4th place and lower: 0 points
-    /// All original kill/death/damage/healing tracking remains untouched.
-    /// </summary>
+    // ─────────────────────────────────────────────────────────────────────────
+    // Constant aliases for the Axe element and its seven SpellName values.
+    // Element.Ice == 10 is reused as the Axe slot (replaces Ice entirely).
+    // SpellNames 146-152 are appended after ColdFusion (145).
+    // ─────────────────────────────────────────────────────────────────────────
+    public static class Axe
+    {
+        public static readonly Element Element = (Element)10; // same integer as Element.Ice
+
+        public static readonly SpellName Hatchet   = (SpellName)146;
+        public static readonly SpellName Lunge     = (SpellName)147;
+        public static readonly SpellName Cleave    = (SpellName)148;
+        public static readonly SpellName Tomahawk  = (SpellName)149;
+        public static readonly SpellName IronWard  = (SpellName)150;
+        public static readonly SpellName Shatter   = (SpellName)151;
+        public static readonly SpellName Whirlwind = (SpellName)152;
+    }
+
     [HarmonyPatch]
     public static class AxeElementPatches
     {
-        private static Dictionary<int, int> totalPoints = [];
-        private static Dictionary<int, int> roundPoints = [];
-        private static List<int> deathOrder   = [];
-        private static Dictionary<Score, int> aggregateCache = [];
-
         public static void Initialize()
         {
-            GameEventsObserver.SubscribeToRoundStart(ResetRound);
+            // One-time setup (called from AxeElementModule.OnLoad)
         }
+    }
 
-        public static int GetTotalPoints(int playerId) =>
-            totalPoints.TryGetValue(playerId, out int pts) ? pts : 0;
-
-        public static int GetRoundPoints(int playerId) =>
-            roundPoints.TryGetValue(playerId, out int pts) ? pts : 0;
-
-        private static int OriginalSumKills(Score score)
+    // ─────────────────────────────────────────────────────────────────────────
+    // SpellManager.Awake — register all 7 Axe spells after the vanilla
+    // spells have been populated, and replace Ice spells in the element slot.
+    // ─────────────────────────────────────────────────────────────────────────
+    [HarmonyPatch(typeof(SpellManager), "Awake")]
+    public static class AxeSpellManagerPatch
+    {
+        [HarmonyPostfix]
+        public static void Postfix(SpellManager __instance)
         {
-            if (score.kills == null || score.kills.Count == 0)
-                return 0;
-            return score.kills.Count(x => x != -1) - score.kills.Count(x => x == -1);
+            var spellTable = Traverse.Create(__instance)
+                .Field("spell_table")
+                .GetValue<Dictionary<SpellName, Spell>>();
+
+            AxeRegistration.RegisterSpells(__instance, spellTable);
         }
+    }
 
-        private static void AwardRoundPoints()
+    // ─────────────────────────────────────────────────────────────────────────
+    // WizardStatus.rpcApplyDamage — notify IronWard and Whirlwind objects
+    // whenever the wizard takes damage (mirrors chainmail + DoubleStrike hooks).
+    // ─────────────────────────────────────────────────────────────────────────
+    [HarmonyPatch(typeof(WizardStatus), "rpcApplyDamage")]
+    public static class AxeWizardStatusPatch
+    {
+        [HarmonyPostfix]
+        public static void Postfix(WizardStatus __instance, float damage, int owner, int spellId)
         {
-            roundPoints.Clear();
+            IronWardObject.NotifyDamage(owner, damage, __instance);
+            WhirlwindObject.NotifyDamage(owner, damage, __instance as UnitStatus);
+        }
+    }
 
-            if (PlayerManager.round <= 0)
+    // ─────────────────────────────────────────────────────────────────────────
+    // GameSettings constructor — ensure elements array is large enough.
+    // Since Axe reuses the Ice slot (10) no expansion is needed, but we
+    // keep this patch for safety in case the array is shorter than expected.
+    // ─────────────────────────────────────────────────────────────────────────
+    [HarmonyPatch(typeof(GameSettings), MethodType.Constructor)]
+    public static class AxeGameSettingsPatch
+    {
+        [HarmonyPostfix]
+        public static void Postfix(GameSettings __instance)
+        {
+            int needed = AvailableElements.unlockOrder != null
+                ? AvailableElements.unlockOrder.Length
+                : 11;
+            if (__instance.elements != null && __instance.elements.Length < needed)
+            {
+                var expanded = new ElementInclusionMode[needed];
+                __instance.elements.CopyTo(expanded, 0);
+                __instance.elements = expanded;
+            }
+        }
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // ElementColorMapping.Start — Override Ice stage visuals with steel/grey.
+    // ─────────────────────────────────────────────────────────────────────────
+    [HarmonyPatch(typeof(ElementColorMapping), "Start")]
+    public static class AxeElementColorMappingPatch
+    {
+        [HarmonyPostfix]
+        public static void Postfix(ElementColorMapping __instance)
+        {
+            if (__instance.element != Axe.Element)
                 return;
 
-            foreach (var kvp in PlayerManager.players)
+            // Override post-processing with steel/grey theme
+            Bloom bloom = null;
+            Vignette vignette = null;
+
+            var profileField = typeof(ElementColorMapping).GetField("profile",
+                BindingFlags.Public | BindingFlags.Instance);
+            if (profileField == null) return;
+
+            var profile = profileField.GetValue(__instance) as PostProcessProfile;
+            if (profile == null) return;
+
+            profile.TryGetSettings(out bloom);
+            profile.TryGetSettings(out vignette);
+
+            if (bloom != null)
+                bloom.intensity.value = 2.0f;
+            if (vignette != null)
             {
-                int idx = deathOrder.IndexOf(kvp.Key);
-                int place = idx == -1 ? 0 : (PlayerManager.players.Count - 1 - idx);
+                vignette.color.value = new Color(0.45f, 0.45f, 0.50f);
+                vignette.intensity.value = 0.35f;
+            }
 
-                int pts = Mathf.Max(0, Mathf.Min(PlayerManager.players.Count - place - 1, 3 - place));
+            // Replace ambient sound: fade out ice, fade in metal/fire as placeholder
+            var ambientField = typeof(ElementColorMapping).GetField("ambientInstance",
+                BindingFlags.Public | BindingFlags.Static);
+            if (ambientField != null)
+            {
+                var existing = (EventInstance)ambientField.GetValue(null);
+                if (existing.isValid())
+                    existing.FadeSoundOut(0f, 0.5f, 0f);
 
-                Plugin.Log.LogDebug($"AwardRoundPoints: PlayerId={kvp.Key}, Index={idx}, Place={place}, Points={pts}");
-                roundPoints[kvp.Key] = pts;
+                var newInstance = RuntimeManager.CreateInstance("event:/sfx/ambience/fire");
+                newInstance.FadeSoundIn(0f, 2f, 0f);
+                newInstance.start();
+                ambientField.SetValue(null, newInstance);
             }
         }
+    }
 
-        private static void ResetRound()
-        {
-            deathOrder.Clear();
-            roundPoints.Clear();
-            aggregateCache.Clear();
-
-            if (PlayerManager.round <= 1)
-                totalPoints.Clear();
-        }
-
-        /// <summary>
-        /// Record death order when a wizard dies.
-        /// </summary>
-        [HarmonyPatch(typeof(WizardStatus), nameof(WizardStatus.DieRightNow))]
+    // ─────────────────────────────────────────────────────────────────────────
+    // VideoSpellPlayer — Override draft UI colors for element index 10.
+    // ─────────────────────────────────────────────────────────────────────────
+    [HarmonyPatch(typeof(VideoSpellPlayer), "SlideIn")]
+    public static class AxeVideoSpellPlayerPatch
+    {
         [HarmonyPrefix]
-        private static void TrackDeath(WizardStatus __instance)
+        public static void Prefix(VideoSpellPlayer __instance)
         {
-            if (Globals.round_recap_manager != null && Globals.round_recap_manager.scoresSent)
-                return;
+            // Override darkColors[10] and lightColors[10] with steel/grey
+            var darkField = typeof(VideoSpellPlayer).GetField("darkColors",
+                BindingFlags.Public | BindingFlags.Instance);
+            var lightField = typeof(VideoSpellPlayer).GetField("lightColors",
+                BindingFlags.Public | BindingFlags.Instance);
 
-            var wc = __instance.GetComponent<WizardController>();
-            if (wc != null && !wc.isClone)
+            if (darkField != null)
             {
-                int owner = __instance.GetComponent<Identity>().owner;
-                if (!deathOrder.Contains(owner))
-                {
-                    deathOrder.Add(owner);
-                    Plugin.Log.LogDebug($"TrackDeath: Added owner {owner} to deathOrder. Current order: [{string.Join(",", deathOrder)}]");
-                }
-                else
-                {
-                    Plugin.Log.LogDebug($"TrackDeath: Owner {owner} already in deathOrder. Current order: [{string.Join(",", deathOrder)}]");
-                }
-            }
-        }
-
-        /// <summary>
-        /// Award placement points before the recap screen initializes.
-        /// </summary>
-        [HarmonyPatch(typeof(RoundRecapManager), nameof(RoundRecapManager.Initialize))]
-        [HarmonyPrefix]
-        private static void AwardPoints()
-        {
-            AwardRoundPoints();
-            aggregateCache.Clear();
-        }
-
-        /// <summary>
-        /// Intercept SumKills() -- return placement points instead of kill count.
-        /// </summary>
-        [HarmonyPatch(typeof(Score), nameof(Score.SumKills))]
-        [HarmonyPrefix]
-        private static bool PatchSumKills(Score __instance, ref int __result)
-        {
-            if (PlayerManager.players == null)
-                return true;
-
-            foreach (var kvp in PlayerManager.players)
-            {
-                if (kvp.Value.totalScore == __instance)
-                {
-                    __result = GetTotalPoints(kvp.Key);
-                    return false;
-                }
-                if (kvp.Value.roundScore == __instance)
-                {
-                    __result = GetRoundPoints(kvp.Key);
-                    return false;
-                }
+                var darkColors = darkField.GetValue(__instance) as Color[];
+                if (darkColors != null && darkColors.Length > 10)
+                    darkColors[10] = new Color(0.3f, 0.3f, 0.35f);
             }
 
-            if (aggregateCache.TryGetValue(__instance, out int cached))
+            if (lightField != null)
             {
-                __result = cached;
-                return false;
+                var lightColors = lightField.GetValue(__instance) as Color[];
+                if (lightColors != null && lightColors.Length > 10)
+                    lightColors[10] = new Color(0.7f, 0.7f, 0.75f);
             }
-
-            __result = OriginalSumKills(__instance);
-            return false;
         }
+    }
 
-        /// <summary>
-        /// Track aggregate Score objects (team totals) built via AddScore.
-        /// </summary>
-        [HarmonyPatch(typeof(Score), nameof(Score.AddScore), new[] { typeof(Score) })]
+    // ─────────────────────────────────────────────────────────────────────────
+    // SelectionMenu.ShowElementTooltip — Replace "Ice" name with "Axe".
+    // ─────────────────────────────────────────────────────────────────────────
+    [HarmonyPatch(typeof(SelectionMenu), "ShowElementTooltip")]
+    public static class AxeSelectionMenuPatch
+    {
         [HarmonyPostfix]
-        private static void TrackAggregates(Score __instance, Score score)
+        public static void Postfix(SelectionMenu __instance)
         {
-            if (PlayerManager.players == null)
-                return;
-
-            foreach (var kvp in PlayerManager.players)
+            // The tooltip text field displays the element name from ToString().
+            // Replace "Ice" with "Axe" in whatever text was set.
+            var tooltipField = typeof(SelectionMenu).GetField("tooltipText",
+                BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance);
+            if (tooltipField != null)
             {
-                if (kvp.Value.totalScore == score)
-                {
-                    if (!aggregateCache.ContainsKey(__instance))
-                        aggregateCache[__instance] = 0;
-                    aggregateCache[__instance] += GetTotalPoints(kvp.Key);
-                    return;
-                }
-            }
-        }
-
-        /// <summary>
-        /// Rename "Kills:" label to "Points" on the final stats popup.
-        /// </summary>
-        [HarmonyPatch(typeof(RecapCard), nameof(RecapCard.ShowStats))]
-        [HarmonyPostfix]
-        private static void RenameKillsLabel(RecapCard __instance)
-        {
-            foreach (var text in __instance.stats.GetComponentsInChildren<Text>())
-            {
-                if (text.text == "Kills:")
-                {
-                    text.text = "Points:";
-                    break;
-                }
-            }
-        }
-
-        /// <summary>
-        /// Override the round recap gem display to show placement points.
-        /// Runs AFTER Initialize to fix mostKills, suppress suicides, and
-        /// replace roundScore.kills with fake entries matching each player
-        /// point count, so the NewKills animation shows the right gem count.
-        /// </summary>
-        [HarmonyPatch(typeof(RoundRecapManager), nameof(RoundRecapManager.Initialize))]
-        [HarmonyPostfix]
-        private static void OverrideRecapDisplay(RoundRecapManager __instance)
-        {
-            int maxPts = 0;
-
-            foreach (var kvp in PlayerManager.players)
-            {
-                int pts = GetRoundPoints(kvp.Key);
-                if (!totalPoints.ContainsKey(kvp.Key))
-                    totalPoints[kvp.Key] = 0;
-                totalPoints[kvp.Key] += pts;
-                Plugin.Log.LogDebug($"CommitRoundPoints: PlayerId={kvp.Key}, Points={pts}, Total={totalPoints[kvp.Key]}");
+                var textObj = tooltipField.GetValue(__instance);
+                if (textObj is Text uiText && uiText.text != null)
+                    uiText.text = uiText.text.Replace("Ice", "Axe");
             }
 
-            foreach (var kvp in PlayerManager.players)
+            // Also try alternative field name
+            var altField = typeof(SelectionMenu).GetField("tooltip",
+                BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance);
+            if (altField != null)
             {
-                int pts = GetRoundPoints(kvp.Key);
-                maxPts = Mathf.Max(pts, maxPts);
-
-                kvp.Value.roundScore.kills = [.. Enumerable.Repeat(kvp.Key, pts)];
+                var textObj = altField.GetValue(__instance);
+                if (textObj is Text uiText && uiText.text != null)
+                    uiText.text = uiText.text.Replace("Ice", "Axe");
             }
-
-            var t = Traverse.Create(__instance);
-            t.Field("mostKills").SetValue(maxPts);
-            t.Field("showSuicides").SetValue(false);
-            t.Field("suicides").GetValue<Dictionary<int, bool>>().Clear();
         }
     }
 }

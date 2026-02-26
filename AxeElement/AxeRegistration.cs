@@ -1,42 +1,17 @@
-using System;
 using System.Collections.Generic;
 using HarmonyLib;
 using UnityEngine;
 
 namespace AxeElement
 {
-    // ─────────────────────────────────────────────────────────────────────────
-    // Constant aliases for the Axe element and its seven SpellName values.
-    // Element.Ice == 10 is reused as the Axe slot (replaces Ice entirely).
-    // SpellNames 146-152 are appended after ColdFusion (145).
-    // ─────────────────────────────────────────────────────────────────────────
-    public static class Axe
+    /// <summary>
+    /// Spell definition and registration. Called from AxeElementPatches during SpellManager.Awake.
+    /// Contains spell metadata (cooldowns, windups, descriptions, etc.) and AI draft priority setup.
+    /// </summary>
+    public static class AxeRegistration
     {
-        public static readonly Element Element = (Element)10; // same integer as Element.Ice
-
-        public static readonly SpellName Hatchet  = (SpellName)146;
-        public static readonly SpellName Lunge    = (SpellName)147;
-        public static readonly SpellName Cleave   = (SpellName)148;
-        public static readonly SpellName Tomahawk = (SpellName)149;
-        public static readonly SpellName IronWard = (SpellName)150;
-        public static readonly SpellName Shatter  = (SpellName)151;
-        public static readonly SpellName Whirlwind = (SpellName)152;
-    }
-
-    // ─────────────────────────────────────────────────────────────────────────
-    // SpellManager.Awake — register all 7 Axe spells after the vanilla
-    // spells have been populated, and replace Ice spells in the element slot.
-    // ─────────────────────────────────────────────────────────────────────────
-    [HarmonyPatch(typeof(SpellManager), "Awake")]
-    public static class AxeSpellManagerPatch
-    {
-        [HarmonyPostfix]
-        public static void Postfix(SpellManager __instance)
+        public static void RegisterSpells(SpellManager manager, Dictionary<SpellName, Spell> spellTable)
         {
-            var spellTable = Traverse.Create(__instance)
-                .Field("spell_table")
-                .GetValue<Dictionary<SpellName, Spell>>();
-
             // Reassign existing Ice spells to Tutorial element slot (11)
             // so the Axe element slot (10) is exclusively Axe.
             foreach (var kv in spellTable)
@@ -46,7 +21,7 @@ namespace AxeElement
             }
 
             // ── Hatchet (Primary) ──────────────────────────────────────────
-            var hatchet = __instance.gameObject.AddComponent<Hatchet>();
+            var hatchet = manager.gameObject.AddComponent<Hatchet>();
             hatchet.spellName        = Axe.Hatchet;
             hatchet.element          = Axe.Element;
             hatchet.spellButton      = SpellButton.Primary;
@@ -60,10 +35,10 @@ namespace AxeElement
             hatchet.minRange         = 5f;
             hatchet.maxRange         = 30f;
             hatchet.uses             = SpellUses.Attack;
-            spellTable[Axe.Hatchet] = hatchet;
+            spellTable[Axe.Hatchet]  = hatchet;
 
             // ── Lunge (Movement) ───────────────────────────────────────────
-            var lunge = __instance.gameObject.AddComponent<Lunge>();
+            var lunge = manager.gameObject.AddComponent<Lunge>();
             lunge.spellName         = Axe.Lunge;
             lunge.element           = Axe.Element;
             lunge.spellButton       = SpellButton.Movement;
@@ -98,7 +73,7 @@ namespace AxeElement
             spellTable[Axe.Lunge] = lunge;
 
             // ── Cleave (Melee) ─────────────────────────────────────────────
-            var cleave = __instance.gameObject.AddComponent<Cleave>();
+            var cleave = manager.gameObject.AddComponent<Cleave>();
             cleave.spellName        = Axe.Cleave;
             cleave.element          = Axe.Element;
             cleave.spellButton      = SpellButton.Melee;
@@ -112,78 +87,78 @@ namespace AxeElement
             cleave.minRange         = 0f;
             cleave.maxRange         = 4f;
             cleave.uses             = SpellUses.Attack;
-            spellTable[Axe.Cleave] = cleave;
+            spellTable[Axe.Cleave]  = cleave;
 
             // ── Tomahawk (Secondary) ───────────────────────────────────────
-            var tomahawk = __instance.gameObject.AddComponent<Tomahawk>();
-            tomahawk.spellName      = Axe.Tomahawk;
-            tomahawk.element        = Axe.Element;
-            tomahawk.spellButton    = SpellButton.Secondary;
-            tomahawk.description    = "Throw a tomahawk that sticks to the first target, then leaps to a second and pulls them together.";
-            tomahawk.cooldown       = 7f;
-            tomahawk.windUp         = 0.5f;
-            tomahawk.windDown       = 0.4f;
-            tomahawk.animationName  = "Attack";
+            var tomahawk = manager.gameObject.AddComponent<Tomahawk>();
+            tomahawk.spellName       = Axe.Tomahawk;
+            tomahawk.element         = Axe.Element;
+            tomahawk.spellButton     = SpellButton.Secondary;
+            tomahawk.description     = "Throw a tomahawk that sticks to the first target, then leaps to a second and pulls them together.";
+            tomahawk.cooldown        = 7f;
+            tomahawk.windUp          = 0.5f;
+            tomahawk.windDown        = 0.4f;
+            tomahawk.animationName   = "Attack";
             tomahawk.curveMultiplier = 1.0f;
             tomahawk.initialVelocity = 0.35f;
-            tomahawk.minRange       = 5f;
-            tomahawk.maxRange       = 30f;
-            tomahawk.uses           = SpellUses.Attack;
+            tomahawk.minRange        = 5f;
+            tomahawk.maxRange        = 30f;
+            tomahawk.uses            = SpellUses.Attack;
             spellTable[Axe.Tomahawk] = tomahawk;
 
             // ── IronWard (Defensive) ───────────────────────────────────────
-            var ironWard = __instance.gameObject.AddComponent<IronWard>();
-            ironWard.spellName      = Axe.IronWard;
-            ironWard.element        = Axe.Element;
-            ironWard.spellButton    = SpellButton.Defensive;
-            ironWard.description    = "Summon a ward that intercepts incoming damage and hurls it back at the attacker.";
-            ironWard.cooldown       = 10f;
-            ironWard.windUp         = 0.35f;
-            ironWard.windDown       = 0.35f;
-            ironWard.animationName  = "Defensive";
+            var ironWard = manager.gameObject.AddComponent<IronWard>();
+            ironWard.spellName       = Axe.IronWard;
+            ironWard.element         = Axe.Element;
+            ironWard.spellButton     = SpellButton.Defensive;
+            ironWard.description     = "Summon a ward that intercepts incoming damage and hurls it back at the attacker.";
+            ironWard.cooldown        = 10f;
+            ironWard.windUp          = 0.35f;
+            ironWard.windDown        = 0.35f;
+            ironWard.animationName   = "Defensive";
             ironWard.curveMultiplier = 0f;
             ironWard.initialVelocity = 0f;
-            ironWard.minRange       = 0f;
-            ironWard.maxRange       = 0f;
-            ironWard.uses           = SpellUses.Defend | SpellUses.Custom;
+            ironWard.minRange        = 0f;
+            ironWard.maxRange        = 0f;
+            ironWard.uses            = SpellUses.Defend | SpellUses.Custom;
             spellTable[Axe.IronWard] = ironWard;
 
             // ── Shatter (Utility) ──────────────────────────────────────────
-            var shatter = __instance.gameObject.AddComponent<Shatter>();
-            shatter.spellName       = Axe.Shatter;
-            shatter.element         = Axe.Element;
-            shatter.spellButton     = SpellButton.Utility;
-            shatter.description     = "Launch a shatter-blade that, on hit, calls down a crushing hammer on the target.";
-            shatter.cooldown        = 8f;
-            shatter.windUp          = 0.35f;
-            shatter.windDown        = 0.35f;
-            shatter.animationName   = "Attack";
-            shatter.curveMultiplier = 0.5f;
-            shatter.initialVelocity = 0.4f;
-            shatter.minRange        = 5f;
-            shatter.maxRange        = 30f;
-            shatter.uses            = SpellUses.Attack;
-            spellTable[Axe.Shatter] = shatter;
+            var shatter = manager.gameObject.AddComponent<Shatter>();
+            shatter.spellName        = Axe.Shatter;
+            shatter.element          = Axe.Element;
+            shatter.spellButton      = SpellButton.Utility;
+            shatter.description      = "Launch a shatter-blade that, on hit, calls down a crushing hammer on the target.";
+            shatter.cooldown         = 8f;
+            shatter.windUp           = 0.35f;
+            shatter.windDown         = 0.35f;
+            shatter.animationName    = "Attack";
+            shatter.curveMultiplier  = 0.5f;
+            shatter.initialVelocity  = 0.4f;
+            shatter.minRange         = 5f;
+            shatter.maxRange         = 30f;
+            shatter.uses             = SpellUses.Attack;
+            spellTable[Axe.Shatter]  = shatter;
 
             // ── Whirlwind (Ultimate) ───────────────────────────────────────
-            var whirlwind = __instance.gameObject.AddComponent<Whirlwind>();
-            whirlwind.spellName      = Axe.Whirlwind;
-            whirlwind.element        = Axe.Element;
-            whirlwind.spellButton    = SpellButton.Ultimate;
-            whirlwind.description    = "Enter a berserker state; teleport to and devastate every enemy that has hurt you.";
-            whirlwind.cooldown       = 20f;
-            whirlwind.windUp         = 1.3f;
-            whirlwind.windDown       = 0.5f;
-            whirlwind.animationName  = "SelfCast";
+            var whirlwind = manager.gameObject.AddComponent<Whirlwind>();
+            whirlwind.spellName       = Axe.Whirlwind;
+            whirlwind.element         = Axe.Element;
+            whirlwind.spellButton     = SpellButton.Ultimate;
+            whirlwind.description     = "Enter a berserker state; teleport to and devastate every enemy that has hurt you.";
+            whirlwind.cooldown        = 20f;
+            whirlwind.windUp          = 1.3f;
+            whirlwind.windDown        = 0.5f;
+            whirlwind.animationName   = "SelfCast";
             whirlwind.curveMultiplier = 1.0f;
             whirlwind.initialVelocity = 0f;
-            whirlwind.minRange       = 0f;
-            whirlwind.maxRange       = 0f;
-            whirlwind.uses           = SpellUses.Attack | SpellUses.Custom;
+            whirlwind.minRange        = 0f;
+            whirlwind.maxRange        = 0f;
+            whirlwind.uses            = SpellUses.Attack | SpellUses.Custom;
             spellTable[Axe.Whirlwind] = whirlwind;
 
             // ── AI draft priority ──────────────────────────────────────────
-            var aiDraft = Traverse.Create(__instance)
+            var aiDraft = Traverse.Create(manager)
                 .Field("ai_draft_priority")
                 .GetValue<Dictionary<SpellButton, List<SpellName>>>();
 
@@ -204,47 +179,15 @@ namespace AxeElement
                 if (aiDraft.ContainsKey(SpellButton.Ultimate))
                     aiDraft[SpellButton.Ultimate].Add(Axe.Whirlwind);
             }
-        }
-    }
 
-    // ─────────────────────────────────────────────────────────────────────────
-    // WizardStatus.rpcApplyDamage — notify IronWard and Whirlwind objects
-    // whenever the wizard takes damage (mirrors chainmail + DoubleStrike hooks).
-    // ─────────────────────────────────────────────────────────────────────────
-    [HarmonyPatch(typeof(WizardStatus), "rpcApplyDamage")]
-    public static class AxeWizardStatusPatch
-    {
-        [HarmonyPostfix]
-        public static void Postfix(WizardStatus __instance, float damage, int owner, int spellId)
-        {
-            // IronWard — mirrors chainmail notification
-            IronWardObject.NotifyDamage(owner, damage, __instance);
+            // ── UI colors ──────────────────────────────────────────────────
+            // Steel/grey spell color for the Axe element in cooldown UI
+            if (manager.spellColors != null && manager.spellColors.Length > 10)
+                manager.spellColors[10] = new Color(0.6f, 0.6f, 0.65f);
 
-            // Whirlwind — mirrors DoubleStrike.RegisterDamage notification
-            WhirlwindObject.NotifyDamage(owner, damage, __instance as UnitStatus);
-        }
-    }
-
-    // ─────────────────────────────────────────────────────────────────────────
-    // GameSettings constructor — ensure elements array is large enough.
-    // Since Axe reuses the Ice slot (10) no expansion is needed, but we
-    // keep this patch for safety in case the array is shorter than expected.
-    // ─────────────────────────────────────────────────────────────────────────
-    [HarmonyPatch(typeof(GameSettings), MethodType.Constructor)]
-    public static class AxeGameSettingsPatch
-    {
-        [HarmonyPostfix]
-        public static void Postfix(GameSettings __instance)
-        {
-            int needed = AvailableElements.unlockOrder != null
-                ? AvailableElements.unlockOrder.Length
-                : 11;
-            if (__instance.elements != null && __instance.elements.Length < needed)
-            {
-                var expanded = new ElementInclusionMode[needed];
-                __instance.elements.CopyTo(expanded, 0);
-                __instance.elements = expanded;
-            }
+            // Steel/grey icon emission color
+            if (Globals.iconEmissionColors != null && Globals.iconEmissionColors.Length > 10)
+                Globals.iconEmissionColors[10] = new Color(0.35f, 0.35f, 0.38f);
         }
     }
 }

@@ -5,16 +5,15 @@ using UnityEngine;
 
 namespace AxeElement
 {
-    public class ShatterObject : global::Photon.MonoBehaviour
+    public class ShatterObject : SpellObject
     {
-        public float DAMAGE = 7f;
-        protected float RADIUS = 0f;
-        protected float POWER = 0f;
-        protected float START_TIME = 1.156f;
-
-        public float deathTimer;
-        protected Identity id = new Identity();
-        protected SoundPlayer sp;
+        public ShatterObject()
+        {
+            DAMAGE = 7f;
+            RADIUS = 0f;
+            POWER = 0f;
+            START_TIME = 1.156f;
+        }
 
         // Inspector-assigned from Reflex prefab
         public UnityEngine.Object impact;
@@ -28,14 +27,14 @@ namespace AxeElement
         private Transform hammer;
         private Transform target;
         private EventInstance aSource;
-        private float curve;
-        private float velocity;
+        private new float curve;
+        private new float velocity;
 
-        private Vector3 correctObjectPos;
-
-        private void Awake()
+        protected override void Awake()
         {
-            this.sp = base.GetComponent<SoundPlayer>();
+            base.Awake();
+            if (this.id == null)
+                this.id = new Identity();
         }
 
         private void Start()
@@ -99,7 +98,7 @@ namespace AxeElement
                 this.SpellObjectDeath();
         }
 
-        public void SpellObjectDeath()
+        public override void SpellObjectDeath()
         {
             base.photonView.RPCLocal(this, "rpcSpellObjectDeath", PhotonTargets.All, Array.Empty<object>());
         }
@@ -234,23 +233,9 @@ namespace AxeElement
             }
         }
 
-        private void BaseClientCorrection()
-        {
-            base.transform.position = Vector3.Lerp(base.transform.position, this.correctObjectPos, 0.5f);
-        }
-
         private void OnPhotonSerializeView(PhotonStream stream, PhotonMessageInfo info)
         {
-            if (stream.isWriting)
-            {
-                stream.SendNext(base.transform.position);
-                stream.SendNext(base.transform.rotation);
-            }
-            else
-            {
-                this.correctObjectPos = (Vector3)stream.ReceiveNext();
-                stream.ReceiveNext();
-            }
+            this.BaseSerialize(stream, info);
         }
     }
 }

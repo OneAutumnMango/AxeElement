@@ -6,21 +6,8 @@ using UnityEngine;
 
 namespace AxeElement
 {
-    public class HatchetObject : global::Photon.MonoBehaviour
+    public class HatchetObject : SpellObject
     {
-        public float DAMAGE = 7f;
-        protected float RADIUS = 4f;
-        protected float POWER = 30f;
-        protected float Y_POWER = 0f;
-        protected float START_TIME = 1.2f;
-
-        public float deathTimer;
-        public float collisionRadius = 1f;
-        public float velocity;
-        public float curve;
-        protected Identity id = new Identity();
-        protected SoundPlayer sp;
-
         // Inspector-assigned fields matching the Glaive prefab
         public UnityEngine.Object impact;
 
@@ -39,9 +26,20 @@ namespace AxeElement
         private EventInstance aSource;
         private Collision cachedCollision;
 
-        private void Awake()
+        public HatchetObject()
         {
-            this.sp = base.GetComponent<SoundPlayer>();
+            DAMAGE = 7f;
+            RADIUS = 4f;
+            POWER = 30f;
+            Y_POWER = 0f;
+            START_TIME = 1.2f;
+            collisionRadius = 1f;
+        }
+
+        protected override void Awake()
+        {
+            base.Awake();
+            if (id == null) id = new Identity();
         }
 
         private void Start()
@@ -49,28 +47,28 @@ namespace AxeElement
             this.child = base.transform.GetChild(0);
             this.phys = base.GetComponent<PhysicsBody>();
             this.noSelfHitTimer = Time.time + 0.17f;
-            if (this.sp != null)
+            if (sp != null)
             {
-                this.aSource = this.sp.PlaySound("event:/sfx/metal/glaive-cast");
+                this.aSource = sp.PlaySound("event:/sfx/metal/glaive-cast");
             }
-            this.SpellObjectStart();
+            SpellObjectStart();
         }
 
-        public void SpellObjectStart()
+        public override void SpellObjectStart()
         {
-            this.deathTimer = Time.time + this.START_TIME;
-            WizardController wizard = GameUtility.GetWizard(this.id.owner);
+            base.SpellObjectStart();
+            WizardController wizard = GameUtility.GetWizard(id.owner);
             this.caster = (wizard != null) ? wizard.transform : null;
-            GameUtility.SetWizardColor(this.id.owner, base.gameObject, false);
+            UpdateColor();
         }
 
         public void Init(Identity identity, float curve, float velocity)
         {
-            this.id.owner = identity.owner;
+            id.owner = identity.owner;
             this.caster = identity.transform;
             this.curve = curve;
             this.velocity = velocity;
-            this.ChangeToSpellLayerDelayed(velocity);
+            ChangeToSpellLayerDelayed(velocity);
             if (!base.photonView.IsConnectedAndNotLocal())
             {
                 base.photonView.RPCLocal(this, "rpcSpellObjectStart", PhotonTargets.All, new object[]
@@ -82,11 +80,6 @@ namespace AxeElement
                     velocity
                 });
             }
-        }
-
-        private void ChangeToSpellLayerDelayed(float vel)
-        {
-            base.gameObject.layer = 0;
         }
 
         private void FixedUpdate()
@@ -152,7 +145,7 @@ namespace AxeElement
 
             if (base.photonView.IsConnectedAndNotLocal())
             {
-                this.BaseClientCorrection();
+                BaseClientCorrection();
                 return;
             }
 
@@ -163,21 +156,13 @@ namespace AxeElement
                 this.noHitTimer = 0f;
             }
 
-            if (this.deathTimer < Time.time)
+            if (deathTimer < Time.time)
             {
-                this.SpellObjectDeath();
+                SpellObjectDeath();
             }
         }
 
-        private void BaseClientCorrection()
-        {
-            base.transform.position = Vector3.Lerp(base.transform.position, this.correctObjectPos, 0.5f);
-        }
-
-        private Vector3 correctObjectPos;
-        private Quaternion correctObjectRot;
-
-        public void SpellObjectDeath()
+        public override void SpellObjectDeath()
         {
             base.photonView.RPCLocal(this, "rpcSpellObjectDeath", PhotonTargets.All, Array.Empty<object>());
         }
@@ -191,7 +176,7 @@ namespace AxeElement
                 return;
             }
             GameObject gameObject = collision.gameObject;
-            if (this.noSelfHitTimer > Time.time && GameUtility.IdentityCompare(gameObject, this.id.owner)) return;
+            if (this.noSelfHitTimer > Time.time && GameUtility.IdentityCompare(gameObject, id.owner)) return;
             this.Collide(collision);
         }
 
@@ -221,7 +206,7 @@ namespace AxeElement
 
                 if (!this.homing)
                 {
-                    this.deathTimer += 4f;
+                    deathTimer += 4f;
                     this.initialTarget = gameObject;
                     this.homing = true;
 
@@ -246,18 +231,18 @@ namespace AxeElement
 
                 base.photonView.RPCLocal(this, "rpcCollision", PhotonTargets.All, new object[] { gameObject.transform.position });
 
-                Collider[] aoeSphere = GameUtility.GetAllInSphere(base.transform.position, this.RADIUS, this.id.owner, new UnitType[1]);
+                Collider[] aoeSphere = GameUtility.GetAllInSphere(base.transform.position, RADIUS, id.owner, new UnitType[1]);
                 for (int i = 0; i < aoeSphere.Length; i++)
                 {
                     GameObject go2 = aoeSphere[i].transform.root.gameObject;
-                    go2.GetComponent<PhysicsBody>().AddForceOwner(GameUtility.GetForceVector(base.transform.position, go2.transform.position, this.POWER));
+                    go2.GetComponent<PhysicsBody>().AddForceOwner(GameUtility.GetForceVector(base.transform.position, go2.transform.position, POWER));
                     go2.GetComponent<UnitStatus>().ApplyDamage(
-                        (go2 == gameObject) ? this.DAMAGE : (this.DAMAGE * 0.5f),
-                        this.id.owner, 56);
+                        (go2 == gameObject) ? DAMAGE : (DAMAGE * 0.5f),
+                        id.owner, 56);
                 }
 
                 if (this.target == null || this.target.gameObject == gameObject)
-                    this.SpellObjectDeath();
+                    SpellObjectDeath();
             }
         }
 
@@ -274,34 +259,25 @@ namespace AxeElement
         [PunRPC]
         public void rpcSpellObjectStart(int owner, Vector3 pos, Quaternion rot, float curve, float velocity)
         {
-            this.id.owner = owner;
+            id.owner = owner;
             base.transform.position = pos;
             base.transform.rotation = rot;
             this.curve = curve;
             this.velocity = velocity;
-            this.SpellObjectStart();
+            SpellObjectStart();
         }
 
         private void OnPhotonSerializeView(PhotonStream stream, PhotonMessageInfo info)
         {
-            if (stream.isWriting)
-            {
-                stream.SendNext(base.transform.position);
-                stream.SendNext(base.transform.rotation);
-            }
-            else
-            {
-                this.correctObjectPos = (Vector3)stream.ReceiveNext();
-                this.correctObjectRot = (Quaternion)stream.ReceiveNext();
-            }
+            BaseSerialize(stream, info);
         }
 
         [PunRPC]
         public void rpcCollision(Vector3 pos)
         {
             if (base.transform == null) return;
-            if (this.sp != null)
-                this.sp.PlaySoundComponentInstantiate("event:/sfx/metal/glaive-hit", 5f);
+            if (sp != null)
+                sp.PlaySoundComponentInstantiate("event:/sfx/metal/glaive-hit", 5f);
             if (this.impact != null)
                 UnityEngine.Object.Instantiate(this.impact, base.transform.position, Globals.sideways);
             if (this.target != null)

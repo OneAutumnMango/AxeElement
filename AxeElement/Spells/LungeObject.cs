@@ -5,20 +5,8 @@ using UnityEngine;
 
 namespace AxeElement
 {
-    public class LungeObject : global::Photon.MonoBehaviour
+    public class LungeObject : SpellObject
     {
-        public float DAMAGE = 5f;
-        protected float RADIUS = 4f;
-        protected float POWER = 20f;
-        protected float Y_POWER = 0f;
-        protected float START_TIME = 4f;
-
-        public float deathTimer;
-        protected Identity id = new Identity();
-        protected SoundPlayer sp;
-
-        public float velocity;
-        public float curve;
         public int spellIndex;
 
         private PhysicsBody wizardPhys;
@@ -65,14 +53,24 @@ namespace AxeElement
         private const float CHAIN_POWER_M = 0.5f;
         private const float SLAM_DAMAGE = 8f;
 
-        private void Awake()
+        public LungeObject()
         {
-            this.sp = base.GetComponent<SoundPlayer>();
+            DAMAGE = 5f;
+            RADIUS = 4f;
+            POWER = 20f;
+            Y_POWER = 0f;
+            START_TIME = 4f;
+        }
+
+        protected override void Awake()
+        {
+            base.Awake();
+            if (id == null) id = new Identity();
         }
 
         private void Start()
         {
-            this.SpellObjectStart();
+            this.deathTimer = Time.time + this.START_TIME;
             this.lastPos = base.transform.position;
             Transform[] array = this.vineTransforms;
             if (array != null)
@@ -83,11 +81,6 @@ namespace AxeElement
             if (this.targetEffects != null)
                 this.targetEffects.parent = null;
             Globals.camera_contain.AddCameraTransform(base.transform);
-        }
-
-        private void SpellObjectStart()
-        {
-            this.deathTimer = Time.time + this.START_TIME;
         }
 
         public void Init(Identity identity, float curve, float velocity, int spellIndex, SpellName spellNameForCooldown)
@@ -141,7 +134,7 @@ namespace AxeElement
             this.curve = curve;
             this.velocity = velocity;
             this.spellIndex = spellIndex;
-            this.ChangeToSpellLayerDelayed(velocity);
+            this.SetLayerImmediate(velocity);
             this.RegisterAvoids();
 
             if (this.sp != null)
@@ -167,7 +160,7 @@ namespace AxeElement
             }
         }
 
-        private void ChangeToSpellLayerDelayed(float vel)
+        private void SetLayerImmediate(float vel)
         {
             base.gameObject.layer = 0;
         }
@@ -312,8 +305,7 @@ namespace AxeElement
                 this.SpellObjectDeath();
         }
 
-        private Vector3 correctObjectPos;
-        private void BaseClientCorrection()
+        public override void BaseClientCorrection()
         {
             base.transform.position = Vector3.Lerp(base.transform.position, this.correctObjectPos, 0.5f);
         }
@@ -325,7 +317,7 @@ namespace AxeElement
             return CHAIN_POWER_M * (Mathf.Sqrt(distanceSQ) - 7.5f);
         }
 
-        public void ChangeToSpellLayer()
+        public override void ChangeToSpellLayer()
         {
             base.gameObject.layer = 11;
         }
@@ -338,7 +330,7 @@ namespace AxeElement
             this.vineTransforms[this.vineTransforms.Length - 1].position = this.wizard.transform.position;
         }
 
-        public void SpellObjectDeath()
+        public override void SpellObjectDeath()
         {
             this.dying = true;
             if (!base.photonView.IsConnectedAndNotLocal() && this.wizard != null && this.state == LungeState.EnemyHooked)

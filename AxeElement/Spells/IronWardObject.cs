@@ -7,16 +7,15 @@ using UnityEngine;
 
 namespace AxeElement
 {
-    public class IronWardObject : global::Photon.MonoBehaviour
+    public class IronWardObject : SpellObject
     {
-        public float DAMAGE = 3f;
-        protected float RADIUS = 3f;
-        protected float POWER = 2.5f;
-        protected float START_TIME = 2f;
-
-        public float deathTimer;
-        protected Identity id = new Identity();
-        protected SoundPlayer sp;
+        public IronWardObject()
+        {
+            DAMAGE = 3f;
+            RADIUS = 3f;
+            POWER = 2.5f;
+            START_TIME = 2f;
+        }
 
         // Inspector-assigned from Chainmail prefab
         public Transform child;
@@ -42,7 +41,7 @@ namespace AxeElement
         private ParticleSystem.MainModule sparksMain;
         private float sparkTimer;
 
-        // Static registry: player owner → IronWard objects protecting them
+        // Static registry: player owner -> IronWard objects protecting them
         public static Dictionary<int, List<IronWardObject>> activeIronWards =
             new Dictionary<int, List<IronWardObject>>();
 
@@ -60,9 +59,11 @@ namespace AxeElement
             }
         }
 
-        private void Awake()
+        protected override void Awake()
         {
-            this.sp = base.GetComponent<SoundPlayer>();
+            base.Awake();
+            if (this.id == null)
+                this.id = new Identity();
             if (this.sparks != null)
                 this.sparksMain = this.sparks.main;
         }
@@ -202,7 +203,7 @@ namespace AxeElement
             }
         }
 
-        public void SpellObjectDeath()
+        public override void SpellObjectDeath()
         {
             this.state = IronWardState.End;
             base.photonView.RPCLocal(this, "rpcSpellObjectDeath", PhotonTargets.All, Array.Empty<object>());

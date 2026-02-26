@@ -10,17 +10,8 @@ using UnityEngine;
 
 namespace AxeElement
 {
-    public class WhirlwindObject : global::Photon.MonoBehaviour
+    public class WhirlwindObject : SpellObject
     {
-        public float DAMAGE = 5f;
-        protected float RADIUS = 5f;
-        protected float POWER = 30f;
-        protected float START_TIME = 3f;
-
-        public float deathTimer;
-        protected Identity id = new Identity();
-        protected SoundPlayer sp;
-
         // Inspector-assigned from Double Strike prefab
         public UnityEngine.Object impact;
         public ParticleSystem distortionTrail;
@@ -47,6 +38,25 @@ namespace AxeElement
         private static Dictionary<int, List<WhirlwindObject>> activeWhirlwinds =
             new Dictionary<int, List<WhirlwindObject>>();
 
+        public WhirlwindObject()
+        {
+            DAMAGE = 5f;
+            RADIUS = 5f;
+            POWER = 30f;
+            START_TIME = 3f;
+        }
+
+        protected override void Awake()
+        {
+            base.Awake();
+            if (id == null) id = new Identity();
+        }
+
+        private void Start()
+        {
+            this.deathTimer = Time.time + this.START_TIME;
+        }
+
         public static void NotifyDamage(int owner, float damage, UnitStatus unit)
         {
             if (!activeWhirlwinds.ContainsKey(owner)) return;
@@ -72,16 +82,6 @@ namespace AxeElement
             if (!activeWhirlwinds.ContainsKey(owner)) return;
             if (activeWhirlwinds[owner].Contains(wo))
                 activeWhirlwinds[owner].Remove(wo);
-        }
-
-        private void Awake()
-        {
-            this.sp = base.GetComponent<SoundPlayer>();
-        }
-
-        private void Start()
-        {
-            this.deathTimer = Time.time + this.START_TIME;
         }
 
         public void Init(Identity identity, float curve)
@@ -291,7 +291,7 @@ namespace AxeElement
             UnRegisterWhirlwind(this.id.owner, this);
         }
 
-        public void SpellObjectDeath()
+        public override void SpellObjectDeath()
         {
             UnRegisterWhirlwind(this.id.owner, this);
             base.photonView.RPCLocal(this, "rpcSpellObjectDeath", PhotonTargets.All, Array.Empty<object>());

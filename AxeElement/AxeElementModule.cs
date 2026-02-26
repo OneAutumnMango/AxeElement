@@ -11,6 +11,12 @@ namespace AxeElement
         {
             AxeElementPatches.Initialize();
             PatchGroup(harmony, typeof(AxeElementPatches));
+            PatchGroup(harmony, typeof(AxeSpellManagerPatch));
+            PatchGroup(harmony, typeof(AxeWizardStatusPatch));
+            PatchGroup(harmony, typeof(AxeGameSettingsPatch));
+            PatchGroup(harmony, typeof(AxeElementColorMappingPatch));
+            PatchGroup(harmony, typeof(AxeVideoSpellPlayerPatch));
+            PatchGroup(harmony, typeof(AxeSelectionMenuPatch));
         }
 
         protected override void OnUnload(Harmony harmony)
