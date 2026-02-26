@@ -26,6 +26,7 @@ namespace AxeElement
             PatchGroup(harmony, typeof(AxeSelectionMenuPatch));
             PatchGroup(harmony, typeof(AxeGetSpellDebugPatch));
             PatchGroup(harmony, typeof(AxePracticeRangeGuardPatch));
+            PatchGroup(harmony, typeof(AxePlayerSelectionUpdatePatch));
         }
 
         protected override void OnUnload(Harmony harmony)

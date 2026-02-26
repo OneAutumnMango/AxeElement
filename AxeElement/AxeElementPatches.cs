@@ -79,7 +79,9 @@ namespace AxeElement
         }
 
         /// <summary>
-        /// Ensures GameSettings.elements array is large enough for all unlockOrder entries.
+        /// Ensures GameSettings.elements array is large enough for all unlockOrder entries,
+        /// and bumps LastUnlockedIndex so vanilla .Take(LastUnlockedIndex+5) thresholds
+        /// include Axe at index 10.
         /// Called from multiple guard patches to prevent IndexOutOfRange when presets
         /// reset the array to size 10.
         /// </summary>
@@ -664,6 +666,54 @@ namespace AxeElement
             catch (System.Exception ex)
             {
                 Plugin.Log.LogError($"[AxeUI] Practice Range guard failed: {ex}");
+            }
+        }
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // PlayerSelection.Update — Temporarily bump LastUnlockedIndex to 6 so
+    // ErrorCheck's .Take(LastUnlockedIndex+5) includes Axe at index 10.
+    // Restored in the postfix so other systems (GetRandomAvailable, etc.)
+    // see the vanilla value and select Axe spells correctly.
+    // ─────────────────────────────────────────────────────────────────────────
+    [HarmonyPatch(typeof(PlayerSelection), "Update")]
+    public static class AxePlayerSelectionUpdatePatch
+    {
+        private static int savedLastUnlockedIndex = -1;
+        private static bool logged = false;
+
+        [HarmonyPrefix]
+        public static void Prefix()
+        {
+            AxeElementPatches.EnsureElementsArraySize();
+
+            if (GamePreferences.current != null &&
+                GamePreferences.current.prefs != null)
+            {
+                savedLastUnlockedIndex = GamePreferences.current.prefs.LastUnlockedIndex;
+                if (GamePreferences.current.prefs.LastUnlockedIndex < 6)
+                {
+                    GamePreferences.current.prefs.LastUnlockedIndex = 6;
+                }
+
+                if (!logged)
+                {
+                    logged = true;
+                    Plugin.Log.LogInfo("[AxeUI] PlayerSelection.Update prefix: " +
+                        $"bumped LastUnlockedIndex from {savedLastUnlockedIndex} to 6");
+                }
+            }
+        }
+
+        [HarmonyPostfix]
+        public static void Postfix()
+        {
+            if (savedLastUnlockedIndex >= 0 &&
+                GamePreferences.current != null &&
+                GamePreferences.current.prefs != null)
+            {
+                GamePreferences.current.prefs.LastUnlockedIndex = savedLastUnlockedIndex;
+                savedLastUnlockedIndex = -1;
             }
         }
     }
