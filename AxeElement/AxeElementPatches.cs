@@ -223,6 +223,76 @@ namespace AxeElement
     }
 
     // ─────────────────────────────────────────────────────────────────────────
+    // SelectionMenu.Start — Replace Ice icon sprite with Metal icon sprite
+    // so the element toggle screen shows the Metal icon for the Axe slot.
+    // ─────────────────────────────────────────────────────────────────────────
+    [HarmonyPatch(typeof(SelectionMenu), "Start")]
+    public static class AxeSelectionMenuIconPatch
+    {
+        [HarmonyPostfix]
+        public static void Postfix(SelectionMenu __instance)
+        {
+            try
+            {
+                var elementsField = typeof(SelectionMenu).GetField("elements",
+                    BindingFlags.Public | BindingFlags.Instance);
+                if (elementsField == null) return;
+
+                var elements = elementsField.GetValue(__instance) as Image[];
+                if (elements == null || elements.Length < 10) return;
+
+                // Index 8 = Metal, Index 9 = Ice/Axe in unlockOrder
+                var metalIcon = elements[8];
+                var iceIcon = elements[9];
+                if (metalIcon != null && iceIcon != null && metalIcon.sprite != null)
+                {
+                    iceIcon.sprite = metalIcon.sprite;
+                    Plugin.Log.LogInfo("[AxeUI] SelectionMenu: Replaced Ice icon with Metal icon");
+                }
+            }
+            catch (System.Exception ex)
+            {
+                Plugin.Log.LogError($"[AxeUI] SelectionMenu icon swap failed: {ex}");
+            }
+        }
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // AvailableElements.Awake — Replace Ice icon sprite with Metal icon sprite
+    // so the round element display shows the Metal icon for the Axe slot.
+    // ─────────────────────────────────────────────────────────────────────────
+    [HarmonyPatch(typeof(AvailableElements), "Awake")]
+    public static class AxeAvailableElementsIconPatch
+    {
+        [HarmonyPostfix]
+        public static void Postfix(AvailableElements __instance)
+        {
+            try
+            {
+                var iconsField = typeof(AvailableElements).GetField("elementIcons",
+                    BindingFlags.NonPublic | BindingFlags.Instance);
+                if (iconsField == null) return;
+
+                var elementIcons = iconsField.GetValue(__instance) as Image[];
+                if (elementIcons == null || elementIcons.Length < 10) return;
+
+                // Index 8 = Metal, Index 9 = Ice/Axe in unlockOrder
+                var metalIcon = elementIcons[8];
+                var iceIcon = elementIcons[9];
+                if (metalIcon != null && iceIcon != null && metalIcon.sprite != null)
+                {
+                    iceIcon.sprite = metalIcon.sprite;
+                    Plugin.Log.LogInfo("[AxeUI] AvailableElements: Replaced Ice icon with Metal icon");
+                }
+            }
+            catch (System.Exception ex)
+            {
+                Plugin.Log.LogError($"[AxeUI] AvailableElements icon swap failed: {ex}");
+            }
+        }
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
     // DEBUG: Trace GetSpellByRoundAndElement to diagnose wrong element display.
     // ─────────────────────────────────────────────────────────────────────────
     [HarmonyPatch(typeof(GameUtility), "GetSpellByRoundAndElement", typeof(Element), typeof(int))]

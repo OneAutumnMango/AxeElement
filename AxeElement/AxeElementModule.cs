@@ -17,6 +17,8 @@ namespace AxeElement
             PatchGroup(harmony, typeof(AxeElementColorMappingPatch));
             PatchGroup(harmony, typeof(AxeVideoSpellPlayerPatch));
             PatchGroup(harmony, typeof(AxeSelectionMenuPatch));
+            PatchGroup(harmony, typeof(AxeSelectionMenuIconPatch));
+            PatchGroup(harmony, typeof(AxeAvailableElementsIconPatch));
             PatchGroup(harmony, typeof(AxeGetSpellDebugPatch));
         }
 
