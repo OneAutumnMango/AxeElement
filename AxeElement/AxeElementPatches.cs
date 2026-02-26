@@ -12,12 +12,12 @@ namespace AxeElement
 {
     // ─────────────────────────────────────────────────────────────────────────
     // Constant aliases for the Axe element and its seven SpellName values.
-    // Element.Ice == 10 is reused as the Axe slot (replaces Ice entirely).
+    // Element.Tutorial == 11 is used as the Axe slot. Ice stays vanilla.
     // SpellNames 146-152 are appended after ColdFusion (145).
     // ─────────────────────────────────────────────────────────────────────────
     public static class Axe
     {
-        public static readonly Element Element = (Element)10; // same integer as Element.Ice
+        public static readonly Element Element = (Element)11; // Tutorial slot
 
         public static readonly SpellName Hatchet   = (SpellName)146;
         public static readonly SpellName Lunge     = (SpellName)147;
@@ -33,13 +33,72 @@ namespace AxeElement
     {
         public static void Initialize()
         {
-            // One-time setup (called from AxeElementModule.OnLoad)
+            // Expand unlockOrder to include Axe (Tutorial element) as the 11th entry.
+            // This runs at mod load, before any Unity lifecycle methods.
+            if (AvailableElements.unlockOrder != null && AvailableElements.unlockOrder.Length <= 10)
+            {
+                var expanded = new Element[11];
+                AvailableElements.unlockOrder.CopyTo(expanded, 0);
+                expanded[10] = Axe.Element;
+                AvailableElements.unlockOrder = expanded;
+                Plugin.Log.LogInfo("[AxeInit] Expanded unlockOrder to 11 elements (added Axe at index 10)");
+            }
+
+            // Inject Axe element into SpellHandler's static sound dictionaries.
+            // Both map Element → FMOD event path; all vanilla elements use the same path.
+            try
+            {
+                var castField = typeof(SpellHandler).GetField("castSounds",
+                    BindingFlags.NonPublic | BindingFlags.Static);
+                if (castField != null)
+                {
+                    var dict = castField.GetValue(null) as Dictionary<Element, string>;
+                    if (dict != null && !dict.ContainsKey(Axe.Element))
+                    {
+                        dict[Axe.Element] = "event:/sfx/wizard/spell-attack";
+                        Plugin.Log.LogInfo("[AxeInit] Injected Axe into SpellHandler.castSounds");
+                    }
+                }
+
+                var ultField = typeof(SpellHandler).GetField("ultimateCastSounds",
+                    BindingFlags.NonPublic | BindingFlags.Static);
+                if (ultField != null)
+                {
+                    var dict = ultField.GetValue(null) as Dictionary<Element, string>;
+                    if (dict != null && !dict.ContainsKey(Axe.Element))
+                    {
+                        dict[Axe.Element] = "event:/sfx/wizard/spell-attack";
+                        Plugin.Log.LogInfo("[AxeInit] Injected Axe into SpellHandler.ultimateCastSounds");
+                    }
+                }
+            }
+            catch (System.Exception ex)
+            {
+                Plugin.Log.LogError($"[AxeInit] Failed to inject SpellHandler sound dictionaries: {ex}");
+            }
+        }
+
+        /// <summary>
+        /// Ensures GameSettings.elements array is large enough for all unlockOrder entries.
+        /// Called from multiple guard patches to prevent IndexOutOfRange when presets
+        /// reset the array to size 10.
+        /// </summary>
+        public static void EnsureElementsArraySize()
+        {
+            if (PlayerManager.gameSettings != null &&
+                PlayerManager.gameSettings.elements != null &&
+                PlayerManager.gameSettings.elements.Length < AvailableElements.unlockOrder.Length)
+            {
+                var expanded = new ElementInclusionMode[AvailableElements.unlockOrder.Length];
+                PlayerManager.gameSettings.elements.CopyTo(expanded, 0);
+                PlayerManager.gameSettings.elements = expanded;
+            }
         }
     }
 
     // ─────────────────────────────────────────────────────────────────────────
     // SpellManager.Awake — register all 7 Axe spells after the vanilla
-    // spells have been populated, and replace Ice spells in the element slot.
+    // spells have been populated.
     // ─────────────────────────────────────────────────────────────────────────
     [HarmonyPatch(typeof(SpellManager), "Awake")]
     public static class AxeSpellManagerPatch
@@ -47,14 +106,6 @@ namespace AxeElement
         [HarmonyPostfix]
         public static void Postfix(SpellManager __instance)
         {
-            // Only register on the canonical SpellManager (DontDestroyOnLoad).
-            // Duplicate instances self-destruct before populating spell_table.
-            if (Globals.spell_manager != null && Globals.spell_manager != __instance)
-            {
-                Plugin.Log.LogInfo("[AxePatch] Skipping duplicate SpellManager instance.");
-                return;
-            }
-
             var spellTable = Traverse.Create(__instance)
                 .Field("spell_table")
                 .GetValue<Dictionary<SpellName, Spell>>();
@@ -65,7 +116,7 @@ namespace AxeElement
 
     // ─────────────────────────────────────────────────────────────────────────
     // WizardStatus.rpcApplyDamage — notify IronWard and Whirlwind objects
-    // whenever the wizard takes damage (mirrors chainmail + DoubleStrike hooks).
+    // whenever the wizard takes damage.
     // ─────────────────────────────────────────────────────────────────────────
     [HarmonyPatch(typeof(WizardStatus), "rpcApplyDamage")]
     public static class AxeWizardStatusPatch
@@ -86,9 +137,8 @@ namespace AxeElement
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    // GameSettings constructor — ensure elements array is large enough.
-    // Since Axe reuses the Ice slot (10) no expansion is needed, but we
-    // keep this patch for safety in case the array is shorter than expected.
+    // GameSettings constructor — ensure elements array is large enough for
+    // 11 elements (Axe occupies the Tutorial slot at index 10).
     // ─────────────────────────────────────────────────────────────────────────
     [HarmonyPatch(typeof(GameSettings), MethodType.Constructor)]
     public static class AxeGameSettingsPatch
@@ -96,20 +146,356 @@ namespace AxeElement
         [HarmonyPostfix]
         public static void Postfix(GameSettings __instance)
         {
-            int needed = AvailableElements.unlockOrder != null
-                ? AvailableElements.unlockOrder.Length
-                : 11;
-            if (__instance.elements != null && __instance.elements.Length < needed)
+            AxeElementPatches.EnsureElementsArraySize();
+        }
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Guard: SelectionMenu.ShowElements — ensure arrays are correct size.
+    // Prefix: expand GameSettings.elements; skip if Image array not ready.
+    // Postfix: force-unlock Axe (index 10) past LastUnlockedIndex threshold.
+    // ─────────────────────────────────────────────────────────────────────────
+    [HarmonyPatch(typeof(SelectionMenu), "ShowElements")]
+    public static class AxeElementsArrayGuardPatch
+    {
+        [HarmonyPrefix]
+        public static bool Prefix(SelectionMenu __instance)
+        {
+            AxeElementPatches.EnsureElementsArraySize();
+
+            // If SelectionMenu's Image array hasn't been expanded to 11 yet
+            // (Start prefix hasn't run), skip ShowElements to avoid crash
+            var elementsField = typeof(SelectionMenu).GetField("elements",
+                BindingFlags.Public | BindingFlags.Instance);
+            if (elementsField != null)
             {
-                var expanded = new ElementInclusionMode[needed];
-                __instance.elements.CopyTo(expanded, 0);
-                __instance.elements = expanded;
+                var elements = elementsField.GetValue(__instance) as Image[];
+                if (elements != null && elements.Length < AvailableElements.unlockOrder.Length)
+                    return false; // Skip — will run correctly once Start expands the array
+            }
+
+            return true;
+        }
+
+        [HarmonyPostfix]
+        public static void Postfix(SelectionMenu __instance)
+        {
+            // Force unlock Axe (index 10) — the vanilla condition
+            // i < LastUnlockedIndex + 5 excludes our modded element
+            var elementsField = typeof(SelectionMenu).GetField("elements",
+                BindingFlags.Public | BindingFlags.Instance);
+            if (elementsField == null) return;
+            var elements = elementsField.GetValue(__instance) as Image[];
+            if (elements == null || elements.Length < 11) return;
+
+            var axeImage = elements[10];
+            if (axeImage != null)
+            {
+                if (axeImage.transform.childCount > 2)
+                    axeImage.transform.GetChild(2).gameObject.SetActive(false);
+                var btn = axeImage.GetComponent<Button>();
+                if (btn != null)
+                    btn.interactable = true;
             }
         }
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    // ElementColorMapping.Start — Override Ice stage visuals with steel/grey.
+    // Guard: AvailableElements.GetAvailableAndIncludedElements — ensure
+    // GameSettings.elements is large enough before the loop, and include
+    // Axe (index 10) in the available/included lists afterward.
+    // ─────────────────────────────────────────────────────────────────────────
+    [HarmonyPatch(typeof(AvailableElements), "GetAvailableAndIncludedElements")]
+    public static class AxeGetAvailableGuardPatch
+    {
+        [HarmonyPrefix]
+        public static void Prefix()
+        {
+            AxeElementPatches.EnsureElementsArraySize();
+        }
+
+        [HarmonyPostfix]
+        public static void Postfix(ref List<Element> available, ref List<Element> included)
+        {
+            // The vanilla loop only iterates i <= lastUnlockedIndex + 4 (up to index 9).
+            // Manually check index 10 (Axe) and add to the correct list.
+            if (PlayerManager.gameSettings.elements != null &&
+                PlayerManager.gameSettings.elements.Length > 10)
+            {
+                var mode = PlayerManager.gameSettings.elements[10];
+                if (mode == ElementInclusionMode.Possible && !available.Contains(Axe.Element))
+                    available.Add(Axe.Element);
+                else if (mode == ElementInclusionMode.Included && !included.Contains(Axe.Element))
+                    included.Add(Axe.Element);
+            }
+        }
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // AvailableElements.ShowAvailableElements — Force-unlock Axe (index 10)
+    // on the round display tablet. The vanilla threshold LastUnlockedIndex + 5
+    // excludes our modded element.
+    // ─────────────────────────────────────────────────────────────────────────
+    [HarmonyPatch(typeof(AvailableElements), "ShowAvailableElements")]
+    public static class AxeAvailableElementsUnlockPatch
+    {
+        [HarmonyPostfix]
+        public static void Postfix(AvailableElements __instance)
+        {
+            try
+            {
+                var locksField = typeof(AvailableElements).GetField("locks",
+                    BindingFlags.NonPublic | BindingFlags.Instance);
+                var iconsField = typeof(AvailableElements).GetField("elementIcons",
+                    BindingFlags.NonPublic | BindingFlags.Instance);
+
+                var locks = locksField?.GetValue(__instance) as Image[];
+                var icons = iconsField?.GetValue(__instance) as Image[];
+
+                if (locks != null && locks.Length > 10)
+                    locks[10].enabled = false;
+
+                if (icons != null && icons.Length > 10)
+                    icons[10].color = new Color(0.4f, 0.4f, 0.4f);
+            }
+            catch (System.Exception ex)
+            {
+                Plugin.Log.LogError($"[AxeUI] AvailableElements unlock postfix failed: {ex}");
+            }
+        }
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // SelectionMenu.ChangeElement — Extend the cycle range to include Axe.
+    // Vanilla uses LastUnlockedIndex + 5 as modulo cap, which excludes
+    // our 11th element (index 10).
+    // ─────────────────────────────────────────────────────────────────────────
+    [HarmonyPatch(typeof(SelectionMenu), "ChangeElement")]
+    public static class AxeChangeElementPatch
+    {
+        [HarmonyPrefix]
+        public static bool Prefix(SelectionMenu __instance, bool up)
+        {
+            try
+            {
+                int num = AvailableElements.unlockOrder.Length; // 11
+                var indexField = typeof(SelectionMenu).GetField("elementIndex",
+                    BindingFlags.Public | BindingFlags.Instance);
+                if (indexField == null) return true;
+
+                int current = (int)indexField.GetValue(__instance);
+                int next = (current + (up ? 1 : (num - 1))) % num;
+                indexField.SetValue(__instance, next);
+
+                var updateMethod = typeof(SelectionMenu).GetMethod("UpdateElementSelector",
+                    BindingFlags.NonPublic | BindingFlags.Instance);
+                updateMethod?.Invoke(__instance, null);
+
+                return false; // Skip original
+            }
+            catch (System.Exception ex)
+            {
+                Plugin.Log.LogError($"[AxeUI] ChangeElement patch failed: {ex}");
+                return true; // Fallback to vanilla
+            }
+        }
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // AvailableElements.Awake — Prefix clones a tablet child to create the
+    // 11th icon slot; Postfix verifies the Metal sprite is applied.
+    // ─────────────────────────────────────────────────────────────────────────
+    [HarmonyPatch(typeof(AvailableElements), "Awake")]
+    public static class AxeAvailableElementsPatch
+    {
+        [HarmonyPrefix]
+        public static void Prefix(AvailableElements __instance)
+        {
+            try
+            {
+                // Ensure unlockOrder is expanded (safety — Initialize should have done this)
+                if (AvailableElements.unlockOrder.Length <= 10)
+                    AxeElementPatches.Initialize();
+
+                // Clone a tablet child to create the 11th icon slot.
+                // Awake's body iterates tablet.GetChild(i) for i=0..unlockOrder.Length-1,
+                // so we must add the child BEFORE Awake runs.
+                var tablet = __instance.panel.transform.GetChild(0);
+                if (tablet.childCount == 10)
+                {
+                    // Clone Metal's child (index 8) — it already has the Metal sprite
+                    var metalChild = tablet.GetChild(8);
+                    var newChild = Object.Instantiate(metalChild, tablet);
+                    newChild.SetAsLastSibling();
+
+                    // Position next to Ice (index 9) using same grid offset
+                    var metalRT = metalChild.GetComponent<RectTransform>();
+                    var iceRT = tablet.GetChild(9).GetComponent<RectTransform>();
+                    var newRT = newChild.GetComponent<RectTransform>();
+                    float xStep = iceRT.anchoredPosition.x - metalRT.anchoredPosition.x;
+                    newRT.anchoredPosition = new Vector2(
+                        iceRT.anchoredPosition.x + xStep,
+                        metalRT.anchoredPosition.y);
+
+                    Plugin.Log.LogInfo("[AxeUI] AvailableElements: Cloned Metal icon as 11th tablet child for Axe");
+                }
+            }
+            catch (System.Exception ex)
+            {
+                Plugin.Log.LogError($"[AxeUI] AvailableElements tablet clone failed: {ex}");
+            }
+        }
+
+        [HarmonyPostfix]
+        public static void Postfix(AvailableElements __instance)
+        {
+            try
+            {
+                var iconsField = typeof(AvailableElements).GetField("elementIcons",
+                    BindingFlags.NonPublic | BindingFlags.Instance);
+                if (iconsField == null) return;
+
+                var elementIcons = iconsField.GetValue(__instance) as Image[];
+                if (elementIcons == null || elementIcons.Length < 11) return;
+
+                // Ensure index 10 (Axe) has the Metal sprite
+                var metalIcon = elementIcons[8];
+                var axeIcon = elementIcons[10];
+                if (metalIcon != null && axeIcon != null && metalIcon.sprite != null)
+                {
+                    axeIcon.sprite = metalIcon.sprite;
+                    Plugin.Log.LogInfo("[AxeUI] AvailableElements: Confirmed Metal icon on Axe slot (index 10)");
+                }
+            }
+            catch (System.Exception ex)
+            {
+                Plugin.Log.LogError($"[AxeUI] AvailableElements icon assignment failed: {ex}");
+            }
+        }
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // SelectionMenu.Start — Prefix creates the 11th element Image in the
+    // element toggle grid before Start's body calls Refresh → ShowElements.
+    // ─────────────────────────────────────────────────────────────────────────
+    [HarmonyPatch(typeof(SelectionMenu), "Start")]
+    public static class AxeSelectionMenuIconPatch
+    {
+        [HarmonyPrefix]
+        public static void Prefix(SelectionMenu __instance)
+        {
+            try
+            {
+                // Ensure GameSettings.elements array can hold 11 entries
+                AxeElementPatches.EnsureElementsArraySize();
+
+                var elementsField = typeof(SelectionMenu).GetField("elements",
+                    BindingFlags.Public | BindingFlags.Instance);
+                if (elementsField == null) return;
+
+                var elements = elementsField.GetValue(__instance) as Image[];
+                if (elements == null || elements.Length != 10) return;
+
+                // Clone Metal icon (index 8) as template for Axe — already has Metal sprite
+                var template = elements[8];
+                var newObj = Object.Instantiate(template.gameObject, template.transform.parent);
+                var newImage = newObj.GetComponent<Image>();
+
+                // Position next to Ice (index 9) using same grid offset
+                var metalRT = elements[8].GetComponent<RectTransform>();
+                var iceRT = elements[9].GetComponent<RectTransform>();
+                var newRT = newObj.GetComponent<RectTransform>();
+                float xStep = iceRT.anchoredPosition.x - metalRT.anchoredPosition.x;
+                newRT.anchoredPosition = new Vector2(
+                    iceRT.anchoredPosition.x + xStep,
+                    metalRT.anchoredPosition.y);
+
+                // Expand the elements array to 11
+                var expanded = new Image[11];
+                elements.CopyTo(expanded, 0);
+                expanded[10] = newImage;
+                elementsField.SetValue(__instance, expanded);
+
+                // Initialize child indicators (Included/Banned/Lock) as hidden
+                newObj.transform.GetChild(0).gameObject.SetActive(false);
+                newObj.transform.GetChild(1).gameObject.SetActive(false);
+                if (newObj.transform.childCount > 2)
+                    newObj.transform.GetChild(2).gameObject.SetActive(false);
+
+                // Fix button onClick to call ClickElement(10) for the Axe slot
+                var btn = newObj.GetComponent<Button>();
+                if (btn != null)
+                {
+                    btn.onClick = new Button.ButtonClickedEvent();
+                    btn.onClick.AddListener(() => __instance.ClickElement(10));
+                    btn.interactable = true;
+                }
+
+                Plugin.Log.LogInfo("[AxeUI] SelectionMenu: Created 11th element Image for Axe");
+            }
+            catch (System.Exception ex)
+            {
+                Plugin.Log.LogError($"[AxeUI] SelectionMenu element creation failed: {ex}");
+            }
+        }
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // SpellHandler.Start — Expand elementEffects (EmissionModule[]) and
+    // ultimateEffects (ParticleSystem[]) to include index 11 for Axe.
+    // Reuse Metal's effects (index 9).
+    // ─────────────────────────────────────────────────────────────────────────
+    [HarmonyPatch(typeof(SpellHandler), "Start")]
+    public static class AxeSpellHandlerPatch
+    {
+        [HarmonyPostfix]
+        public static void Postfix(SpellHandler __instance)
+        {
+            try
+            {
+                // elementEffects is ParticleSystem.EmissionModule[] (struct array), size 11
+                var elemField = typeof(SpellHandler).GetField("elementEffects",
+                    BindingFlags.NonPublic | BindingFlags.Instance);
+                if (elemField != null)
+                {
+                    var raw = elemField.GetValue(__instance);
+                    if (raw is ParticleSystem.EmissionModule[] emArr && emArr.Length <= 11)
+                    {
+                        var expanded = new ParticleSystem.EmissionModule[12];
+                        emArr.CopyTo(expanded, 0);
+                        // Reuse Metal's emission (index 9) for Axe (index 11)
+                        expanded[11] = emArr[9];
+                        elemField.SetValue(__instance, expanded);
+                        Plugin.Log.LogInfo($"[AxeUI] SpellHandler: Expanded elementEffects from {emArr.Length} to 12");
+                    }
+                }
+
+                // ultimateEffects is ParticleSystem[], size 11
+                var ultFxField = typeof(SpellHandler).GetField("ultimateEffects",
+                    BindingFlags.NonPublic | BindingFlags.Instance);
+                if (ultFxField != null)
+                {
+                    var arr = ultFxField.GetValue(__instance) as ParticleSystem[];
+                    if (arr != null && arr.Length <= 11)
+                    {
+                        var expanded = new ParticleSystem[12];
+                        arr.CopyTo(expanded, 0);
+                        expanded[11] = arr[9];
+                        ultFxField.SetValue(__instance, expanded);
+                        Plugin.Log.LogInfo($"[AxeUI] SpellHandler: Expanded ultimateEffects from {arr.Length} to 12");
+                    }
+                }
+            }
+            catch (System.Exception ex)
+            {
+                Plugin.Log.LogError($"[AxeUI] SpellHandler FX expansion failed: {ex}");
+            }
+        }
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // ElementColorMapping.Start — Override stage visuals with steel/grey
+    // for the Axe element. Skips Practice Range to avoid FMOD conflicts.
     // ─────────────────────────────────────────────────────────────────────────
     [HarmonyPatch(typeof(ElementColorMapping), "Start")]
     public static class AxeElementColorMappingPatch
@@ -118,6 +504,10 @@ namespace AxeElement
         public static void Postfix(ElementColorMapping __instance)
         {
             if (__instance.element != Axe.Element)
+                return;
+
+            // Skip in Practice Range to avoid FMOD/visual conflicts
+            if (Globals.practice_range_manager != null)
                 return;
 
             // Override post-processing with steel/grey theme
@@ -142,7 +532,7 @@ namespace AxeElement
                 vignette.intensity.value = 0.35f;
             }
 
-            // Replace ambient sound: fade out ice, fade in metal/fire as placeholder
+            // Replace ambient sound
             var ambientField = typeof(ElementColorMapping).GetField("ambientInstance",
                 BindingFlags.Public | BindingFlags.Static);
             if (ambientField != null)
@@ -160,7 +550,8 @@ namespace AxeElement
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    // VideoSpellPlayer — Override draft UI colors for element index 10.
+    // VideoSpellPlayer — Override draft UI colors for element index 11 (Axe).
+    // Expands the color arrays if needed since vanilla only has indices 0-10.
     // ─────────────────────────────────────────────────────────────────────────
     [HarmonyPatch(typeof(VideoSpellPlayer), "SlideIn")]
     public static class AxeVideoSpellPlayerPatch
@@ -168,7 +559,6 @@ namespace AxeElement
         [HarmonyPrefix]
         public static void Prefix(VideoSpellPlayer __instance)
         {
-            // Override darkColors[10] and lightColors[10] with steel/grey
             var darkField = typeof(VideoSpellPlayer).GetField("darkColors",
                 BindingFlags.Public | BindingFlags.Instance);
             var lightField = typeof(VideoSpellPlayer).GetField("lightColors",
@@ -177,21 +567,36 @@ namespace AxeElement
             if (darkField != null)
             {
                 var darkColors = darkField.GetValue(__instance) as Color[];
-                if (darkColors != null && darkColors.Length > 10)
-                    darkColors[10] = new Color(0.3f, 0.3f, 0.35f);
+                if (darkColors != null && darkColors.Length <= 11)
+                {
+                    var expanded = new Color[12];
+                    darkColors.CopyTo(expanded, 0);
+                    darkField.SetValue(__instance, expanded);
+                    darkColors = expanded;
+                }
+                if (darkColors != null && darkColors.Length > 11)
+                    darkColors[11] = new Color(0.3f, 0.3f, 0.35f);
             }
 
             if (lightField != null)
             {
                 var lightColors = lightField.GetValue(__instance) as Color[];
-                if (lightColors != null && lightColors.Length > 10)
-                    lightColors[10] = new Color(0.7f, 0.7f, 0.75f);
+                if (lightColors != null && lightColors.Length <= 11)
+                {
+                    var expanded = new Color[12];
+                    lightColors.CopyTo(expanded, 0);
+                    lightField.SetValue(__instance, expanded);
+                    lightColors = expanded;
+                }
+                if (lightColors != null && lightColors.Length > 11)
+                    lightColors[11] = new Color(0.7f, 0.7f, 0.75f);
             }
         }
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    // SelectionMenu.ShowElementTooltip — Replace "Ice" name with "Axe".
+    // SelectionMenu.ShowElementTooltip — Replace "Tutorial" with "Axe" in
+    // the element name shown in the description text.
     // ─────────────────────────────────────────────────────────────────────────
     [HarmonyPatch(typeof(SelectionMenu), "ShowElementTooltip")]
     public static class AxeSelectionMenuPatch
@@ -199,101 +604,19 @@ namespace AxeElement
         [HarmonyPostfix]
         public static void Postfix(SelectionMenu __instance)
         {
-            // The tooltip text field displays the element name from ToString().
-            // Replace "Ice" with "Axe" in whatever text was set.
-            var tooltipField = typeof(SelectionMenu).GetField("tooltipText",
-                BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance);
-            if (tooltipField != null)
+            var descField = typeof(SelectionMenu).GetField("descriptionText",
+                BindingFlags.Public | BindingFlags.Instance);
+            if (descField != null)
             {
-                var textObj = tooltipField.GetValue(__instance);
+                var textObj = descField.GetValue(__instance);
                 if (textObj is Text uiText && uiText.text != null)
-                    uiText.text = uiText.text.Replace("Ice", "Axe");
-            }
-
-            // Also try alternative field name
-            var altField = typeof(SelectionMenu).GetField("tooltip",
-                BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance);
-            if (altField != null)
-            {
-                var textObj = altField.GetValue(__instance);
-                if (textObj is Text uiText && uiText.text != null)
-                    uiText.text = uiText.text.Replace("Ice", "Axe");
+                    uiText.text = uiText.text.Replace("Tutorial", "Axe");
             }
         }
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    // SelectionMenu.Start — Replace Ice icon sprite with Metal icon sprite
-    // so the element toggle screen shows the Metal icon for the Axe slot.
-    // ─────────────────────────────────────────────────────────────────────────
-    [HarmonyPatch(typeof(SelectionMenu), "Start")]
-    public static class AxeSelectionMenuIconPatch
-    {
-        [HarmonyPostfix]
-        public static void Postfix(SelectionMenu __instance)
-        {
-            try
-            {
-                var elementsField = typeof(SelectionMenu).GetField("elements",
-                    BindingFlags.Public | BindingFlags.Instance);
-                if (elementsField == null) return;
-
-                var elements = elementsField.GetValue(__instance) as Image[];
-                if (elements == null || elements.Length < 10) return;
-
-                // Index 8 = Metal, Index 9 = Ice/Axe in unlockOrder
-                var metalIcon = elements[8];
-                var iceIcon = elements[9];
-                if (metalIcon != null && iceIcon != null && metalIcon.sprite != null)
-                {
-                    iceIcon.sprite = metalIcon.sprite;
-                    Plugin.Log.LogInfo("[AxeUI] SelectionMenu: Replaced Ice icon with Metal icon");
-                }
-            }
-            catch (System.Exception ex)
-            {
-                Plugin.Log.LogError($"[AxeUI] SelectionMenu icon swap failed: {ex}");
-            }
-        }
-    }
-
-    // ─────────────────────────────────────────────────────────────────────────
-    // AvailableElements.Awake — Replace Ice icon sprite with Metal icon sprite
-    // so the round element display shows the Metal icon for the Axe slot.
-    // ─────────────────────────────────────────────────────────────────────────
-    [HarmonyPatch(typeof(AvailableElements), "Awake")]
-    public static class AxeAvailableElementsIconPatch
-    {
-        [HarmonyPostfix]
-        public static void Postfix(AvailableElements __instance)
-        {
-            try
-            {
-                var iconsField = typeof(AvailableElements).GetField("elementIcons",
-                    BindingFlags.NonPublic | BindingFlags.Instance);
-                if (iconsField == null) return;
-
-                var elementIcons = iconsField.GetValue(__instance) as Image[];
-                if (elementIcons == null || elementIcons.Length < 10) return;
-
-                // Index 8 = Metal, Index 9 = Ice/Axe in unlockOrder
-                var metalIcon = elementIcons[8];
-                var iceIcon = elementIcons[9];
-                if (metalIcon != null && iceIcon != null && metalIcon.sprite != null)
-                {
-                    iceIcon.sprite = metalIcon.sprite;
-                    Plugin.Log.LogInfo("[AxeUI] AvailableElements: Replaced Ice icon with Metal icon");
-                }
-            }
-            catch (System.Exception ex)
-            {
-                Plugin.Log.LogError($"[AxeUI] AvailableElements icon swap failed: {ex}");
-            }
-        }
-    }
-
-    // ─────────────────────────────────────────────────────────────────────────
-    // DEBUG: Trace GetSpellByRoundAndElement to diagnose wrong element display.
+    // DEBUG: Trace GetSpellByRoundAndElement to diagnose element display.
     // ─────────────────────────────────────────────────────────────────────────
     [HarmonyPatch(typeof(GameUtility), "GetSpellByRoundAndElement", typeof(Element), typeof(int))]
     public static class AxeGetSpellDebugPatch
@@ -304,9 +627,43 @@ namespace AxeElement
             if (el == Axe.Element)
             {
                 if (__result != null)
-                    Plugin.Log.LogInfo($"[AxeDbg] GetSpellByRoundAndElement(Ice/Axe, round={round}) => {__result.spellName} el={__result.element} btn={__result.spellButton}");
+                    Plugin.Log.LogInfo($"[AxeDbg] GetSpellByRoundAndElement(Tutorial/Axe, round={round}) => {__result.spellName} el={__result.element} btn={__result.spellButton}");
                 else
-                    Plugin.Log.LogWarning($"[AxeDbg] GetSpellByRoundAndElement(Ice/Axe, round={round}) => NULL");
+                    Plugin.Log.LogWarning($"[AxeDbg] GetSpellByRoundAndElement(Tutorial/Axe, round={round}) => NULL");
+            }
+        }
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // PracticeRangeManager.Awake — Preemptive guard to ensure Practice Range
+    // FMOD state stays on Tutorial music. Since Tutorial == Axe.Element,
+    // we confirm the element assignment after the vanilla Awake runs.
+    // ─────────────────────────────────────────────────────────────────────────
+    [HarmonyPatch(typeof(PracticeRangeManager), "Awake")]
+    public static class AxePracticeRangeGuardPatch
+    {
+        [HarmonyPostfix]
+        public static void Postfix()
+        {
+            try
+            {
+                var currentField = typeof(FmodController).GetField("current",
+                    BindingFlags.NonPublic | BindingFlags.Static);
+                if (currentField == null) return;
+
+                var fmod = currentField.GetValue(null);
+                if (fmod == null) return;
+
+                var elementField = typeof(FmodController).GetField("currentElement",
+                    BindingFlags.NonPublic | BindingFlags.Instance);
+                if (elementField == null) return;
+
+                elementField.SetValue(fmod, (Element)11);
+                Plugin.Log.LogInfo("[AxeUI] Practice Range guard: confirmed currentElement = Tutorial/11");
+            }
+            catch (System.Exception ex)
+            {
+                Plugin.Log.LogError($"[AxeUI] Practice Range guard failed: {ex}");
             }
         }
     }

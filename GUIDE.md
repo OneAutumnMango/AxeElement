@@ -63,9 +63,10 @@ Each spell has two classes:
 
 ### Key Concepts
 
-- **Element.Ice == (Element)10** is reused as the Axe slot. The mod replaces Ice entirely.
+- **Element.Tutorial == (Element)11** is used as the Axe slot. Ice stays fully vanilla.
 - **SpellNames 146-152** are appended after the last vanilla spell (ColdFusion = 145).
-- Original Ice spells are reassigned to `Element.Tutorial` (hidden) so they don't appear.
+- The mod dynamically expands `AvailableElements.unlockOrder` from 10 to 11 entries to include the Axe element.
+- UI arrays (SelectionMenu elements, AvailableElements tablet, GameSettings.elements, color arrays) are dynamically expanded to accommodate the 11th element.
 - Icons and videos are borrowed from **Metal** element spells via `SpellButton` mapping.
 - Spell objects are instantiated by hijacking vanilla prefabs (e.g., `"Objects/Glaive"` for Hatchet), stripping the original component, and attaching the custom one.
 
@@ -77,9 +78,12 @@ Each spell has two classes:
 
 1. **Plugin.Awake()** — BepInEx loads the plugin, registers with ModFramework
 2. **AxeElementModule.OnLoad()** — Called by ModFramework via Harmony
-3. **PatchGroup()** — Registers each Harmony patch class (listed in AxeElementModule.cs)
-4. **SpellManager.Awake (patched)** — When the game creates SpellManager, our postfix calls `AxeRegistration.RegisterSpells()`
-5. **RegisterSpells()** — Reassigns Ice spells to Tutorial, creates 7 Axe `Spell` components on the SpellManager GameObject, populates spell_table, sets up AI draft priority and UI colors
+3. **AxeElementPatches.Initialize()** — Expands `AvailableElements.unlockOrder` to 11 entries (adds Axe/Tutorial at index 10)
+4. **PatchGroup()** — Registers each Harmony patch class (listed in AxeElementModule.cs)
+5. **AvailableElements.Awake (prefix)** — Clones a tablet child to create the 11th icon slot before Awake's body runs
+6. **SelectionMenu.Start (prefix)** — Creates the 11th element Image in the toggle grid before Start's body runs
+7. **SpellManager.Awake (postfix)** — When the game creates SpellManager, our postfix calls `AxeRegistration.RegisterSpells()`
+8. **RegisterSpells()** — Creates 7 Axe `Spell` components on the SpellManager GameObject, populates spell_table, sets up AI draft priority, expands color arrays
 
 ### Spell Cast Flow
 
@@ -421,22 +425,22 @@ hatchet.icon = IconLoader.LoadIcon("hatchet.png") ?? metalIcons.GetValueOrDefaul
 
 ### Overriding Element Icons in Scene UI
 
-The mod already patches two scene-level icon displays:
+The mod dynamically creates the 11th element slot in two scene-level displays:
 
-1. **SelectionMenu** (element toggle screen) — `AxeSelectionMenuIconPatch` in `AxeElementPatches.cs` replaces `elements[9].sprite` (Ice position) with `elements[8].sprite` (Metal position)
+1. **SelectionMenu** (element toggle screen) — `AxeSelectionMenuIconPatch` (prefix on `SelectionMenu.Start`) clones the Metal icon (index 8) to create the 11th Image at index 10, positions it using grid spacing, expands the `elements` array from 10 to 11, and wires up `ClickElement(10)` on the button.
 
-2. **AvailableElements** (round display tablet) — `AxeAvailableElementsIconPatch` replaces `elementIcons[9].sprite` with `elementIcons[8].sprite`
+2. **AvailableElements** (round display tablet) — `AxeAvailableElementsPatch` prefix on `AvailableElements.Awake` clones the Metal tablet child (index 8) as the 11th child, then the postfix confirms the Metal sprite is applied to `elementIcons[10]`.
 
 **To use a custom element icon instead of Metal's:**
 ```csharp
-// In the patch postfix, instead of:
-iceIcon.sprite = metalIcon.sprite;
+// In the AvailableElements postfix, instead of:
+axeIcon.sprite = metalIcon.sprite;
 // Load your own:
 var customSprite = IconLoader.LoadIcon("axe-element.png");
 if (customSprite != null)
-    iceIcon.sprite = customSprite;
+    axeIcon.sprite = customSprite;
 else
-    iceIcon.sprite = metalIcon.sprite; // fallback
+    axeIcon.sprite = metalIcon.sprite; // fallback
 ```
 
 ### Overriding Element Colors
@@ -445,20 +449,20 @@ Element colors are patched in several places:
 
 | What | Where | Current Value |
 |------|-------|---------------|
-| Spell cooldown ring color | `AxeRegistration.cs` → `spellColors[10]` | `(0.6f, 0.6f, 0.65f)` light steel |
-| Icon emission glow | `AxeRegistration.cs` → `iconEmissionColors[10]` | `(0.35f, 0.35f, 0.38f)` steel grey |
-| Draft dark color | `AxeVideoSpellPlayerPatch` → `darkColors[10]` | `(0.3f, 0.3f, 0.35f)` |
-| Draft light color | `AxeVideoSpellPlayerPatch` → `lightColors[10]` | `(0.7f, 0.7f, 0.75f)` |
+| Spell cooldown ring color | `AxeRegistration.cs` → `spellColors[11]` | `(0.6f, 0.6f, 0.65f)` light steel |
+| Icon emission glow | `AxeRegistration.cs` → `iconEmissionColors[11]` | `(0.35f, 0.35f, 0.38f)` steel grey |
+| Draft dark color | `AxeVideoSpellPlayerPatch` → `darkColors[11]` | `(0.3f, 0.3f, 0.35f)` |
+| Draft light color | `AxeVideoSpellPlayerPatch` → `lightColors[11]` | `(0.7f, 0.7f, 0.75f)` |
 | Stage vignette color | `AxeElementColorMappingPatch` → vignette | `(0.45f, 0.45f, 0.50f)` |
 | Stage vignette intensity | `AxeElementColorMappingPatch` → vignette | `0.35f` |
 | Stage bloom intensity | `AxeElementColorMappingPatch` → bloom | `2.0f` |
 
 ### Overriding Element Name
 
-The `AxeSelectionMenuPatch` postfix replaces "Ice" with "Axe" in the tooltip text. If you rename the element, update the replacement string in `AxeElementPatches.cs`:
+The `AxeSelectionMenuPatch` postfix replaces "Tutorial" with "Axe" in the tooltip text. If you rename the element, update the replacement string in `AxeElementPatches.cs`:
 
 ```csharp
-uiText.text = uiText.text.Replace("Ice", "YourName");
+uiText.text = uiText.text.Replace("Tutorial", "YourName");
 ```
 
 ---
@@ -530,12 +534,15 @@ var value = Traverse.Create(__instance).Field("privateField").GetValue<SomeType>
 | `AxeSpellManagerPatch` | `SpellManager.Awake` | Register Axe spells |
 | `AxeWizardStatusPatch` | `WizardStatus.rpcApplyDamage` | IronWard/Whirlwind damage hooks |
 | `AxeGameSettingsPatch` | `GameSettings` constructor | Ensure elements array is large enough |
-| `AxeElementColorMappingPatch` | `ElementColorMapping.Start` | Override stage visuals |
+| `AxeElementsArrayGuardPatch` | `SelectionMenu.ShowElements` | Re-expand elements array after preset reset |
+| `AxeGetAvailableGuardPatch` | `AvailableElements.GetAvailableAndIncludedElements` | Re-expand elements array before loop |
+| `AxeAvailableElementsPatch` | `AvailableElements.Awake` | Expand unlockOrder, clone 11th tablet child, assign Metal icon |
+| `AxeSelectionMenuIconPatch` | `SelectionMenu.Start` | Create 11th element Image, expand elements array |
+| `AxeElementColorMappingPatch` | `ElementColorMapping.Start` | Override stage visuals (skips Practice Range) |
 | `AxeVideoSpellPlayerPatch` | `VideoSpellPlayer.SlideIn` | Override draft UI colors |
-| `AxeSelectionMenuPatch` | `SelectionMenu.ShowElementTooltip` | Replace "Ice" with "Axe" text |
-| `AxeSelectionMenuIconPatch` | `SelectionMenu.Start` | Swap Ice icon to Metal icon |
-| `AxeAvailableElementsIconPatch` | `AvailableElements.Awake` | Swap Ice icon on round display |
+| `AxeSelectionMenuPatch` | `SelectionMenu.ShowElementTooltip` | Replace "Tutorial" with "Axe" text |
 | `AxeGetSpellDebugPatch` | `GameUtility.GetSpellByRoundAndElement` | Debug logging |
+| `AxePracticeRangeGuardPatch` | `PracticeRangeManager.Awake` | Ensure Practice Range FMOD state stays correct |
 
 ---
 
@@ -723,8 +730,8 @@ catch (System.Exception ex)
 | Electric | 7 | 5 |
 | Steam | 8 | 7 |
 | Metal | 9 | 8 |
-| Ice/Axe | 10 | 9 |
-| Tutorial | 11 | — |
+| Ice | 10 | 9 |
+| Tutorial/Axe | 11 | 10 (added by mod) |
 
 ### Axe Spell Constants
 

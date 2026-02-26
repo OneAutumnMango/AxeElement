@@ -25,7 +25,7 @@ namespace AxeElement
 
             ModUIRegistry.RegisterMod(
                 "Axe Element",
-                "Replaces the Ice element with a new Axe element featuring 7 unique spells",
+                "Adds a new Axe element featuring 7 unique spells",
                 BuildModUI,
                 priority: 10
             );

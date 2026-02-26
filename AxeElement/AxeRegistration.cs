@@ -26,14 +26,7 @@ namespace AxeElement
 
             if (registered)
             {
-                // Re-entering (round transition): just ensure Ice spells stay on Tutorial
-                // and Axe spells are in the table. Skip Axe spells in the Ice reassignment.
-                foreach (var kv in spellTable)
-                {
-                    if (kv.Value != null && kv.Value.element == Element.Ice && !axeSpellNames.Contains(kv.Key))
-                        kv.Value.element = Element.Tutorial;
-                }
-                // Re-add Axe spells if missing (SpellManager recreated the table)
+                // Re-entering (round transition): ensure Axe spells stay in the table.
                 var existing = manager.gameObject.GetComponents<Spell>();
                 foreach (var spell in existing)
                 {
@@ -70,14 +63,6 @@ namespace AxeElement
                 Plugin.Log.LogInfo($"[AxeReg]   Metal icon: btn={kv.Key} sprite={kv.Value.name}");
             foreach (var kv in metalVideos)
                 Plugin.Log.LogInfo($"[AxeReg]   Metal video: btn={kv.Key} clip={kv.Value.name}");
-
-            // Reassign existing Ice spells to Tutorial element slot (11)
-            // so the Axe element slot (10) is exclusively Axe.
-            foreach (var kv in spellTable)
-            {
-                if (kv.Value != null && kv.Value.element == Element.Ice)
-                    kv.Value.element = Element.Tutorial;
-            }
 
             // ── Hatchet (Primary) ──────────────────────────────────────────
             var hatchet = manager.gameObject.AddComponent<Hatchet>();
@@ -258,13 +243,25 @@ namespace AxeElement
             }
 
             // ── UI colors ──────────────────────────────────────────────────
-            // Steel/grey spell color for the Axe element in cooldown UI
-            if (manager.spellColors != null && manager.spellColors.Length > 10)
-                manager.spellColors[10] = new Color(0.6f, 0.6f, 0.65f);
+            // Expand spellColors to include index 11 (Axe/Tutorial slot)
+            if (manager.spellColors != null && manager.spellColors.Length <= 11)
+            {
+                var expanded = new Color[12];
+                manager.spellColors.CopyTo(expanded, 0);
+                manager.spellColors = expanded;
+            }
+            if (manager.spellColors != null && manager.spellColors.Length > 11)
+                manager.spellColors[11] = new Color(0.6f, 0.6f, 0.65f);
 
-            // Steel/grey icon emission color
-            if (Globals.iconEmissionColors != null && Globals.iconEmissionColors.Length > 10)
-                Globals.iconEmissionColors[10] = new Color(0.35f, 0.35f, 0.38f);
+            // Expand iconEmissionColors to include index 11
+            if (Globals.iconEmissionColors != null && Globals.iconEmissionColors.Length <= 11)
+            {
+                var expanded = new Color[12];
+                Globals.iconEmissionColors.CopyTo(expanded, 0);
+                Globals.iconEmissionColors = expanded;
+            }
+            if (Globals.iconEmissionColors != null && Globals.iconEmissionColors.Length > 11)
+                Globals.iconEmissionColors[11] = new Color(0.35f, 0.35f, 0.38f);
 
             // ── Diagnostic: verify spell table state ──────────────────────────
             int axeCount = 0;
