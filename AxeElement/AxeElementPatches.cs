@@ -63,7 +63,7 @@ namespace AxeElement
     public static class AxeWizardStatusPatch
     {
         [HarmonyPostfix]
-        public static void Postfix(WizardStatus __instance, float damage, int owner, int spellId)
+        public static void Postfix(WizardStatus __instance, float damage, int owner, int source)
         {
             IronWardObject.NotifyDamage(owner, damage, __instance);
             WhirlwindObject.NotifyDamage(owner, damage, __instance as UnitStatus);
@@ -203,6 +203,25 @@ namespace AxeElement
                 var textObj = altField.GetValue(__instance);
                 if (textObj is Text uiText && uiText.text != null)
                     uiText.text = uiText.text.Replace("Ice", "Axe");
+            }
+        }
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // DEBUG: Trace GetSpellByRoundAndElement to diagnose wrong element display.
+    // ─────────────────────────────────────────────────────────────────────────
+    [HarmonyPatch(typeof(GameUtility), "GetSpellByRoundAndElement", typeof(Element), typeof(int))]
+    public static class AxeGetSpellDebugPatch
+    {
+        [HarmonyPostfix]
+        public static void Postfix(Element el, int round, Spell __result)
+        {
+            if (el == Axe.Element)
+            {
+                if (__result != null)
+                    Plugin.Log.LogInfo($"[AxeDbg] GetSpellByRoundAndElement(Ice/Axe, round={round}) => {__result.spellName} el={__result.element} btn={__result.spellButton}");
+                else
+                    Plugin.Log.LogWarning($"[AxeDbg] GetSpellByRoundAndElement(Ice/Axe, round={round}) => NULL");
             }
         }
     }

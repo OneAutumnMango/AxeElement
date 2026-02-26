@@ -17,6 +17,7 @@ namespace AxeElement
             PatchGroup(harmony, typeof(AxeElementColorMappingPatch));
             PatchGroup(harmony, typeof(AxeVideoSpellPlayerPatch));
             PatchGroup(harmony, typeof(AxeSelectionMenuPatch));
+            PatchGroup(harmony, typeof(AxeGetSpellDebugPatch));
         }
 
         protected override void OnUnload(Harmony harmony)

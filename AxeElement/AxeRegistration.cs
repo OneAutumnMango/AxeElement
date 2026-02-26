@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Linq;
 using HarmonyLib;
 using UnityEngine;
 
@@ -10,8 +11,60 @@ namespace AxeElement
     /// </summary>
     public static class AxeRegistration
     {
+        private static bool registered;
+        private static readonly HashSet<SpellName> axeSpellNames = new HashSet<SpellName>();
+
         public static void RegisterSpells(SpellManager manager, Dictionary<SpellName, Spell> spellTable)
         {
+            if (spellTable == null)
+            {
+                Plugin.Log.LogWarning("[AxeReg] spellTable is null!");
+                return;
+            }
+
+            Plugin.Log.LogInfo($"[AxeReg] RegisterSpells called. registered={registered}, table count={spellTable.Count}");
+
+            if (registered)
+            {
+                // Re-entering (round transition): just ensure Ice spells stay on Tutorial
+                // and Axe spells are in the table. Skip Axe spells in the Ice reassignment.
+                foreach (var kv in spellTable)
+                {
+                    if (kv.Value != null && kv.Value.element == Element.Ice && !axeSpellNames.Contains(kv.Key))
+                        kv.Value.element = Element.Tutorial;
+                }
+                // Re-add Axe spells if missing (SpellManager recreated the table)
+                var existing = manager.gameObject.GetComponents<Spell>();
+                foreach (var spell in existing)
+                {
+                    if (spell != null && axeSpellNames.Contains(spell.spellName))
+                    {
+                        spell.element = Axe.Element;
+                        if (!spellTable.ContainsKey(spell.spellName))
+                            spellTable[spell.spellName] = spell;
+                    }
+                }
+                Plugin.Log.LogInfo("[AxeReg] Re-entry complete.");
+                return;
+            }
+            registered = true;
+
+            // ── Collect Ice spell icons/videos before reassigning ────────────
+            // Map by SpellButton so we can assign to matching Axe spell slots
+            var iceIcons  = new Dictionary<SpellButton, Sprite>();
+            var iceVideos = new Dictionary<SpellButton, UnityEngine.Video.VideoClip>();
+
+            foreach (var kv in spellTable)
+            {
+                if (kv.Value != null && kv.Value.element == Element.Ice)
+                {
+                    if (kv.Value.icon != null && !iceIcons.ContainsKey(kv.Value.spellButton))
+                        iceIcons[kv.Value.spellButton] = kv.Value.icon;
+                    if (kv.Value.video != null && !iceVideos.ContainsKey(kv.Value.spellButton))
+                        iceVideos[kv.Value.spellButton] = kv.Value.video;
+                }
+            }
+
             // Reassign existing Ice spells to Tutorial element slot (11)
             // so the Axe element slot (10) is exclusively Axe.
             foreach (var kv in spellTable)
@@ -35,7 +88,10 @@ namespace AxeElement
             hatchet.minRange         = 5f;
             hatchet.maxRange         = 30f;
             hatchet.uses             = SpellUses.Attack;
+            hatchet.additionalCasts  = new SubSpell[0];
+            AssignAssets(hatchet, SpellButton.Primary, iceIcons, iceVideos);
             spellTable[Axe.Hatchet]  = hatchet;
+            axeSpellNames.Add(Axe.Hatchet);
 
             // ── Lunge (Movement) ───────────────────────────────────────────
             var lunge = manager.gameObject.AddComponent<Lunge>();
@@ -70,7 +126,9 @@ namespace AxeElement
                     uses             = SpellUses.Move | SpellUses.Attack
                 }
             };
+            AssignAssets(lunge, SpellButton.Movement, iceIcons, iceVideos);
             spellTable[Axe.Lunge] = lunge;
+            axeSpellNames.Add(Axe.Lunge);
 
             // ── Cleave (Melee) ─────────────────────────────────────────────
             var cleave = manager.gameObject.AddComponent<Cleave>();
@@ -87,7 +145,10 @@ namespace AxeElement
             cleave.minRange         = 0f;
             cleave.maxRange         = 4f;
             cleave.uses             = SpellUses.Attack;
+            cleave.additionalCasts  = new SubSpell[0];
+            AssignAssets(cleave, SpellButton.Melee, iceIcons, iceVideos);
             spellTable[Axe.Cleave]  = cleave;
+            axeSpellNames.Add(Axe.Cleave);
 
             // ── Tomahawk (Secondary) ───────────────────────────────────────
             var tomahawk = manager.gameObject.AddComponent<Tomahawk>();
@@ -104,7 +165,10 @@ namespace AxeElement
             tomahawk.minRange        = 5f;
             tomahawk.maxRange        = 30f;
             tomahawk.uses            = SpellUses.Attack;
+            tomahawk.additionalCasts = new SubSpell[0];
+            AssignAssets(tomahawk, SpellButton.Secondary, iceIcons, iceVideos);
             spellTable[Axe.Tomahawk] = tomahawk;
+            axeSpellNames.Add(Axe.Tomahawk);
 
             // ── IronWard (Defensive) ───────────────────────────────────────
             var ironWard = manager.gameObject.AddComponent<IronWard>();
@@ -121,7 +185,10 @@ namespace AxeElement
             ironWard.minRange        = 0f;
             ironWard.maxRange        = 0f;
             ironWard.uses            = SpellUses.Defend | SpellUses.Custom;
+            ironWard.additionalCasts = new SubSpell[0];
+            AssignAssets(ironWard, SpellButton.Defensive, iceIcons, iceVideos);
             spellTable[Axe.IronWard] = ironWard;
+            axeSpellNames.Add(Axe.IronWard);
 
             // ── Shatter (Utility) ──────────────────────────────────────────
             var shatter = manager.gameObject.AddComponent<Shatter>();
@@ -138,7 +205,10 @@ namespace AxeElement
             shatter.minRange         = 5f;
             shatter.maxRange         = 30f;
             shatter.uses             = SpellUses.Attack;
+            shatter.additionalCasts  = new SubSpell[0];
+            AssignAssets(shatter, SpellButton.Utility, iceIcons, iceVideos);
             spellTable[Axe.Shatter]  = shatter;
+            axeSpellNames.Add(Axe.Shatter);
 
             // ── Whirlwind (Ultimate) ───────────────────────────────────────
             var whirlwind = manager.gameObject.AddComponent<Whirlwind>();
@@ -149,13 +219,16 @@ namespace AxeElement
             whirlwind.cooldown        = 20f;
             whirlwind.windUp          = 1.3f;
             whirlwind.windDown        = 0.5f;
-            whirlwind.animationName   = "SelfCast";
+            whirlwind.animationName   = "Spell Channel";
             whirlwind.curveMultiplier = 1.0f;
             whirlwind.initialVelocity = 0f;
             whirlwind.minRange        = 0f;
             whirlwind.maxRange        = 0f;
             whirlwind.uses            = SpellUses.Attack | SpellUses.Custom;
+            whirlwind.additionalCasts = new SubSpell[0];
+            AssignAssets(whirlwind, SpellButton.Ultimate, iceIcons, iceVideos);
             spellTable[Axe.Whirlwind] = whirlwind;
+            axeSpellNames.Add(Axe.Whirlwind);
 
             // ── AI draft priority ──────────────────────────────────────────
             var aiDraft = Traverse.Create(manager)
@@ -164,20 +237,18 @@ namespace AxeElement
 
             if (aiDraft != null)
             {
-                if (aiDraft.ContainsKey(SpellButton.Primary))
-                    aiDraft[SpellButton.Primary].Add(Axe.Hatchet);
-                if (aiDraft.ContainsKey(SpellButton.Movement))
-                    aiDraft[SpellButton.Movement].Add(Axe.Lunge);
-                if (aiDraft.ContainsKey(SpellButton.Melee))
-                    aiDraft[SpellButton.Melee].Add(Axe.Cleave);
-                if (aiDraft.ContainsKey(SpellButton.Secondary))
-                    aiDraft[SpellButton.Secondary].Add(Axe.Tomahawk);
-                if (aiDraft.ContainsKey(SpellButton.Defensive))
-                    aiDraft[SpellButton.Defensive].Add(Axe.IronWard);
-                if (aiDraft.ContainsKey(SpellButton.Utility))
-                    aiDraft[SpellButton.Utility].Add(Axe.Shatter);
-                if (aiDraft.ContainsKey(SpellButton.Ultimate))
-                    aiDraft[SpellButton.Ultimate].Add(Axe.Whirlwind);
+                void TryAddDraft(SpellButton btn, SpellName name)
+                {
+                    if (aiDraft.ContainsKey(btn) && !aiDraft[btn].Contains(name))
+                        aiDraft[btn].Add(name);
+                }
+                TryAddDraft(SpellButton.Primary,   Axe.Hatchet);
+                TryAddDraft(SpellButton.Movement,  Axe.Lunge);
+                TryAddDraft(SpellButton.Melee,     Axe.Cleave);
+                TryAddDraft(SpellButton.Secondary, Axe.Tomahawk);
+                TryAddDraft(SpellButton.Defensive, Axe.IronWard);
+                TryAddDraft(SpellButton.Utility,   Axe.Shatter);
+                TryAddDraft(SpellButton.Ultimate,  Axe.Whirlwind);
             }
 
             // ── UI colors ──────────────────────────────────────────────────
@@ -188,6 +259,36 @@ namespace AxeElement
             // Steel/grey icon emission color
             if (Globals.iconEmissionColors != null && Globals.iconEmissionColors.Length > 10)
                 Globals.iconEmissionColors[10] = new Color(0.35f, 0.35f, 0.38f);
+
+            // ── Diagnostic: verify spell table state ──────────────────────────
+            int axeCount = 0;
+            foreach (var kv in spellTable)
+            {
+                if (kv.Value != null && kv.Value.element == Axe.Element)
+                {
+                    axeCount++;
+                    Plugin.Log.LogInfo($"[AxeReg]   Axe spell in table: {kv.Key} btn={kv.Value.spellButton} el={kv.Value.element}");
+                }
+            }
+            Plugin.Log.LogInfo($"[AxeReg] Registration complete. Axe spells in table: {axeCount}, axeSpellNames count: {axeSpellNames.Count}");
+            Plugin.Log.LogInfo($"[AxeReg] Globals.spell_manager == manager: {Globals.spell_manager == manager}");
+            // Verify the table reference is the same one Globals uses
+            var globalsTable = Traverse.Create(Globals.spell_manager)
+                .Field("spell_table")
+                .GetValue<Dictionary<SpellName, Spell>>();
+            Plugin.Log.LogInfo($"[AxeReg] spellTable ref == globals ref: {object.ReferenceEquals(spellTable, globalsTable)}");
+        }
+
+        private static void AssignAssets(
+            Spell spell,
+            SpellButton button,
+            Dictionary<SpellButton, Sprite> iceIcons,
+            Dictionary<SpellButton, UnityEngine.Video.VideoClip> iceVideos)
+        {
+            if (iceIcons.TryGetValue(button, out var icon))
+                spell.icon = icon;
+            if (iceVideos.TryGetValue(button, out var video))
+                spell.video = video;
         }
     }
 }

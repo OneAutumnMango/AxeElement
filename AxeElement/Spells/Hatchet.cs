@@ -8,8 +8,12 @@ namespace AxeElement
         public override void Initialize(Identity identity, Vector3 position, Quaternion rotation, float curve, int spellIndex, bool selfCast, SpellName spellNameForCooldown)
         {
             var go = GameUtility.Instantiate("Objects/Glaive", position + Spell.skillshotOffset, rotation, 0);
-            UnityEngine.Object.DestroyImmediate(go.GetComponent<GlaiveObject>());
-            go.AddComponent<HatchetObject>().Init(identity, curve * this.curveMultiplier, this.initialVelocity);
+            var original = go.GetComponent<GlaiveObject>();
+            UnityEngine.Object _impact = (original != null) ? original.impact : null;
+            UnityEngine.Object.DestroyImmediate(original);
+            var comp = go.AddComponent<HatchetObject>();
+            comp.impact = _impact;
+            comp.Init(identity, curve * this.curveMultiplier, this.initialVelocity);
         }
 
         public override Vector3? GetAiAim(TargetComponent targetComponent, Vector3 position, Vector3 target, SpellUses use, ref float curve, int owner)

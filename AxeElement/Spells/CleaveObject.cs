@@ -136,8 +136,18 @@ namespace AxeElement
                 GameObject shackleGo = GameUtility.Instantiate("Objects/Shackle Object",
                     enemy.transform.position,
                     Quaternion.LookRotation((enemy.transform.position - base.transform.position).WithY(0f), Vector3.up), 0);
-                UnityEngine.Object.DestroyImmediate(shackleGo.GetComponent<TetherballObjectObject>());
+                var shackleOriginal = shackleGo.GetComponent<TetherballObjectObject>();
+                Transform[] _svt = null;
+                Transform _sattach = null;
+                if (shackleOriginal != null)
+                {
+                    _svt = shackleOriginal.vineTransforms;
+                    _sattach = shackleOriginal.attach;
+                }
+                UnityEngine.Object.DestroyImmediate(shackleOriginal);
                 CleaveShackle shackle = shackleGo.AddComponent<CleaveShackle>();
+                shackle.vineTransforms = _svt;
+                shackle.attach = _sattach;
                 if (Globals.online)
                     shackle.Init(owner, viewIds[i], ballViewId);
                 else

@@ -278,14 +278,26 @@ namespace AxeElement
 
             if (!this.hit)
             {
-                if (this.wizardPhys != null)
-                    this.wizardPhys.abilityVelocity = this.wizardParticles.forward * this.velocity;
-                Vector3 euler = this.wizardParticles.eulerAngles;
-                euler.y += this.curve;
-                this.wizardParticles.eulerAngles = euler;
-                if (this.wizard != null)
+                if (this.wizardParticles != null)
                 {
-                    this.wizardParticles.position = this.wizard.transform.position;
+                    if (this.wizardPhys != null)
+                        this.wizardPhys.abilityVelocity = this.wizardParticles.forward * this.velocity;
+                    Vector3 euler = this.wizardParticles.eulerAngles;
+                    euler.y += this.curve;
+                    this.wizardParticles.eulerAngles = euler;
+                    if (this.wizard != null)
+                    {
+                        this.wizardParticles.position = this.wizard.transform.position;
+                        this.wizard.transform.eulerAngles = euler;
+                    }
+                }
+                else if (this.wizardPhys != null && this.wizard != null)
+                {
+                    // Fallback when wizardParticles is not available on the prefab:
+                    // drive forward movement using the wizard's own transform direction
+                    this.wizardPhys.abilityVelocity = this.wizard.transform.forward * this.velocity;
+                    Vector3 euler = this.wizard.transform.eulerAngles;
+                    euler.y += this.curve;
                     this.wizard.transform.eulerAngles = euler;
                 }
                 if (this.landTimer < Time.time && this.wizardPhys != null && this.wizardPhys.onGround)
@@ -325,9 +337,14 @@ namespace AxeElement
         private void PositionLine()
         {
             if (this.vineTransforms == null || this.vineTransforms.Length == 0 || this.attach == null) return;
-            this.vineTransforms[0].position = this.attach.position;
-            this.vineTransforms[0].rotation = this.attach.rotation;
-            this.vineTransforms[this.vineTransforms.Length - 1].position = this.wizard.transform.position;
+            if (this.vineTransforms[0] != null)
+            {
+                this.vineTransforms[0].position = this.attach.position;
+                this.vineTransforms[0].rotation = this.attach.rotation;
+            }
+            var last = this.vineTransforms[this.vineTransforms.Length - 1];
+            if (last != null && this.wizard != null)
+                last.position = this.wizard.transform.position;
         }
 
         public override void SpellObjectDeath()
