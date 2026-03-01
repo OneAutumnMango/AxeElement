@@ -64,24 +64,25 @@ namespace AxeElement
             foreach (var kv in metalVideos)
                 Plugin.Log.LogInfo($"[AxeReg]   Metal video: btn={kv.Key} clip={kv.Value.name}");
 
-            // ── Hatchet (Primary) ──────────────────────────────────────────
-            var hatchet = manager.gameObject.AddComponent<Hatchet>();
-            hatchet.spellName        = Axe.Hatchet;
-            hatchet.element          = Axe.Element;
-            hatchet.spellButton      = SpellButton.Primary;
-            hatchet.description      = "Hurl a spinning hatchet that homes in on a second target after the first hit.";
-            hatchet.cooldown         = 1.5f;
-            hatchet.windUp           = 0.35f;
-            hatchet.windDown         = 0.3f;
-            hatchet.animationName    = "Attack";
-            hatchet.curveMultiplier  = 1.5f;
-            hatchet.initialVelocity  = 28f;
-            hatchet.minRange         = 0f;
-            hatchet.maxRange         = 30f;
-            hatchet.uses             = SpellUses.Attack;
-            hatchet.additionalCasts  = new SubSpell[0];
-            AssignAssets(hatchet, SpellButton.Primary, metalIcons, metalVideos);
-            spellTable[Axe.Hatchet]  = hatchet;
+            // ── AxePrimary (Primary) ─────────────────────────────────────────
+            var axePrimary = manager.gameObject.AddComponent<AxePrimary>();
+            axePrimary.spellName        = Axe.Hatchet;
+            axePrimary.element          = Axe.Element;
+            axePrimary.spellButton      = SpellButton.Primary;
+            axePrimary.description      = "Hurl a spinning axe-blade that explodes on impact, dealing area damage.";
+            axePrimary.cooldown         = 1.5f;
+            axePrimary.windUp           = 0.35f;
+            axePrimary.windDown         = 0.3f;
+            axePrimary.animationName    = "Attack";
+            axePrimary.curveMultiplier  = 1.5f;
+            axePrimary.initialVelocity  = 28f;
+            axePrimary.minRange         = 0f;
+            axePrimary.maxRange         = 30f;
+            axePrimary.uses             = SpellUses.Attack;
+            axePrimary.additionalCasts  = new SubSpell[0];
+            AssignAssets(axePrimary, SpellButton.Primary, metalIcons, metalVideos);
+            TintIconLighter(axePrimary);
+            spellTable[Axe.Hatchet]     = axePrimary;
             axeSpellNames.Add(Axe.Hatchet);
 
             // ── Lunge (Movement) ───────────────────────────────────────────
@@ -280,6 +281,56 @@ namespace AxeElement
                 .Field("spell_table")
                 .GetValue<Dictionary<SpellName, Spell>>();
             Plugin.Log.LogInfo($"[AxeReg] spellTable ref == globals ref: {object.ReferenceEquals(spellTable, globalsTable)}");
+        }
+
+        private static void TintIconLighter(Spell spell)
+        {
+            if (spell.icon == null) return;
+            try
+            {
+                Sprite original = spell.icon;
+                int w = (int)original.rect.width;
+                int h = (int)original.rect.height;
+                Texture2D readableTex = new Texture2D(w, h, TextureFormat.RGBA32, false);
+
+                // RenderTexture blit to read non-readable source textures
+                RenderTexture rt = RenderTexture.GetTemporary(
+                    original.texture.width, original.texture.height, 0, RenderTextureFormat.Default);
+                Graphics.Blit(original.texture, rt);
+                RenderTexture prev = RenderTexture.active;
+                RenderTexture.active = rt;
+                readableTex.ReadPixels(new Rect(
+                    original.rect.x,
+                    original.texture.height - original.rect.y - original.rect.height,
+                    w, h), 0, 0);
+                readableTex.Apply();
+                RenderTexture.active = prev;
+                RenderTexture.ReleaseTemporary(rt);
+
+                // Blend RGB 40% toward white, preserve original alpha
+                Color[] pixels = readableTex.GetPixels();
+                for (int i = 0; i < pixels.Length; i++)
+                {
+                    pixels[i] = new Color(
+                        Mathf.Lerp(pixels[i].r, 1f, 0.4f),
+                        Mathf.Lerp(pixels[i].g, 1f, 0.4f),
+                        Mathf.Lerp(pixels[i].b, 1f, 0.4f),
+                        pixels[i].a);
+                }
+                readableTex.SetPixels(pixels);
+                readableTex.Apply();
+
+                spell.icon = Sprite.Create(
+                    readableTex,
+                    new Rect(0, 0, w, h),
+                    new Vector2(0.5f, 0.5f),
+                    original.pixelsPerUnit);
+                Plugin.Log.LogInfo("[AxeReg] Tinted Primary icon lighter successfully");
+            }
+            catch (System.Exception ex)
+            {
+                Plugin.Log.LogWarning($"[AxeReg] Icon tinting failed (using original): {ex.Message}");
+            }
         }
 
         private static void AssignAssets(

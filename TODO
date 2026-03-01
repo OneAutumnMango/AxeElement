@@ -1,0 +1,19 @@
+Primary     : basic throw
+Movement    : apollo 3, move back a little then small dash forward with damage
+Melee       :
+Secondary   : beast tamer wild axes
+Defensive   : stand still counter, tp like steam def, small damage low cd
+Utility     : juggernaut spinning blade
+Ultimate    :
+
+# Melee Ideas:
+3s bleed, spells hit during this time refresh the duration and deal 10% more damage
+
+# Ultimate Ideas:
+bonus movespeed and melee cd reduc
+primary bounces once
+lifesteal off bleeding targets
+
+nearby bleeding enemies are slightly slower (10%-15%)
+gain lifesteal off bleeding targets - really hard to implement? maybe just conditional applyDamage patch
+apply bleed in radius
