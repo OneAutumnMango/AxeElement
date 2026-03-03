@@ -151,25 +151,26 @@ namespace AxeElement
             spellTable[Axe.AxeMelee]    = axeMelee;
             axeSpellNames.Add(Axe.AxeMelee);
 
-            // ── Tomahawk (Secondary) ───────────────────────────────────────
-            var tomahawk = manager.gameObject.AddComponent<Tomahawk>();
-            tomahawk.spellName       = Axe.Tomahawk;
-            tomahawk.element         = Axe.Element;
-            tomahawk.spellButton     = SpellButton.Secondary;
-            tomahawk.description     = "Throw a tomahawk that sticks to the first target, then leaps to a second and pulls them together.";
-            tomahawk.cooldown        = 7f;
-            tomahawk.windUp          = 0.5f;
-            tomahawk.windDown        = 0.4f;
-            tomahawk.animationName   = "Secondary Spell";
-            tomahawk.curveMultiplier = 1.5f;
-            tomahawk.initialVelocity = 25f;
-            tomahawk.minRange        = 0f;
-            tomahawk.maxRange        = 40f;
-            tomahawk.uses            = SpellUses.Attack;
-            tomahawk.additionalCasts = new SubSpell[0];
-            AssignAssets(tomahawk, SpellButton.Secondary, metalIcons, metalVideos);
-            spellTable[Axe.Tomahawk] = tomahawk;
-            axeSpellNames.Add(Axe.Tomahawk);
+            // ── AxeSecondary (Secondary) ────────────────────────────────────
+            var axeSecondary = manager.gameObject.AddComponent<AxeSecondary>();
+            axeSecondary.spellName       = Axe.AxeSecondary;
+            axeSecondary.element         = Axe.Element;
+            axeSecondary.spellButton     = SpellButton.Secondary;
+            axeSecondary.description     = "Throw two axes that arc outward and converge, piercing through all enemies they pass through.";
+            axeSecondary.cooldown        = 10f;
+            axeSecondary.windUp          = 0.4f;
+            axeSecondary.windDown        = 0.35f;
+            axeSecondary.animationName   = "Secondary Spell";
+            axeSecondary.curveMultiplier = 0f;
+            axeSecondary.initialVelocity = 45f;
+            axeSecondary.minRange        = 0f;
+            axeSecondary.maxRange        = 28f;
+            axeSecondary.uses            = SpellUses.Attack;
+            axeSecondary.additionalCasts = new SubSpell[0];
+            AssignAssets(axeSecondary, SpellButton.Primary, metalIcons, metalVideos); // start from primary icon
+            TintIconLighter(axeSecondary);
+            spellTable[Axe.AxeSecondary] = axeSecondary;
+            axeSpellNames.Add(Axe.AxeSecondary);
 
             // ── AxeDefensive (Defensive) ───────────────────────────────────
             var axeDefensive = manager.gameObject.AddComponent<AxeDefensive>();
@@ -247,7 +248,7 @@ namespace AxeElement
                 TryAddDraft(SpellButton.Primary,   Axe.AxePrimary);
                 TryAddDraft(SpellButton.Movement,  Axe.Lunge);
                 TryAddDraft(SpellButton.Melee,     Axe.AxeMelee);
-                TryAddDraft(SpellButton.Secondary, Axe.Tomahawk);
+                TryAddDraft(SpellButton.Secondary, Axe.AxeSecondary);
                 TryAddDraft(SpellButton.Defensive, Axe.AxeDefensive);
                 TryAddDraft(SpellButton.Utility,   Axe.Shatter);
                 TryAddDraft(SpellButton.Ultimate,  Axe.Whirlwind);
