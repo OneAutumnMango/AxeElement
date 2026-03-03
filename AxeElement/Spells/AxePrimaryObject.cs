@@ -143,9 +143,11 @@ namespace AxeElement
 
                 Collider[] allInSphere = GameUtility.GetAllInSphere(
                     base.transform.position, this.RADIUS, this.id.owner, new UnitType[1]);
+                var hitTargets = new System.Collections.Generic.HashSet<GameObject>();
                 for (int i = 0; i < allInSphere.Length; i++)
                 {
                     GameObject target = allInSphere[i].transform.root.gameObject;
+                    if (!hitTargets.Add(target)) continue;
                     target.GetComponent<PhysicsBody>().AddForceOwner(
                         GameUtility.GetForceVector(base.transform.position, target.transform.position, this.POWER));
                     target.GetComponent<UnitStatus>().ApplyDamage(this.DAMAGE, this.id.owner, 0);

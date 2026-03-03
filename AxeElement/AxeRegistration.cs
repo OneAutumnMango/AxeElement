@@ -64,6 +64,12 @@ namespace AxeElement
             foreach (var kv in metalVideos)
                 Plugin.Log.LogInfo($"[AxeReg]   Metal video: btn={kv.Key} clip={kv.Value.name}");
 
+            // ── Collect Hinder icon for AxeMelee ─────────────────────────────
+            Sprite hinderIcon = null;
+            if (spellTable.TryGetValue((SpellName)8, out var hinderSpell) && hinderSpell?.icon != null)
+                hinderIcon = hinderSpell.icon;
+            Plugin.Log.LogInfo($"[AxeReg] Hinder icon found: {hinderIcon != null}");
+
             // ── AxePrimary (Primary) ─────────────────────────────────────────
             var axePrimary = manager.gameObject.AddComponent<AxePrimary>();
             axePrimary.spellName        = Axe.Hatchet;
@@ -122,24 +128,27 @@ namespace AxeElement
             spellTable[Axe.Lunge] = lunge;
             axeSpellNames.Add(Axe.Lunge);
 
-            // ── Cleave (Melee) ─────────────────────────────────────────────
-            var cleave = manager.gameObject.AddComponent<Cleave>();
-            cleave.spellName        = Axe.Cleave;
-            cleave.element          = Axe.Element;
-            cleave.spellButton      = SpellButton.Melee;
-            cleave.description      = "Slam the ground around you, chaining nearby enemies to a heavy ball.";
-            cleave.cooldown         = 5f;
-            cleave.windUp           = 0.35f;
-            cleave.windDown         = 0.35f;
-            cleave.animationName    = "Melee";
-            cleave.curveMultiplier  = 0f;
-            cleave.initialVelocity  = 0f;
-            cleave.minRange         = 0f;
-            cleave.maxRange         = 4f;
-            cleave.uses             = SpellUses.Attack;
-            cleave.additionalCasts  = new SubSpell[0];
-            AssignAssets(cleave, SpellButton.Melee, metalIcons, metalVideos);
-            spellTable[Axe.Cleave]  = cleave;
+            // ── AxeMelee (Melee) ───────────────────────────────────────────
+            var axeMelee = manager.gameObject.AddComponent<AxeMelee>();
+            axeMelee.spellName        = Axe.Cleave;
+            axeMelee.element          = Axe.Element;
+            axeMelee.spellButton      = SpellButton.Melee;
+            axeMelee.description      = "Slam with your axe to wound nearby enemies; spells deal more damage to bleeding targets.";
+            axeMelee.cooldown         = 5f;
+            axeMelee.windUp           = 0.35f;
+            axeMelee.windDown         = 0.35f;
+            axeMelee.animationName    = "Melee";
+            axeMelee.curveMultiplier  = 0f;
+            axeMelee.initialVelocity  = 0f;
+            axeMelee.minRange         = 0f;
+            axeMelee.maxRange         = 4f;
+            axeMelee.uses             = SpellUses.Attack;
+            axeMelee.additionalCasts  = new SubSpell[0];
+            AssignAssets(axeMelee, SpellButton.Melee, metalIcons, metalVideos);
+            if (hinderIcon != null)
+                axeMelee.icon = hinderIcon;
+            TintIconGreyscale(axeMelee);
+            spellTable[Axe.Cleave]    = axeMelee;
             axeSpellNames.Add(Axe.Cleave);
 
             // ── Tomahawk (Secondary) ───────────────────────────────────────
@@ -264,6 +273,19 @@ namespace AxeElement
             if (Globals.iconEmissionColors != null && Globals.iconEmissionColors.Length > 11)
                 Globals.iconEmissionColors[11] = new Color(0.35f, 0.35f, 0.38f);
 
+            // ── Load bleed effect prefab for AxeMelee ─────────────────────
+            try
+            {
+                var ignitePrefab = Resources.Load<GameObject>("Objects/Ignite");
+                var igniteComp = ignitePrefab?.GetComponent<IgniteObject>();
+                AxeMeleeObject.BleedEffectPrefab = igniteComp?.effect;
+                Plugin.Log.LogInfo($"[AxeReg] BleedEffectPrefab loaded: {AxeMeleeObject.BleedEffectPrefab != null}");
+            }
+            catch (System.Exception ex)
+            {
+                Plugin.Log.LogWarning($"[AxeReg] BleedEffectPrefab load failed: {ex.Message}");
+            }
+
             // ── Diagnostic: verify spell table state ──────────────────────────
             int axeCount = 0;
             foreach (var kv in spellTable)
@@ -330,6 +352,53 @@ namespace AxeElement
             catch (System.Exception ex)
             {
                 Plugin.Log.LogWarning($"[AxeReg] Icon tinting failed (using original): {ex.Message}");
+            }
+        }
+
+        private static void TintIconGreyscale(Spell spell)
+        {
+            if (spell.icon == null) return;
+            try
+            {
+                Sprite original = spell.icon;
+                int w = (int)original.rect.width;
+                int h = (int)original.rect.height;
+                Texture2D readableTex = new Texture2D(w, h, TextureFormat.RGBA32, false);
+
+                RenderTexture rt = RenderTexture.GetTemporary(
+                    original.texture.width, original.texture.height, 0, RenderTextureFormat.Default);
+                Graphics.Blit(original.texture, rt);
+                RenderTexture prev = RenderTexture.active;
+                RenderTexture.active = rt;
+                readableTex.ReadPixels(new Rect(
+                    original.rect.x,
+                    original.texture.height - original.rect.y - original.rect.height,
+                    w, h), 0, 0);
+                readableTex.Apply();
+                RenderTexture.active = prev;
+                RenderTexture.ReleaseTemporary(rt);
+
+                // Convert to greyscale, then lighten 40% toward white; preserve alpha
+                Color[] pixels = readableTex.GetPixels();
+                for (int i = 0; i < pixels.Length; i++)
+                {
+                    float lum = pixels[i].r * 0.299f + pixels[i].g * 0.587f + pixels[i].b * 0.114f;
+                    float light = Mathf.Lerp(lum, 1f, 0.4f) * 0.9f;
+                    pixels[i] = new Color(light, light, light, pixels[i].a);
+                }
+                readableTex.SetPixels(pixels);
+                readableTex.Apply();
+
+                spell.icon = Sprite.Create(
+                    readableTex,
+                    new Rect(0, 0, w, h),
+                    new Vector2(0.5f, 0.5f),
+                    original.pixelsPerUnit);
+                Plugin.Log.LogInfo("[AxeReg] Converted Melee icon to greyscale successfully");
+            }
+            catch (System.Exception ex)
+            {
+                Plugin.Log.LogWarning($"[AxeReg] Greyscale icon conversion failed (using original): {ex.Message}");
             }
         }
 

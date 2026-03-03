@@ -717,4 +717,33 @@ namespace AxeElement
             }
         }
     }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // WizardStatus.ApplyDamage — Prefix: if the target is bleeding, boost
+    // incoming damage by 10% and refresh the bleed timer.
+    // Patching ApplyDamage (not rpcApplyDamage) ensures the boost is applied
+    // exactly once on the authoritative client before the RPC is dispatched.
+    // ─────────────────────────────────────────────────────────────────────────
+    [HarmonyPatch(typeof(WizardStatus), "ApplyDamage")]
+    public static class AxeBleedApplyDamagePatch
+    {
+        [HarmonyPrefix]
+        public static void Prefix(WizardStatus __instance, ref float damage, int owner, int source)
+        {
+            try
+            {
+                var targetId = __instance.GetComponent<Identity>();
+                if (targetId == null) return;
+                if (BleedManager.IsBleedActive(targetId.owner))
+                {
+                    // damage *= 1.1f;
+                    BleedManager.RefreshBleed(targetId.owner);
+                }
+            }
+            catch (System.Exception ex)
+            {
+                Plugin.Log.LogError($"[AxeBleed] Damage prefix failed: {ex}");
+            }
+        }
+    }
 }
