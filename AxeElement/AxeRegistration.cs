@@ -176,7 +176,7 @@ namespace AxeElement
             axeSecondary.windDown        = 0.35f;
             axeSecondary.animationName   = "Secondary Spell";
             axeSecondary.curveMultiplier = 0f;
-            axeSecondary.initialVelocity = 45f;
+            axeSecondary.initialVelocity = 30f;
             axeSecondary.minRange        = 0f;
             axeSecondary.maxRange        = 28f;
             axeSecondary.uses            = SpellUses.Attack;

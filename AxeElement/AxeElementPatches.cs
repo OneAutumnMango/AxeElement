@@ -734,6 +734,16 @@ namespace AxeElement
             {
                 var targetId = __instance.GetComponent<Identity>();
                 if (targetId == null) return;
+
+                // If target has AxeDefensive active, trigger the counter and block the damage.
+                if (AxeDefensiveObject.activeDefensives.ContainsKey(targetId.owner) &&
+                    AxeDefensiveObject.activeDefensives[targetId.owner] != null)
+                {
+                    AxeDefensiveObject.NotifyDamage(owner, damage, __instance);
+                    damage = 0f;
+                    return;
+                }
+
                 if (BleedManager.IsBleedActive(targetId.owner))
                 {
                     // damage *= 1.1f;

@@ -25,7 +25,7 @@ namespace AxeElement
             RADIUS = 2.5f;
             POWER = 25f;
             Y_POWER = 0f;
-            START_TIME = 0.9f;
+            START_TIME = 1f;
             collisionRadius = 1f;
         }
 
