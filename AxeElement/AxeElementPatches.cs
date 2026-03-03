@@ -20,7 +20,7 @@ namespace AxeElement
         public static readonly Element Element = (Element)11; // Tutorial slot
 
         public static readonly SpellName AxePrimary  = (SpellName)146;
-        public static readonly SpellName Lunge     = (SpellName)147;
+        public static readonly SpellName AxeMovement = (SpellName)147;
         public static readonly SpellName AxeMelee   = (SpellName)148;
         public static readonly SpellName AxeSecondary = (SpellName)149;
         public static readonly SpellName AxeDefensive = (SpellName)150;

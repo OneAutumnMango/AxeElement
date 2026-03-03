@@ -91,42 +91,56 @@ namespace AxeElement
             spellTable[Axe.AxePrimary]     = axePrimary;
             axeSpellNames.Add(Axe.AxePrimary);
 
-            // ── Lunge (Movement) ───────────────────────────────────────────
-            var lunge = manager.gameObject.AddComponent<Lunge>();
-            lunge.spellName         = Axe.Lunge;
-            lunge.element           = Axe.Element;
-            lunge.spellButton       = SpellButton.Movement;
-            lunge.description       = "Lunge forward and latch onto an enemy; recast to reel them in.";
-            lunge.cooldown          = 6f;
-            lunge.windUp            = 0.45f;
-            lunge.windDown          = 0.4f;
-            lunge.animationName     = "FlameLeap";
-            lunge.curveMultiplier   = 2f;
-            lunge.initialVelocity   = 20f;
-            lunge.minRange          = 8f;
-            lunge.maxRange          = 20f;
-            lunge.uses              = SpellUses.Move;
-            lunge.reactivate        = 1;
-            lunge.additionalCasts   = new SubSpell[]
+            // ── AxeMovement (Movement) ──────────────────────────────────────────────
+            var axeMovement = manager.gameObject.AddComponent<AxeMovement>();
+            axeMovement.spellName         = Axe.AxeMovement;
+            axeMovement.element           = Axe.Element;
+            axeMovement.spellButton       = SpellButton.Movement;
+            axeMovement.description       = "Step back and dash forward, striking all enemies in your path. Press again to dash up to 3 times.";
+            axeMovement.cooldown          = 12f;
+            axeMovement.windUp            = 0.15f;
+            axeMovement.windDown          = 0.2f;
+            axeMovement.animationName     = "FlameLeap";
+            axeMovement.curveMultiplier   = 0f;
+            axeMovement.initialVelocity   = 0f;
+            axeMovement.minRange          = 0f;
+            axeMovement.maxRange          = 30f;
+            axeMovement.uses              = SpellUses.Move | SpellUses.Attack;
+            axeMovement.reactivate        = 2;
+            axeMovement.additionalCasts   = new SubSpell[]
             {
                 new SubSpell
                 {
-                    animationName    = "Attack",
-                    cooldown         = 0f,
-                    windUp           = 0.1f,
-                    windDown         = 0.3f,
-                    activationWindow = 4f,
-                    startsDisabled   = true,
+                    animationName    = "FlameLeap",
+                    cooldown         = 12f,
+                    windUp           = 0.15f,
+                    windDown         = 0.2f,
+                    activationWindow = 3f,
+                    startsDisabled   = false,
                     curveMultiplier  = 0f,
                     initialVelocity  = 0f,
                     minRange         = 0f,
-                    maxRange         = 25f,
+                    maxRange         = 30f,
+                    uses             = SpellUses.Move | SpellUses.Attack
+                },
+                new SubSpell
+                {
+                    animationName    = "FlameLeap",
+                    cooldown         = 12f,
+                    windUp           = 0.15f,
+                    windDown         = 0.2f,
+                    activationWindow = 3f,
+                    startsDisabled   = false,
+                    curveMultiplier  = 0f,
+                    initialVelocity  = 0f,
+                    minRange         = 0f,
+                    maxRange         = 30f,
                     uses             = SpellUses.Move | SpellUses.Attack
                 }
             };
-            AssignAssets(lunge, SpellButton.Movement, metalIcons, metalVideos);
-            spellTable[Axe.Lunge] = lunge;
-            axeSpellNames.Add(Axe.Lunge);
+            AssignAssets(axeMovement, SpellButton.Movement, metalIcons, metalVideos);
+            spellTable[Axe.AxeMovement] = axeMovement;
+            axeSpellNames.Add(Axe.AxeMovement);
 
             // ── AxeMelee (Melee) ───────────────────────────────────────────
             var axeMelee = manager.gameObject.AddComponent<AxeMelee>();
@@ -246,7 +260,7 @@ namespace AxeElement
                         aiDraft[btn].Add(name);
                 }
                 TryAddDraft(SpellButton.Primary,   Axe.AxePrimary);
-                TryAddDraft(SpellButton.Movement,  Axe.Lunge);
+                TryAddDraft(SpellButton.Movement,  Axe.AxeMovement);
                 TryAddDraft(SpellButton.Melee,     Axe.AxeMelee);
                 TryAddDraft(SpellButton.Secondary, Axe.AxeSecondary);
                 TryAddDraft(SpellButton.Defensive, Axe.AxeDefensive);
