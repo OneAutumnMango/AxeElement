@@ -70,6 +70,19 @@ namespace AxeElement
                 hinderIcon = hinderSpell.icon;
             Plugin.Log.LogInfo($"[AxeReg] Hinder icon found: {hinderIcon != null}");
 
+            // ── Collect Sand Ult icon for AxeUtility ─────────────────────
+            Sprite sandUltIcon = null;
+            foreach (var kv in spellTable)
+            {
+                if (kv.Value != null && kv.Value.element == (Element)5 &&
+                    kv.Value.spellButton == SpellButton.Ultimate && kv.Value.icon != null)
+                {
+                    sandUltIcon = kv.Value.icon;
+                    break;
+                }
+            }
+            Plugin.Log.LogInfo($"[AxeReg] Sand Ult icon found: {sandUltIcon != null}");
+
             // ── AxePrimary (Primary) ─────────────────────────────────────────
             var axePrimary = manager.gameObject.AddComponent<AxePrimary>();
             axePrimary.spellName        = Axe.AxePrimary;
@@ -207,25 +220,27 @@ namespace AxeElement
             spellTable[Axe.AxeDefensive] = axeDefensive;
             axeSpellNames.Add(Axe.AxeDefensive);
 
-            // ── Shatter (Utility) ──────────────────────────────────────────
-            var shatter = manager.gameObject.AddComponent<Shatter>();
-            shatter.spellName        = Axe.Shatter;
-            shatter.element          = Axe.Element;
-            shatter.spellButton      = SpellButton.Utility;
-            shatter.description      = "Launch a shatter-blade that, on hit, calls down a crushing hammer on the target.";
-            shatter.cooldown         = 8f;
-            shatter.windUp           = 0.35f;
-            shatter.windDown         = 0.35f;
-            shatter.animationName    = "Spell 360";
-            shatter.curveMultiplier  = 1.5f;
-            shatter.initialVelocity  = 35f;
-            shatter.minRange         = 0f;
-            shatter.maxRange         = 40f;
-            shatter.uses             = SpellUses.Attack;
-            shatter.additionalCasts  = new SubSpell[0];
-            AssignAssets(shatter, SpellButton.Utility, metalIcons, metalVideos);
-            spellTable[Axe.Shatter]  = shatter;
-            axeSpellNames.Add(Axe.Shatter);
+            // ── AxeUtility (Utility) ───────────────────────────────────
+            var axeUtility = manager.gameObject.AddComponent<AxeUtility>();
+            axeUtility.spellName        = Axe.AxeUtility;
+            axeUtility.element          = Axe.Element;
+            axeUtility.spellButton      = SpellButton.Utility;
+            axeUtility.description      = "Two spinning glaives orbit you for 7 seconds, striking nearby enemies repeatedly.";
+            axeUtility.cooldown         = 12f;
+            axeUtility.windUp           = 0.2f;
+            axeUtility.windDown         = 0.2f;
+            axeUtility.animationName    = "Spell 360";
+            axeUtility.curveMultiplier  = 0f;
+            axeUtility.initialVelocity  = 0f;
+            axeUtility.minRange         = 0f;
+            axeUtility.maxRange         = 0f;
+            axeUtility.uses             = SpellUses.Attack | SpellUses.Custom;
+            axeUtility.additionalCasts  = new SubSpell[0];
+            if (sandUltIcon != null)
+                axeUtility.icon = sandUltIcon;
+            TintIconDarkGrey(axeUtility);
+            spellTable[Axe.AxeUtility] = axeUtility;
+            axeSpellNames.Add(Axe.AxeUtility);
 
             // ── Whirlwind (Ultimate) ───────────────────────────────────────
             var whirlwind = manager.gameObject.AddComponent<Whirlwind>();
@@ -264,7 +279,7 @@ namespace AxeElement
                 TryAddDraft(SpellButton.Melee,     Axe.AxeMelee);
                 TryAddDraft(SpellButton.Secondary, Axe.AxeSecondary);
                 TryAddDraft(SpellButton.Defensive, Axe.AxeDefensive);
-                TryAddDraft(SpellButton.Utility,   Axe.Shatter);
+                TryAddDraft(SpellButton.Utility,   Axe.AxeUtility);
                 TryAddDraft(SpellButton.Ultimate,  Axe.Whirlwind);
             }
 
@@ -415,6 +430,53 @@ namespace AxeElement
             catch (System.Exception ex)
             {
                 Plugin.Log.LogWarning($"[AxeReg] Greyscale icon conversion failed (using original): {ex.Message}");
+            }
+        }
+
+        private static void TintIconDarkGrey(Spell spell)
+        {
+            if (spell.icon == null) return;
+            try
+            {
+                Sprite original = spell.icon;
+                int w = (int)original.rect.width;
+                int h = (int)original.rect.height;
+                Texture2D readableTex = new Texture2D(w, h, TextureFormat.RGBA32, false);
+
+                RenderTexture rt = RenderTexture.GetTemporary(
+                    original.texture.width, original.texture.height, 0, RenderTextureFormat.Default);
+                Graphics.Blit(original.texture, rt);
+                RenderTexture prev = RenderTexture.active;
+                RenderTexture.active = rt;
+                readableTex.ReadPixels(new Rect(
+                    original.rect.x,
+                    original.texture.height - original.rect.y - original.rect.height,
+                    w, h), 0, 0);
+                readableTex.Apply();
+                RenderTexture.active = prev;
+                RenderTexture.ReleaseTemporary(rt);
+
+                // Convert to greyscale; darken dark areas but preserve bright/white areas.
+                Color[] pixels = readableTex.GetPixels();
+                for (int i = 0; i < pixels.Length; i++)
+                {
+                    float lum = pixels[i].r * 0.299f + pixels[i].g * 0.587f + pixels[i].b * 0.114f;
+                    float grey = Mathf.Lerp(lum * 0.65f, lum, lum);
+                    pixels[i] = new Color(grey, grey, grey, pixels[i].a);
+                }
+                readableTex.SetPixels(pixels);
+                readableTex.Apply();
+
+                spell.icon = Sprite.Create(
+                    readableTex,
+                    new Rect(0, 0, w, h),
+                    new Vector2(0.5f, 0.5f),
+                    original.pixelsPerUnit);
+                Plugin.Log.LogInfo("[AxeReg] Tinted AxeUtility icon dark grey successfully");
+            }
+            catch (System.Exception ex)
+            {
+                Plugin.Log.LogWarning($"[AxeReg] Dark grey icon tint failed (using original): {ex.Message}");
             }
         }
 

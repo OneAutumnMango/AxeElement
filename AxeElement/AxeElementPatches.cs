@@ -24,7 +24,7 @@ namespace AxeElement
         public static readonly SpellName AxeMelee   = (SpellName)148;
         public static readonly SpellName AxeSecondary = (SpellName)149;
         public static readonly SpellName AxeDefensive = (SpellName)150;
-        public static readonly SpellName Shatter   = (SpellName)151;
+        public static readonly SpellName AxeUtility = (SpellName)151;
         public static readonly SpellName Whirlwind = (SpellName)152;
     }
 
