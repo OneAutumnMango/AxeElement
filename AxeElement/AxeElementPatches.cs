@@ -19,11 +19,11 @@ namespace AxeElement
     {
         public static readonly Element Element = (Element)11; // Tutorial slot
 
-        public static readonly SpellName Hatchet   = (SpellName)146;
+        public static readonly SpellName AxePrimary  = (SpellName)146;
         public static readonly SpellName Lunge     = (SpellName)147;
-        public static readonly SpellName Cleave    = (SpellName)148;
+        public static readonly SpellName AxeMelee   = (SpellName)148;
         public static readonly SpellName Tomahawk  = (SpellName)149;
-        public static readonly SpellName IronWard  = (SpellName)150;
+        public static readonly SpellName AxeDefensive = (SpellName)150;
         public static readonly SpellName Shatter   = (SpellName)151;
         public static readonly SpellName Whirlwind = (SpellName)152;
     }
@@ -128,7 +128,7 @@ namespace AxeElement
         {
             try
             {
-                IronWardObject.NotifyDamage(owner, damage, __instance);
+                AxeDefensiveObject.NotifyDamage(owner, damage, __instance);
                 WhirlwindObject.NotifyDamage(owner, damage, __instance as UnitStatus);
             }
             catch (System.Exception ex)

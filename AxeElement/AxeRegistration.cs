@@ -72,7 +72,7 @@ namespace AxeElement
 
             // ── AxePrimary (Primary) ─────────────────────────────────────────
             var axePrimary = manager.gameObject.AddComponent<AxePrimary>();
-            axePrimary.spellName        = Axe.Hatchet;
+            axePrimary.spellName        = Axe.AxePrimary;
             axePrimary.element          = Axe.Element;
             axePrimary.spellButton      = SpellButton.Primary;
             axePrimary.description      = "Hurl a spinning axe-blade that explodes on impact, dealing area damage.";
@@ -86,10 +86,10 @@ namespace AxeElement
             axePrimary.maxRange         = 30f;
             axePrimary.uses             = SpellUses.Attack;
             axePrimary.additionalCasts  = new SubSpell[0];
-            AssignAssets(axePrimary, SpellButton.Primary, metalIcons, metalVideos);
+            AssignAssets(axePrimary, SpellButton.Utility, metalIcons, metalVideos);
             TintIconLighter(axePrimary);
-            spellTable[Axe.Hatchet]     = axePrimary;
-            axeSpellNames.Add(Axe.Hatchet);
+            spellTable[Axe.AxePrimary]     = axePrimary;
+            axeSpellNames.Add(Axe.AxePrimary);
 
             // ── Lunge (Movement) ───────────────────────────────────────────
             var lunge = manager.gameObject.AddComponent<Lunge>();
@@ -130,7 +130,7 @@ namespace AxeElement
 
             // ── AxeMelee (Melee) ───────────────────────────────────────────
             var axeMelee = manager.gameObject.AddComponent<AxeMelee>();
-            axeMelee.spellName        = Axe.Cleave;
+            axeMelee.spellName        = Axe.AxeMelee;
             axeMelee.element          = Axe.Element;
             axeMelee.spellButton      = SpellButton.Melee;
             axeMelee.description      = "Slam with your axe to wound nearby enemies; spells deal more damage to bleeding targets.";
@@ -148,8 +148,8 @@ namespace AxeElement
             if (hinderIcon != null)
                 axeMelee.icon = hinderIcon;
             TintIconGreyscale(axeMelee);
-            spellTable[Axe.Cleave]    = axeMelee;
-            axeSpellNames.Add(Axe.Cleave);
+            spellTable[Axe.AxeMelee]    = axeMelee;
+            axeSpellNames.Add(Axe.AxeMelee);
 
             // ── Tomahawk (Secondary) ───────────────────────────────────────
             var tomahawk = manager.gameObject.AddComponent<Tomahawk>();
@@ -171,25 +171,26 @@ namespace AxeElement
             spellTable[Axe.Tomahawk] = tomahawk;
             axeSpellNames.Add(Axe.Tomahawk);
 
-            // ── IronWard (Defensive) ───────────────────────────────────────
-            var ironWard = manager.gameObject.AddComponent<IronWard>();
-            ironWard.spellName       = Axe.IronWard;
-            ironWard.element         = Axe.Element;
-            ironWard.spellButton     = SpellButton.Defensive;
-            ironWard.description     = "Summon a ward that intercepts incoming damage and hurls it back at the attacker.";
-            ironWard.cooldown        = 10f;
-            ironWard.windUp          = 0.35f;
-            ironWard.windDown        = 0.35f;
-            ironWard.animationName   = "Defensive";
-            ironWard.curveMultiplier = 0f;
-            ironWard.initialVelocity = 0f;
-            ironWard.minRange        = 0f;
-            ironWard.maxRange        = 0f;
-            ironWard.uses            = SpellUses.Defend | SpellUses.Custom;
-            ironWard.additionalCasts = new SubSpell[0];
-            AssignAssets(ironWard, SpellButton.Defensive, metalIcons, metalVideos);
-            spellTable[Axe.IronWard] = ironWard;
-            axeSpellNames.Add(Axe.IronWard);
+            // ── AxeDefensive (Defensive) ───────────────────────────────────
+            var axeDefensive = manager.gameObject.AddComponent<AxeDefensive>();
+            axeDefensive.spellName       = Axe.AxeDefensive;
+            axeDefensive.element         = Axe.Element;
+            axeDefensive.spellButton     = SpellButton.Defensive;
+            axeDefensive.description     = "Stand your ground for 1 second; if struck, teleport to the attacker and deal 5 damage.";
+            axeDefensive.cooldown        = 6f;
+            axeDefensive.windUp          = 0.2f;
+            axeDefensive.windDown        = 0.2f;
+            axeDefensive.animationName   = "Defensive";
+            axeDefensive.curveMultiplier = 0f;
+            axeDefensive.initialVelocity = 0f;
+            axeDefensive.minRange        = 0f;
+            axeDefensive.maxRange        = 0f;
+            axeDefensive.uses            = SpellUses.Defend | SpellUses.Custom;
+            axeDefensive.additionalCasts = new SubSpell[0];
+            AssignAssets(axeDefensive, SpellButton.Ultimate, metalIcons, metalVideos); // use metal ult icon
+            TintIconLighter(axeDefensive);                                              // lighten like Primary
+            spellTable[Axe.AxeDefensive] = axeDefensive;
+            axeSpellNames.Add(Axe.AxeDefensive);
 
             // ── Shatter (Utility) ──────────────────────────────────────────
             var shatter = manager.gameObject.AddComponent<Shatter>();
@@ -243,11 +244,11 @@ namespace AxeElement
                     if (aiDraft.ContainsKey(btn) && !aiDraft[btn].Contains(name))
                         aiDraft[btn].Add(name);
                 }
-                TryAddDraft(SpellButton.Primary,   Axe.Hatchet);
+                TryAddDraft(SpellButton.Primary,   Axe.AxePrimary);
                 TryAddDraft(SpellButton.Movement,  Axe.Lunge);
-                TryAddDraft(SpellButton.Melee,     Axe.Cleave);
+                TryAddDraft(SpellButton.Melee,     Axe.AxeMelee);
                 TryAddDraft(SpellButton.Secondary, Axe.Tomahawk);
-                TryAddDraft(SpellButton.Defensive, Axe.IronWard);
+                TryAddDraft(SpellButton.Defensive, Axe.AxeDefensive);
                 TryAddDraft(SpellButton.Utility,   Axe.Shatter);
                 TryAddDraft(SpellButton.Ultimate,  Axe.Whirlwind);
             }

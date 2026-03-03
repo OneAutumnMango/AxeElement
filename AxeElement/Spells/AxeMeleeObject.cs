@@ -11,7 +11,7 @@ namespace AxeElement
         // Set by AxeRegistration after RegisterSpells
         public static UnityEngine.Object BleedEffectPrefab;
 
-        private const int SOURCE_ID = 148; // (int)Axe.Cleave — registered in spell_table for kill feed
+        private const int SOURCE_ID = 148; // (int)Axe.AxeMelee — registered in spell_table for kill feed
 
         public AxeMeleeObject()
         {
