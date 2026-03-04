@@ -113,6 +113,9 @@ namespace AxeElement
             axePrimary.uses             = SpellUses.Attack;
             axePrimary.additionalCasts  = new SubSpell[0];
             AssignAssets(axePrimary, SpellButton.Utility, metalIcons, metalVideos);
+            var primaryPng = LoadPngIcon("primary.png");
+            if (primaryPng != null)
+                axePrimary.icon = primaryPng;
             TintIconLighter(axePrimary);
             spellTable[Axe.AxePrimary]     = axePrimary;
             axeSpellNames.Add(Axe.AxePrimary);
@@ -167,7 +170,10 @@ namespace AxeElement
             AssignAssets(axeMovement, SpellButton.Movement, metalIcons, metalVideos);
             if (sandPrimaryIcon != null)
                 axeMovement.icon = sandPrimaryIcon;
-            TintIconDarkGrey(axeMovement);
+            var movementPng = LoadPngIcon("movement.png");
+            if (movementPng != null)
+                axeMovement.icon = movementPng;
+            TintIconLighter(axeMovement);
             spellTable[Axe.AxeMovement] = axeMovement;
             axeSpellNames.Add(Axe.AxeMovement);
 
@@ -190,7 +196,10 @@ namespace AxeElement
             AssignAssets(axeMelee, SpellButton.Melee, metalIcons, metalVideos);
             if (hinderIcon != null)
                 axeMelee.icon = hinderIcon;
-            TintIconGreyscale(axeMelee);
+            var meleePng = LoadPngIcon("melee.png");
+            if (meleePng != null)
+                axeMelee.icon = meleePng;
+            TintIconLighter(axeMelee);
             spellTable[Axe.AxeMelee]    = axeMelee;
             axeSpellNames.Add(Axe.AxeMelee);
 
@@ -210,7 +219,10 @@ namespace AxeElement
             axeSecondary.maxRange        = 28f;
             axeSecondary.uses            = SpellUses.Attack;
             axeSecondary.additionalCasts = new SubSpell[0];
-            AssignAssets(axeSecondary, SpellButton.Primary, metalIcons, metalVideos); // start from primary icon
+            AssignAssets(axeSecondary, SpellButton.Primary, metalIcons, metalVideos); // fallback
+            var secondaryPng = LoadPngIcon("secondary.png");
+            if (secondaryPng != null)
+                axeSecondary.icon = secondaryPng;
             TintIconLighter(axeSecondary);
             spellTable[Axe.AxeSecondary] = axeSecondary;
             axeSpellNames.Add(Axe.AxeSecondary);
@@ -232,7 +244,10 @@ namespace AxeElement
             axeDefensive.uses            = SpellUses.Defend | SpellUses.Custom;
             axeDefensive.additionalCasts = new SubSpell[0];
             AssignAssets(axeDefensive, SpellButton.Ultimate, metalIcons, metalVideos); // use metal ult icon
-            TintIconLighter(axeDefensive);                                              // lighten like Primary
+            var defensivePng = LoadPngIcon("defensive.png");
+            if (defensivePng != null)
+                axeDefensive.icon = defensivePng;
+            TintIconLighter(axeDefensive);
             spellTable[Axe.AxeDefensive] = axeDefensive;
             axeSpellNames.Add(Axe.AxeDefensive);
 
@@ -254,7 +269,10 @@ namespace AxeElement
             axeUtility.additionalCasts  = new SubSpell[0];
             if (sandUltIcon != null)
                 axeUtility.icon = sandUltIcon;
-            TintIconDarkGrey(axeUtility);
+            var utilityPng = LoadPngIcon("utility-big.png");
+            if (utilityPng != null)
+                axeUtility.icon = utilityPng;
+            TintIconLighter(axeUtility);
             spellTable[Axe.AxeUtility] = axeUtility;
             axeSpellNames.Add(Axe.AxeUtility);
 
@@ -264,7 +282,7 @@ namespace AxeElement
             axeUltimate.element         = Axe.Element;
             axeUltimate.spellButton     = SpellButton.Ultimate;
             axeUltimate.description     = "Slam your axe into the ground, soaking the area in a blood field; enemies inside are bled and slowed, and every wound you deal to bleeding foes heals you.";
-            axeUltimate.cooldown        = 30f;
+            axeUltimate.cooldown        = 25f;
             axeUltimate.windUp          = 0.75f;
             axeUltimate.windDown        = 0.5f;
             axeUltimate.animationName   = "Melee";
@@ -275,6 +293,9 @@ namespace AxeElement
             axeUltimate.uses            = SpellUses.Attack | SpellUses.Custom;
             axeUltimate.additionalCasts = new SubSpell[0];
             AssignAssets(axeUltimate, SpellButton.Movement, metalIcons, metalVideos);
+            var ultimatePng = LoadPngIcon("ultimate.png");
+            if (ultimatePng != null)
+                axeUltimate.icon = ultimatePng;
             TintIconLighter(axeUltimate);
             spellTable[Axe.AxeUltimate] = axeUltimate;
             axeSpellNames.Add(Axe.AxeUltimate);
@@ -494,6 +515,40 @@ namespace AxeElement
             catch (System.Exception ex)
             {
                 Plugin.Log.LogWarning($"[AxeReg] Dark grey icon tint failed (using original): {ex.Message}");
+            }
+        }
+
+        private static Sprite LoadPngIcon(string filename)
+        {
+            try
+            {
+                string dllDir = System.IO.Path.GetDirectoryName(
+                    typeof(Plugin).Assembly.Location);
+                string path = System.IO.Path.Combine(dllDir, "icons", filename);
+                if (!System.IO.File.Exists(path))
+                {
+                    Plugin.Log.LogWarning($"[AxeReg] Icon not found: {path}");
+                    return null;
+                }
+                byte[] data = System.IO.File.ReadAllBytes(path);
+                var tex = new Texture2D(2, 2, TextureFormat.RGBA32, false);
+                if (!ImageConversion.LoadImage(tex, data))
+                {
+                    Plugin.Log.LogWarning($"[AxeReg] Failed to decode: {filename}");
+                    return null;
+                }
+                var sprite = Sprite.Create(
+                    tex,
+                    new Rect(0, 0, tex.width, tex.height),
+                    new Vector2(0.5f, 0.5f),
+                    100f);
+                Plugin.Log.LogInfo($"[AxeReg] Loaded icon from disk: {filename} ({tex.width}x{tex.height})");
+                return sprite;
+            }
+            catch (System.Exception ex)
+            {
+                Plugin.Log.LogWarning($"[AxeReg] LoadPngIcon failed for {filename}: {ex.Message}");
+                return null;
             }
         }
 

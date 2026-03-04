@@ -81,6 +81,10 @@
 		<Reference Include="Unity.Postprocessing.Runtime">
 			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\MageQuit\MageQuit_Data\Managed\Unity.Postprocessing.Runtime.dll</HintPath>
 		</Reference>
+
+		<Reference Include="UnityEngine.ImageConversionModule">
+			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\MageQuit\MageQuit_Data\Managed\UnityEngine.ImageConversionModule.dll</HintPath>
+		</Reference>
 	</ItemGroup>
 
 	<ItemGroup Condition="Exists('..\MageQuitModFramework\MageQuitModFramework\MageQuitModFramework.csproj')">
@@ -109,6 +113,16 @@
 
 		<Copy SourceFiles="@(PluginDlls)"
 				DestinationFolder="$(BepInExPluginDir)" />
+	</Target>
+
+	<Target Name="CopyIcons"
+			AfterTargets="CopyToBepInEx"
+			Condition="Exists('$(BepInExPluginDir)')">
+		<ItemGroup>
+			<IconFiles Include="icons\*.png" />
+		</ItemGroup>
+		<Copy SourceFiles="@(IconFiles)"
+				DestinationFolder="$(BepInExPluginDir.Trim())\icons" />
 	</Target>
 
 </Project>
