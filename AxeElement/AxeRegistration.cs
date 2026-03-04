@@ -242,25 +242,25 @@ namespace AxeElement
             spellTable[Axe.AxeUtility] = axeUtility;
             axeSpellNames.Add(Axe.AxeUtility);
 
-            // ── Whirlwind (Ultimate) ───────────────────────────────────────
-            var whirlwind = manager.gameObject.AddComponent<Whirlwind>();
-            whirlwind.spellName       = Axe.Whirlwind;
-            whirlwind.element         = Axe.Element;
-            whirlwind.spellButton     = SpellButton.Ultimate;
-            whirlwind.description     = "Enter a berserker state; teleport to and devastate every enemy that has hurt you.";
-            whirlwind.cooldown        = 20f;
-            whirlwind.windUp          = 1.3f;
-            whirlwind.windDown        = 0.5f;
-            whirlwind.animationName   = "Spell Channel";
-            whirlwind.curveMultiplier = 0f;
-            whirlwind.initialVelocity = 0f;
-            whirlwind.minRange        = 0f;
-            whirlwind.maxRange        = 0f;
-            whirlwind.uses            = SpellUses.Attack | SpellUses.Custom;
-            whirlwind.additionalCasts = new SubSpell[0];
-            AssignAssets(whirlwind, SpellButton.Ultimate, metalIcons, metalVideos);
-            spellTable[Axe.Whirlwind] = whirlwind;
-            axeSpellNames.Add(Axe.Whirlwind);
+            // ── Blood Field (Ultimate) ─────────────────────────────────────────
+            var axeUltimate = manager.gameObject.AddComponent<AxeUltimate>();
+            axeUltimate.spellName       = Axe.AxeUltimate;
+            axeUltimate.element         = Axe.Element;
+            axeUltimate.spellButton     = SpellButton.Ultimate;
+            axeUltimate.description     = "Slam your axe into the ground, soaking the area in a blood field; enemies inside are bled and slowed, and every wound you deal to bleeding foes heals you.";
+            axeUltimate.cooldown        = 20f;
+            axeUltimate.windUp          = 0.5f;
+            axeUltimate.windDown        = 0.4f;
+            axeUltimate.animationName   = "Melee";
+            axeUltimate.curveMultiplier = 0f;
+            axeUltimate.initialVelocity = 0f;
+            axeUltimate.minRange        = 0f;
+            axeUltimate.maxRange        = 0f;
+            axeUltimate.uses            = SpellUses.Attack | SpellUses.Custom;
+            axeUltimate.additionalCasts = new SubSpell[0];
+            AssignAssets(axeUltimate, SpellButton.Ultimate, metalIcons, metalVideos);
+            spellTable[Axe.AxeUltimate] = axeUltimate;
+            axeSpellNames.Add(Axe.AxeUltimate);
 
             // ── AI draft priority ──────────────────────────────────────────
             var aiDraft = Traverse.Create(manager)
@@ -280,7 +280,7 @@ namespace AxeElement
                 TryAddDraft(SpellButton.Secondary, Axe.AxeSecondary);
                 TryAddDraft(SpellButton.Defensive, Axe.AxeDefensive);
                 TryAddDraft(SpellButton.Utility,   Axe.AxeUtility);
-                TryAddDraft(SpellButton.Ultimate,  Axe.Whirlwind);
+                TryAddDraft(SpellButton.Ultimate,  Axe.AxeUltimate);
             }
 
             // ── UI colors ──────────────────────────────────────────────────

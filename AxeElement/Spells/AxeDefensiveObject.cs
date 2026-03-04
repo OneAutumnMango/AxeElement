@@ -12,7 +12,7 @@ namespace AxeElement
 
         private const float COUNTER_DAMAGE = 5f;
 
-        // From Double Strike prefab (same as Whirlwind).
+        // From Double Strike prefab.
         public UnityEngine.Object impact;
         public ParticleSystem distortionTrail;
         public ParticleSystem distortion;

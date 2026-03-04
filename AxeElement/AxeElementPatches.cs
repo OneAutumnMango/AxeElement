@@ -25,7 +25,7 @@ namespace AxeElement
         public static readonly SpellName AxeSecondary = (SpellName)149;
         public static readonly SpellName AxeDefensive = (SpellName)150;
         public static readonly SpellName AxeUtility = (SpellName)151;
-        public static readonly SpellName Whirlwind = (SpellName)152;
+        public static readonly SpellName AxeUltimate = (SpellName)152;
     }
 
     [HarmonyPatch]
@@ -117,7 +117,7 @@ namespace AxeElement
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    // WizardStatus.rpcApplyDamage — notify IronWard and Whirlwind objects
+    // WizardStatus.rpcApplyDamage — notify AxeDefensive objects
     // whenever the wizard takes damage.
     // ─────────────────────────────────────────────────────────────────────────
     [HarmonyPatch(typeof(WizardStatus), "rpcApplyDamage")]
@@ -129,7 +129,7 @@ namespace AxeElement
             try
             {
                 AxeDefensiveObject.NotifyDamage(owner, damage, __instance);
-                WhirlwindObject.NotifyDamage(owner, damage, __instance as UnitStatus);
+                AxeUltimateObject.NotifyDamage(owner, damage, __instance as UnitStatus);
             }
             catch (System.Exception ex)
             {
@@ -719,10 +719,11 @@ namespace AxeElement
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    // WizardStatus.ApplyDamage — Prefix: if the target is bleeding, boost
-    // incoming damage by 10% and refresh the bleed timer.
-    // Patching ApplyDamage (not rpcApplyDamage) ensures the boost is applied
-    // exactly once on the authoritative client before the RPC is dispatched.
+    // WizardStatus.ApplyDamage — Prefix:
+    //   • If target has AxeDefensive active  → counter and zero the damage.
+    //   • If target is bleeding              → refresh bleed timer.
+    // Lifesteal is handled in the rpcApplyDamage postfix below, which fires
+    // exactly once per actual damage application on the authoritative client.
     // ─────────────────────────────────────────────────────────────────────────
     [HarmonyPatch(typeof(WizardStatus), "ApplyDamage")]
     public static class AxeBleedApplyDamagePatch
@@ -746,8 +747,26 @@ namespace AxeElement
 
                 if (BleedManager.IsBleedActive(targetId.owner))
                 {
-                    // damage *= 1.1f;
+                    Plugin.Log.LogInfo($"[BloodField] owner={owner} target={targetId.owner} is bleeding");
                     BleedManager.RefreshBleed(targetId.owner);
+
+                    // Axe player bonus: +10% damage and lifesteal vs bleeding enemies.
+                    bool isAxePlayer =
+                        PlayerManager.players.ContainsKey(owner) &&
+                        (
+                            (PlayerManager.players[owner].spell_library.TryGetValue(
+                                SpellButton.Ultimate, out SpellName ultName) && ultName == Axe.AxeUltimate) ||
+                            (PlayerManager.players[owner].spell_library.TryGetValue(
+                                SpellButton.Melee, out SpellName meleeName) && meleeName == Axe.AxeMelee)
+                        );
+
+                    if (isAxePlayer)
+                    {
+                        damage *= 1.1f;
+                        float heal = damage * 0.1f;
+                        Plugin.Log.LogInfo($"[BloodField] owner={owner} damage={damage:F2} heal={heal:F2}");
+                        GameUtility.GetWizard(owner)?.GetComponent<WizardStatus>()?.ApplyHealing(heal, owner);
+                    }
                 }
             }
             catch (System.Exception ex)

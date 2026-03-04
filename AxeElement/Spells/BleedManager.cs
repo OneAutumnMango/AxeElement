@@ -30,8 +30,7 @@ namespace AxeElement
             {
                 try
                 {
-                    var go = UnityEngine.Object.Instantiate(prefab, target.transform.position + Vector3.up * 0.9f, Quaternion.identity) as GameObject;
-                    if (go != null)
+                    if (UnityEngine.Object.Instantiate(prefab, target.transform.position + Vector3.up * 0.9f, Quaternion.identity) is GameObject go)
                     {
                         go.transform.SetParent(target.transform);
                         RecolorDark(go);
