@@ -269,7 +269,7 @@ namespace AxeElement
             axeUtility.additionalCasts  = new SubSpell[0];
             if (sandUltIcon != null)
                 axeUtility.icon = sandUltIcon;
-            var utilityPng = LoadPngIcon("utility-big.png");
+            var utilityPng = LoadPngIcon("utility.png");
             if (utilityPng != null)
                 axeUtility.icon = utilityPng;
             TintIconLighter(axeUtility);
