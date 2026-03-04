@@ -26,7 +26,6 @@ namespace AxeElement
             POWER = 25f;
             Y_POWER = 0f;
             START_TIME = 1f;
-            collisionRadius = 1f;
         }
 
         protected override void Awake()

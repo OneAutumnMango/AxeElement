@@ -29,6 +29,7 @@ namespace AxeElement
 
                 var comp = go.AddComponent<AxeUltimateObject>();
                 comp.Init(identity);
+
                 Plugin.Log.LogInfo("[BloodField] Spawned successfully");
             }
             catch (Exception ex)

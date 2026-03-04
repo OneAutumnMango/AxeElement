@@ -83,13 +83,26 @@ namespace AxeElement
             }
             Plugin.Log.LogInfo($"[AxeReg] Sand Ult icon found: {sandUltIcon != null}");
 
+            // ── Collect Sand Primary icon for AxeMovement ────────────────────
+            Sprite sandPrimaryIcon = null;
+            foreach (var kv in spellTable)
+            {
+                if (kv.Value != null && kv.Value.element == (Element)5 &&
+                    kv.Value.spellButton == SpellButton.Primary && kv.Value.icon != null)
+                {
+                    sandPrimaryIcon = kv.Value.icon;
+                    break;
+                }
+            }
+            Plugin.Log.LogInfo($"[AxeReg] Sand Primary icon found: {sandPrimaryIcon != null}");
+
             // ── AxePrimary (Primary) ─────────────────────────────────────────
             var axePrimary = manager.gameObject.AddComponent<AxePrimary>();
             axePrimary.spellName        = Axe.AxePrimary;
             axePrimary.element          = Axe.Element;
             axePrimary.spellButton      = SpellButton.Primary;
             axePrimary.description      = "Hurl a spinning axe-blade that explodes on impact, dealing area damage.";
-            axePrimary.cooldown         = 1.5f;
+            axePrimary.cooldown         = 3.5f;
             axePrimary.windUp           = 0.35f;
             axePrimary.windDown         = 0.3f;
             axePrimary.animationName    = "Attack";
@@ -141,7 +154,7 @@ namespace AxeElement
                     animationName    = "FlameLeap",
                     cooldown         = 12f,
                     windUp           = 0.15f,
-                    windDown         = 0.2f,
+                    windDown         = 0.3f,
                     activationWindow = 3f,
                     startsDisabled   = false,
                     curveMultiplier  = 0f,
@@ -152,6 +165,9 @@ namespace AxeElement
                 }
             };
             AssignAssets(axeMovement, SpellButton.Movement, metalIcons, metalVideos);
+            if (sandPrimaryIcon != null)
+                axeMovement.icon = sandPrimaryIcon;
+            TintIconDarkGrey(axeMovement);
             spellTable[Axe.AxeMovement] = axeMovement;
             axeSpellNames.Add(Axe.AxeMovement);
 
@@ -162,8 +178,8 @@ namespace AxeElement
             axeMelee.spellButton      = SpellButton.Melee;
             axeMelee.description      = "Slam with your axe to wound nearby enemies; spells deal more damage to bleeding targets.";
             axeMelee.cooldown         = 5f;
-            axeMelee.windUp           = 0.35f;
-            axeMelee.windDown         = 0.35f;
+            axeMelee.windUp           = 0.65f;
+            axeMelee.windDown         = 1.5f;
             axeMelee.animationName    = "Melee";
             axeMelee.curveMultiplier  = 0f;
             axeMelee.initialVelocity  = 0f;
@@ -185,7 +201,7 @@ namespace AxeElement
             axeSecondary.spellButton     = SpellButton.Secondary;
             axeSecondary.description     = "Throw two axes that arc outward and converge, piercing through all enemies they pass through.";
             axeSecondary.cooldown        = 10f;
-            axeSecondary.windUp          = 0.4f;
+            axeSecondary.windUp          = 0.35f;
             axeSecondary.windDown        = 0.35f;
             axeSecondary.animationName   = "Secondary Spell";
             axeSecondary.curveMultiplier = 0f;
@@ -227,8 +243,8 @@ namespace AxeElement
             axeUtility.spellButton      = SpellButton.Utility;
             axeUtility.description      = "Two spinning glaives orbit you for 7 seconds, striking nearby enemies repeatedly.";
             axeUtility.cooldown         = 12f;
-            axeUtility.windUp           = 0.2f;
-            axeUtility.windDown         = 0.2f;
+            axeUtility.windUp           = 0.25f;
+            axeUtility.windDown         = 0.8f;
             axeUtility.animationName    = "Spell 360";
             axeUtility.curveMultiplier  = 0f;
             axeUtility.initialVelocity  = 0f;
@@ -248,9 +264,9 @@ namespace AxeElement
             axeUltimate.element         = Axe.Element;
             axeUltimate.spellButton     = SpellButton.Ultimate;
             axeUltimate.description     = "Slam your axe into the ground, soaking the area in a blood field; enemies inside are bled and slowed, and every wound you deal to bleeding foes heals you.";
-            axeUltimate.cooldown        = 20f;
-            axeUltimate.windUp          = 0.5f;
-            axeUltimate.windDown        = 0.4f;
+            axeUltimate.cooldown        = 30f;
+            axeUltimate.windUp          = 0.75f;
+            axeUltimate.windDown        = 0.5f;
             axeUltimate.animationName   = "Melee";
             axeUltimate.curveMultiplier = 0f;
             axeUltimate.initialVelocity = 0f;
@@ -258,7 +274,8 @@ namespace AxeElement
             axeUltimate.maxRange        = 0f;
             axeUltimate.uses            = SpellUses.Attack | SpellUses.Custom;
             axeUltimate.additionalCasts = new SubSpell[0];
-            AssignAssets(axeUltimate, SpellButton.Ultimate, metalIcons, metalVideos);
+            AssignAssets(axeUltimate, SpellButton.Movement, metalIcons, metalVideos);
+            TintIconLighter(axeUltimate);
             spellTable[Axe.AxeUltimate] = axeUltimate;
             axeSpellNames.Add(Axe.AxeUltimate);
 

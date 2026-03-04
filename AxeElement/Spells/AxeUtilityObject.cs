@@ -16,10 +16,12 @@ namespace AxeElement
         private const float HIT_DAMAGE     = 5f;
         private const float HIT_COOLDOWN   = 1.0f;   // min seconds between hits on same target
         private const float HIT_PUSH       = 15f;
+        private const float SPIN_SPEED     = 360f*1.5f;   // degrees/s self-spin on local Y axis
 
         public UnityEngine.Object impact;
 
         private float angle;
+        private float spinAngle;
         private UnitStatus wizardUs;
         private bool dying;
         private Dictionary<int, float> hitCooldowns = new Dictionary<int, float>();
@@ -108,7 +110,8 @@ namespace AxeElement
         private void FixedUpdate()
         {
             // Advance orbit on all clients for smooth visuals.
-            this.angle += ANGULAR_SPEED * Time.fixedDeltaTime;
+            this.angle     += ANGULAR_SPEED * Time.fixedDeltaTime;
+            this.spinAngle += SPIN_SPEED    * Time.fixedDeltaTime;
             if (this.wizardUs != null)
             {
                 float rad = this.angle * Mathf.Deg2Rad;
@@ -119,7 +122,8 @@ namespace AxeElement
                 float trad = (this.angle + 90f) * Mathf.Deg2Rad;
                 Vector3 tangent = new Vector3(Mathf.Sin(trad), 0f, Mathf.Cos(trad));
                 if (tangent != Vector3.zero)
-                    base.transform.rotation = Quaternion.LookRotation(tangent, Vector3.up);
+                    base.transform.rotation = Quaternion.LookRotation(tangent, Vector3.up)
+                        * Quaternion.Euler(0, this.spinAngle, 0);
             }
 
             // Remote clients only need visuals.

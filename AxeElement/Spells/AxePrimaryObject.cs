@@ -22,12 +22,11 @@ namespace AxeElement
 
         public AxePrimaryObject()
         {
-            DAMAGE = 10f;
+            DAMAGE = 7f;
             RADIUS = 3f;
-            POWER = 35f;
+            POWER = 15f;
             Y_POWER = 0f;
-            START_TIME = 1.156f;
-            collisionRadius = 1f;
+            START_TIME = 1.3f;
         }
 
         protected override void Awake()

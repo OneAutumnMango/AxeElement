@@ -7,7 +7,8 @@ namespace AxeElement
     /// <summary>
     /// Blood Field ultimate: creates a persistent dark field that follows the caster.
     /// All enemies inside are immediately bled and slowed 12.5 %.
-    /// The field lasts 5 s, but its timer resets whenever any enemy is still inside.
+    /// Minimum duration 5 s; field persists while any enemy is inside, then collapses
+    /// the moment the last enemy leaves.
     /// After leaving the field, the slow lingers for 0.5 s.
     /// Deals no direct damage — the surrounding Bleed / lifesteal patches supply the
     /// offensive payoff.
@@ -27,11 +28,12 @@ namespace AxeElement
         private readonly Dictionary<int, (WizardController wc, float lingerExpiry)> _slowed
             = new Dictionary<int, (WizardController wc, float lingerExpiry)>();
 
-        private float            _fieldExpiry;   // abs time the field will collapse (if empty)
+        private float            _fieldExpiry;    // abs time the minimum duration expires
+        private bool             _someoneInside;  // true if any enemy was in range last tick
         private float            _nextTick;
         private bool             _dying;
-        private GameObject       _disc;          // dark ground-plane visual
-        private WizardController _casterWc;      // caster reference for position tracking
+        private GameObject       _disc;           // dark ground-plane visual
+        private WizardController _casterWc;       // caster reference for position tracking
 
         // ── Compatibility stub — AxeWizardStatusPatch still calls this ─────────
         public static void NotifyDamage(int owner, float damage, UnitStatus unit) { }
@@ -121,8 +123,8 @@ namespace AxeElement
                 if (Time.time >= this._slowed[key].lingerExpiry)
                     this.RemoveSlow(key);
 
-            // Field expiry check
-            if (Time.time >= this._fieldExpiry)
+            // Field expiry: minimum 5 s, then dies immediately when no one is inside
+            if (Time.time >= this._fieldExpiry && !this._someoneInside)
                 this.BeginDie();
         }
 
@@ -141,9 +143,6 @@ namespace AxeElement
                 var wc  = go.GetComponent<WizardController>();
                 if (eid == null || wc == null) continue;
                 if (!inField.Add(eid.owner)) continue;   // deduplicate per wizard
-
-                // Someone is inside — keep the field alive
-                this._fieldExpiry = Time.time + FIELD_DURATION;
 
                 // Keep bleed refreshed
                 BleedManager.ApplyBleed(eid.owner, go, AxeMeleeObject.BleedEffectPrefab);
@@ -166,6 +165,9 @@ namespace AxeElement
                         this._slowed[key] = (entry.wc, Time.time + LINGER);
                 }
             }
+
+            // Track occupancy for field expiry logic
+            this._someoneInside = inField.Count > 0;
         }
 
         // ── Apply bleed to all in radius at cast time ────────────────────────────
