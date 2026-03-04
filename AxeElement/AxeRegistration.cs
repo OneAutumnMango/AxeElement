@@ -116,7 +116,7 @@ namespace AxeElement
             var primaryPng = LoadPngIcon("primary.png");
             if (primaryPng != null)
                 axePrimary.icon = primaryPng;
-            TintIconLighter(axePrimary);
+            TintIconMaroon(axePrimary);
             spellTable[Axe.AxePrimary]     = axePrimary;
             axeSpellNames.Add(Axe.AxePrimary);
 
@@ -173,7 +173,7 @@ namespace AxeElement
             var movementPng = LoadPngIcon("movement.png");
             if (movementPng != null)
                 axeMovement.icon = movementPng;
-            TintIconLighter(axeMovement);
+            TintIconMaroon(axeMovement);
             spellTable[Axe.AxeMovement] = axeMovement;
             axeSpellNames.Add(Axe.AxeMovement);
 
@@ -199,7 +199,7 @@ namespace AxeElement
             var meleePng = LoadPngIcon("melee.png");
             if (meleePng != null)
                 axeMelee.icon = meleePng;
-            TintIconLighter(axeMelee);
+            TintIconMaroon(axeMelee);
             spellTable[Axe.AxeMelee]    = axeMelee;
             axeSpellNames.Add(Axe.AxeMelee);
 
@@ -223,7 +223,7 @@ namespace AxeElement
             var secondaryPng = LoadPngIcon("secondary.png");
             if (secondaryPng != null)
                 axeSecondary.icon = secondaryPng;
-            TintIconLighter(axeSecondary);
+            TintIconMaroon(axeSecondary);
             spellTable[Axe.AxeSecondary] = axeSecondary;
             axeSpellNames.Add(Axe.AxeSecondary);
 
@@ -247,7 +247,7 @@ namespace AxeElement
             var defensivePng = LoadPngIcon("defensive.png");
             if (defensivePng != null)
                 axeDefensive.icon = defensivePng;
-            TintIconLighter(axeDefensive);
+            TintIconMaroon(axeDefensive);
             spellTable[Axe.AxeDefensive] = axeDefensive;
             axeSpellNames.Add(Axe.AxeDefensive);
 
@@ -272,7 +272,7 @@ namespace AxeElement
             var utilityPng = LoadPngIcon("utility.png");
             if (utilityPng != null)
                 axeUtility.icon = utilityPng;
-            TintIconLighter(axeUtility);
+            TintIconMaroon(axeUtility);
             spellTable[Axe.AxeUtility] = axeUtility;
             axeSpellNames.Add(Axe.AxeUtility);
 
@@ -296,7 +296,7 @@ namespace AxeElement
             var ultimatePng = LoadPngIcon("ultimate.png");
             if (ultimatePng != null)
                 axeUltimate.icon = ultimatePng;
-            TintIconLighter(axeUltimate);
+            TintIconMaroon(axeUltimate);
             spellTable[Axe.AxeUltimate] = axeUltimate;
             axeSpellNames.Add(Axe.AxeUltimate);
 
@@ -515,6 +515,67 @@ namespace AxeElement
             catch (System.Exception ex)
             {
                 Plugin.Log.LogWarning($"[AxeReg] Dark grey icon tint failed (using original): {ex.Message}");
+            }
+        }
+
+        private static void TintIconMaroon(Spell spell)
+        {
+            if (spell.icon == null) return;
+            try
+            {
+                Sprite original = spell.icon;
+                int w = (int)original.rect.width;
+                int h = (int)original.rect.height;
+                Texture2D readableTex = new Texture2D(w, h, TextureFormat.RGBA32, false);
+
+                RenderTexture rt = RenderTexture.GetTemporary(
+                    original.texture.width, original.texture.height, 0, RenderTextureFormat.Default);
+                Graphics.Blit(original.texture, rt);
+                RenderTexture prev = RenderTexture.active;
+                RenderTexture.active = rt;
+                readableTex.ReadPixels(new Rect(
+                    original.rect.x,
+                    original.texture.height - original.rect.y - original.rect.height,
+                    w, h), 0, 0);
+                readableTex.Apply();
+                RenderTexture.active = prev;
+                RenderTexture.ReleaseTemporary(rt);
+
+                // Maroon tint with contrast preserved:
+                // Convert to greyscale, scale each channel independently so contrast
+                // ratios survive, then blend only the top 25% luminance toward white.
+                Color[] pixels = readableTex.GetPixels();
+                for (int i = 0; i < pixels.Length; i++)
+                {
+                    float lum = pixels[i].r * 0.299f + pixels[i].g * 0.587f + pixels[i].b * 0.114f;
+                    // Slightly darker greyscale base (pow > 1 darkens mid-tones)
+                    float grey = Mathf.Pow(lum, 1.4f);
+                    // Multiplicative tint: boost red, suppress green/blue → deep crimson
+                    float r = Mathf.Clamp01(grey * 1.6f);
+                    float g = Mathf.Clamp01(grey * 0.10f);
+                    float b = Mathf.Clamp01(grey * 0.08f);
+                    // White preservation: only top 25% of luminance blends toward white
+                    float rawWt = Mathf.Max(0f, lum - 0.75f) / 0.25f;
+                    float wt    = rawWt * rawWt;
+                    pixels[i] = new Color(
+                        Mathf.Lerp(r, 1f, wt),
+                        Mathf.Lerp(g, 1f, wt),
+                        Mathf.Lerp(b, 1f, wt),
+                        pixels[i].a);
+                }
+                readableTex.SetPixels(pixels);
+                readableTex.Apply();
+
+                spell.icon = Sprite.Create(
+                    readableTex,
+                    new Rect(0, 0, w, h),
+                    new Vector2(0.5f, 0.5f),
+                    original.pixelsPerUnit);
+                Plugin.Log.LogInfo("[AxeReg] Tinted icon to maroon successfully");
+            }
+            catch (System.Exception ex)
+            {
+                Plugin.Log.LogWarning($"[AxeReg] Maroon icon tint failed (using original): {ex.Message}");
             }
         }
 
