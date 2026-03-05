@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Reflection;
 using FMOD.Studio;
@@ -321,7 +322,7 @@ namespace AxeElement
                 {
                     // Clone Metal's child (index 8) — it already has the Metal sprite
                     var metalChild = tablet.GetChild(8);
-                    var newChild = Object.Instantiate(metalChild, tablet);
+                    var newChild = UnityEngine.Object.Instantiate(metalChild, tablet);
                     newChild.SetAsLastSibling();
 
                     // Place Axe as the 5th element of the center diagonal (children 0-3).
@@ -411,7 +412,7 @@ namespace AxeElement
 
                 // Clone Metal icon (index 8) as template for Axe — already has Metal sprite
                 var template = elements[8];
-                var newObj = Object.Instantiate(template.gameObject, template.transform.parent);
+                var newObj = UnityEngine.Object.Instantiate(template.gameObject, template.transform.parent);
                 var newImage = newObj.GetComponent<Image>();
 
                 // Position next to Ice (index 9) using same grid offset
@@ -613,7 +614,7 @@ namespace AxeElement
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    // SelectionMenu.ShowElementTooltip — Replace "Tutorial" with "Axe" in
+    // SelectionMenu.ShowElementTooltip — Replace "Tutorial" with "Blood" in
     // the element name shown in the description text.
     // ─────────────────────────────────────────────────────────────────────────
     [HarmonyPatch(typeof(SelectionMenu), "ShowElementTooltip")]
@@ -628,7 +629,7 @@ namespace AxeElement
             {
                 var textObj = descField.GetValue(__instance);
                 if (textObj is Text uiText && uiText.text != null)
-                    uiText.text = uiText.text.Replace("Tutorial", "Axe");
+                    uiText.text = uiText.text.Replace("Tutorial", "Blood");
             }
         }
     }
@@ -854,7 +855,7 @@ namespace AxeElement
                     var iceRT   = iceTemplate.GetComponent<RectTransform>();
                     Vector2 colStep = iceRT.anchoredPosition - metalRT.anchoredPosition;
 
-                    var newCell = Object.Instantiate(metalTemplate, spells);
+                    var newCell = UnityEngine.Object.Instantiate(metalTemplate, spells);
                     newCell.SetAsLastSibling();
 
                     // Position one column-step beyond Ice
@@ -902,6 +903,58 @@ namespace AxeElement
             {
                 Plugin.Log.LogError($"[AxeUI] PracticeRangePauseMenu patch failed: {ex}");
             }
+        }
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // VideoSpellPlayer.HighlightSpell — Fix spell name display.
+    // SpellName values 146-152 are not defined in the vanilla enum, so
+    // .ToString() returns the integer ("146") and AddSpaces turns it into
+    // " 146". Both overloads set spellNameText.text the same way, so we
+    // patch both with the same postfix: if the trimmed text parses as an int,
+    // look it up in our name table and replace it.
+    // ─────────────────────────────────────────────────────────────────────────
+    internal static class AxeSpellDisplayNames
+    {
+        internal static readonly Dictionary<SpellName, string> Names =
+            new Dictionary<SpellName, string>
+            {
+                { Axe.AxePrimary,   "Rend" },
+                { Axe.AxeMovement,  "Lunge" },
+                { Axe.AxeMelee,     "Bleed" },
+                { Axe.AxeSecondary, "Wild Axes" },
+                { Axe.AxeDefensive, "Riposte" },
+                { Axe.AxeUtility,   "Blade Storm" },
+                { Axe.AxeUltimate,  "Sanguine Aura" },
+            };
+
+        internal static void FixNameText(VideoSpellPlayer vsp)
+        {
+            if (vsp == null || vsp.spellNameText == null) return;
+            string raw = vsp.spellNameText.text.Trim();
+            if (!int.TryParse(raw, out int id)) return;
+            if (Names.TryGetValue((SpellName)id, out string name))
+                vsp.spellNameText.text = name;
+        }
+    }
+
+    [HarmonyPatch(typeof(VideoSpellPlayer), "HighlightSpell", new Type[] { typeof(Element), typeof(int) })]
+    public static class AxeHighlightSpellElementPatch
+    {
+        [HarmonyPostfix]
+        public static void Postfix(VideoSpellPlayer __instance)
+        {
+            AxeSpellDisplayNames.FixNameText(__instance);
+        }
+    }
+
+    [HarmonyPatch(typeof(VideoSpellPlayer), "HighlightSpell", new Type[] { typeof(int) })]
+    public static class AxeHighlightSpellIndexPatch
+    {
+        [HarmonyPostfix]
+        public static void Postfix(VideoSpellPlayer __instance)
+        {
+            AxeSpellDisplayNames.FixNameText(__instance);
         }
     }
 }

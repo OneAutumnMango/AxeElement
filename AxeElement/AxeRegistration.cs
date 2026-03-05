@@ -101,7 +101,7 @@ namespace AxeElement
             axePrimary.spellName        = Axe.AxePrimary;
             axePrimary.element          = Axe.Element;
             axePrimary.spellButton      = SpellButton.Primary;
-            axePrimary.description      = "Hurl a spinning axe-blade that explodes on impact, dealing area damage.";
+            axePrimary.description      = "Hurl a spinning blade forward.";
             axePrimary.cooldown         = 3.5f;
             axePrimary.windUp           = 0.35f;
             axePrimary.windDown         = 0.3f;
@@ -124,7 +124,7 @@ namespace AxeElement
             axeMovement.spellName         = Axe.AxeMovement;
             axeMovement.element           = Axe.Element;
             axeMovement.spellButton       = SpellButton.Movement;
-            axeMovement.description       = "Step back and dash forward, striking all enemies in your path. Press again to dash up to 3 times.";
+            axeMovement.description       = "Step back and surge forward, striking all enemies in your path. Press again to chain up to 3 lunges.";
             axeMovement.cooldown          = 12f;
             axeMovement.windUp            = 0.15f;
             axeMovement.windDown          = 0.2f;
@@ -180,7 +180,7 @@ namespace AxeElement
             axeMelee.spellName        = Axe.AxeMelee;
             axeMelee.element          = Axe.Element;
             axeMelee.spellButton      = SpellButton.Melee;
-            axeMelee.description      = "Slam with your axe to wound nearby enemies; spells deal more damage to bleeding targets.";
+            axeMelee.description      = "Slash enemies to open deep wounds. Bleeding targets take increased spell damage. Hitting spells refreshes the duration.";
             axeMelee.cooldown         = 5f;
             axeMelee.windUp           = 0.65f;
             axeMelee.windDown         = 1.5f;
@@ -205,7 +205,7 @@ namespace AxeElement
             axeSecondary.spellName       = Axe.AxeSecondary;
             axeSecondary.element         = Axe.Element;
             axeSecondary.spellButton     = SpellButton.Secondary;
-            axeSecondary.description     = "Throw two axes that arc outward and converge, piercing through all enemies they pass through.";
+            axeSecondary.description     = "Unleash two axes that arc outward and converge back, piercing through all enemies in their path.";
             axeSecondary.cooldown        = 10f;
             axeSecondary.windUp          = 0.35f;
             axeSecondary.windDown        = 0.35f;
@@ -228,7 +228,7 @@ namespace AxeElement
             axeDefensive.spellName       = Axe.AxeDefensive;
             axeDefensive.element         = Axe.Element;
             axeDefensive.spellButton     = SpellButton.Defensive;
-            axeDefensive.description     = "Stand your ground for 1 second; if struck, teleport to the attacker and deal 5 damage.";
+            axeDefensive.description     = "Brace for 1 second; if struck, vanish and reappear at your attacker, dealing 5 damage.";
             axeDefensive.cooldown        = 6f;
             axeDefensive.windUp          = 0.2f;
             axeDefensive.windDown        = 0.2f;
@@ -251,7 +251,7 @@ namespace AxeElement
             axeUtility.spellName        = Axe.AxeUtility;
             axeUtility.element          = Axe.Element;
             axeUtility.spellButton      = SpellButton.Utility;
-            axeUtility.description      = "Two spinning glaives orbit you for 7 seconds, striking nearby enemies repeatedly.";
+            axeUtility.description      = "Summon two spinning glaives to orbit you for 5 seconds, shredding nearby enemies.";
             axeUtility.cooldown         = 12f;
             axeUtility.windUp           = 0.25f;
             axeUtility.windDown         = 0.8f;
@@ -275,7 +275,7 @@ namespace AxeElement
             axeUltimate.spellName       = Axe.AxeUltimate;
             axeUltimate.element         = Axe.Element;
             axeUltimate.spellButton     = SpellButton.Ultimate;
-            axeUltimate.description     = "Slam your axe into the ground, soaking the area in a blood field; enemies inside are bled and slowed, and every wound you deal to bleeding foes heals you.";
+            axeUltimate.description     = "Drive your weapon into the ground, saturating the area with a blood field. Enemies inside bleed and slow; every wound you deal to bleeding foes restores your health. Spell persists if enemies remain inside.";
             axeUltimate.cooldown        = 25f;
             axeUltimate.windUp          = 0.75f;
             axeUltimate.windDown        = 0.5f;

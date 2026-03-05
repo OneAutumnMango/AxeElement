@@ -10,8 +10,8 @@ namespace AxeElement
         private static readonly Color GlaiveCrimsonColor = new Color(0.55f, 0.05f, 0.05f);
 
         private const float ORBIT_RADIUS   = 2.5f;
-        private const float ANGULAR_SPEED  = 150f;   // degrees/s — full orbit in ~2.4 s
-        private const float LIFETIME       = 7f;
+        private const float ANGULAR_SPEED  = 180f;   // degrees/s — full orbit in ~2.0 s
+        private const float LIFETIME       = 5f;
         private const float HIT_RADIUS     = 1.0f;
         private const float HIT_DAMAGE     = 5f;
         private const float HIT_COOLDOWN   = 1.0f;   // min seconds between hits on same target
