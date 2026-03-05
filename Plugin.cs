@@ -6,7 +6,7 @@ using MageQuitModFramework.UI;
 namespace AxeElement
 {
     [BepInPlugin("com.magequit.axeelement", "Axe Element", "1.0.0")]
-    [BepInDependency("com.magequit.modframework", "1.0.0")]
+    [BepInDependency("com.magequit.modframework", "1.1.0")]
     public class Plugin : BaseUnityPlugin
     {
         public static Plugin Instance { get; private set; }

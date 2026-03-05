@@ -1,0 +1,10 @@
+# TODO
+make defensive not stop you but reduced movespeed (test with nonbots maybe better)
+
+add element to practice range
+
+update videos
+
+# next promopt
+use the askUserQuestion tool if you have any questions
+once the code builds cleanly use askUserQuestion to prompt me to test it working at runtime, give options like yes works without error, erroers found fill in the box below

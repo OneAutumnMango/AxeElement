@@ -64,162 +64,234 @@ namespace AxeElement
             foreach (var kv in metalVideos)
                 Plugin.Log.LogInfo($"[AxeReg]   Metal video: btn={kv.Key} clip={kv.Value.name}");
 
-            // ── Hatchet (Primary) ──────────────────────────────────────────
-            var hatchet = manager.gameObject.AddComponent<Hatchet>();
-            hatchet.spellName        = Axe.Hatchet;
-            hatchet.element          = Axe.Element;
-            hatchet.spellButton      = SpellButton.Primary;
-            hatchet.description      = "Hurl a spinning hatchet that homes in on a second target after the first hit.";
-            hatchet.cooldown         = 1.5f;
-            hatchet.windUp           = 0.35f;
-            hatchet.windDown         = 0.3f;
-            hatchet.animationName    = "Attack";
-            hatchet.curveMultiplier  = 1.5f;
-            hatchet.initialVelocity  = 28f;
-            hatchet.minRange         = 0f;
-            hatchet.maxRange         = 30f;
-            hatchet.uses             = SpellUses.Attack;
-            hatchet.additionalCasts  = new SubSpell[0];
-            AssignAssets(hatchet, SpellButton.Primary, metalIcons, metalVideos);
-            spellTable[Axe.Hatchet]  = hatchet;
-            axeSpellNames.Add(Axe.Hatchet);
+            // ── Collect Hinder icon for AxeMelee ─────────────────────────────
+            Sprite hinderIcon = null;
+            if (spellTable.TryGetValue((SpellName)8, out var hinderSpell) && hinderSpell?.icon != null)
+                hinderIcon = hinderSpell.icon;
+            Plugin.Log.LogInfo($"[AxeReg] Hinder icon found: {hinderIcon != null}");
 
-            // ── Lunge (Movement) ───────────────────────────────────────────
-            var lunge = manager.gameObject.AddComponent<Lunge>();
-            lunge.spellName         = Axe.Lunge;
-            lunge.element           = Axe.Element;
-            lunge.spellButton       = SpellButton.Movement;
-            lunge.description       = "Lunge forward and latch onto an enemy; recast to reel them in.";
-            lunge.cooldown          = 6f;
-            lunge.windUp            = 0.45f;
-            lunge.windDown          = 0.4f;
-            lunge.animationName     = "FlameLeap";
-            lunge.curveMultiplier   = 2f;
-            lunge.initialVelocity   = 20f;
-            lunge.minRange          = 8f;
-            lunge.maxRange          = 20f;
-            lunge.uses              = SpellUses.Move;
-            lunge.reactivate        = 1;
-            lunge.additionalCasts   = new SubSpell[]
+            // ── Collect Sand Ult icon for AxeUtility ─────────────────────
+            Sprite sandUltIcon = null;
+            foreach (var kv in spellTable)
+            {
+                if (kv.Value != null && kv.Value.element == (Element)5 &&
+                    kv.Value.spellButton == SpellButton.Ultimate && kv.Value.icon != null)
+                {
+                    sandUltIcon = kv.Value.icon;
+                    break;
+                }
+            }
+            Plugin.Log.LogInfo($"[AxeReg] Sand Ult icon found: {sandUltIcon != null}");
+
+            // ── Collect Sand Primary icon for AxeMovement ────────────────────
+            Sprite sandPrimaryIcon = null;
+            foreach (var kv in spellTable)
+            {
+                if (kv.Value != null && kv.Value.element == (Element)5 &&
+                    kv.Value.spellButton == SpellButton.Primary && kv.Value.icon != null)
+                {
+                    sandPrimaryIcon = kv.Value.icon;
+                    break;
+                }
+            }
+            Plugin.Log.LogInfo($"[AxeReg] Sand Primary icon found: {sandPrimaryIcon != null}");
+
+            // ── AxePrimary (Primary) ─────────────────────────────────────────
+            var axePrimary = manager.gameObject.AddComponent<AxePrimary>();
+            axePrimary.spellName        = Axe.AxePrimary;
+            axePrimary.element          = Axe.Element;
+            axePrimary.spellButton      = SpellButton.Primary;
+            axePrimary.description      = "Hurl a spinning blade forward.";
+            axePrimary.cooldown         = 3.5f;
+            axePrimary.windUp           = 0.35f;
+            axePrimary.windDown         = 0.3f;
+            axePrimary.animationName    = "Attack";
+            axePrimary.curveMultiplier  = 1.5f;
+            axePrimary.initialVelocity  = 28f;
+            axePrimary.minRange         = 0f;
+            axePrimary.maxRange         = 30f;
+            axePrimary.uses             = SpellUses.Attack;
+            axePrimary.additionalCasts  = new SubSpell[0];
+            AssignAssets(axePrimary, SpellButton.Utility, metalIcons, metalVideos);
+            var primaryPng = LoadPngIcon("primary.png");
+            if (primaryPng != null)
+                axePrimary.icon = primaryPng;
+            spellTable[Axe.AxePrimary]     = axePrimary;
+            axeSpellNames.Add(Axe.AxePrimary);
+
+            // ── AxeMovement (Movement) ──────────────────────────────────────────────
+            var axeMovement = manager.gameObject.AddComponent<AxeMovement>();
+            axeMovement.spellName         = Axe.AxeMovement;
+            axeMovement.element           = Axe.Element;
+            axeMovement.spellButton       = SpellButton.Movement;
+            axeMovement.description       = "Step back and surge forward, striking all enemies in your path. Press again to chain up to 3 lunges.";
+            axeMovement.cooldown          = 12f;
+            axeMovement.windUp            = 0.15f;
+            axeMovement.windDown          = 0.2f;
+            axeMovement.animationName     = "FlameLeap";
+            axeMovement.curveMultiplier   = 0f;
+            axeMovement.initialVelocity   = 0f;
+            axeMovement.minRange          = 0f;
+            axeMovement.maxRange          = 30f;
+            axeMovement.uses              = SpellUses.Move | SpellUses.Attack;
+            axeMovement.reactivate        = 2;
+            axeMovement.additionalCasts   = new SubSpell[]
             {
                 new SubSpell
                 {
-                    animationName    = "Attack",
-                    cooldown         = 0f,
-                    windUp           = 0.1f,
-                    windDown         = 0.3f,
-                    activationWindow = 4f,
-                    startsDisabled   = true,
+                    animationName    = "FlameLeap",
+                    cooldown         = 12f,
+                    windUp           = 0.15f,
+                    windDown         = 0.2f,
+                    activationWindow = 3f,
+                    startsDisabled   = false,
                     curveMultiplier  = 0f,
                     initialVelocity  = 0f,
                     minRange         = 0f,
-                    maxRange         = 25f,
+                    maxRange         = 30f,
+                    uses             = SpellUses.Move | SpellUses.Attack
+                },
+                new SubSpell
+                {
+                    animationName    = "FlameLeap",
+                    cooldown         = 12f,
+                    windUp           = 0.15f,
+                    windDown         = 0.3f,
+                    activationWindow = 3f,
+                    startsDisabled   = false,
+                    curveMultiplier  = 0f,
+                    initialVelocity  = 0f,
+                    minRange         = 0f,
+                    maxRange         = 30f,
                     uses             = SpellUses.Move | SpellUses.Attack
                 }
             };
-            AssignAssets(lunge, SpellButton.Movement, metalIcons, metalVideos);
-            spellTable[Axe.Lunge] = lunge;
-            axeSpellNames.Add(Axe.Lunge);
+            AssignAssets(axeMovement, SpellButton.Movement, metalIcons, metalVideos);
+            if (sandPrimaryIcon != null)
+                axeMovement.icon = sandPrimaryIcon;
+            var movementPng = LoadPngIcon("movement.png");
+            if (movementPng != null)
+                axeMovement.icon = movementPng;
+            spellTable[Axe.AxeMovement] = axeMovement;
+            axeSpellNames.Add(Axe.AxeMovement);
 
-            // ── Cleave (Melee) ─────────────────────────────────────────────
-            var cleave = manager.gameObject.AddComponent<Cleave>();
-            cleave.spellName        = Axe.Cleave;
-            cleave.element          = Axe.Element;
-            cleave.spellButton      = SpellButton.Melee;
-            cleave.description      = "Slam the ground around you, chaining nearby enemies to a heavy ball.";
-            cleave.cooldown         = 5f;
-            cleave.windUp           = 0.35f;
-            cleave.windDown         = 0.35f;
-            cleave.animationName    = "Melee";
-            cleave.curveMultiplier  = 0f;
-            cleave.initialVelocity  = 0f;
-            cleave.minRange         = 0f;
-            cleave.maxRange         = 4f;
-            cleave.uses             = SpellUses.Attack;
-            cleave.additionalCasts  = new SubSpell[0];
-            AssignAssets(cleave, SpellButton.Melee, metalIcons, metalVideos);
-            spellTable[Axe.Cleave]  = cleave;
-            axeSpellNames.Add(Axe.Cleave);
+            // ── AxeMelee (Melee) ───────────────────────────────────────────
+            var axeMelee = manager.gameObject.AddComponent<AxeMelee>();
+            axeMelee.spellName        = Axe.AxeMelee;
+            axeMelee.element          = Axe.Element;
+            axeMelee.spellButton      = SpellButton.Melee;
+            axeMelee.description      = "Slash enemies to open deep wounds. Bleeding targets take increased spell damage. Hitting spells refreshes the duration.";
+            axeMelee.cooldown         = 5f;
+            axeMelee.windUp           = 0.65f;
+            axeMelee.windDown         = 1.5f;
+            axeMelee.animationName    = "Melee";
+            axeMelee.curveMultiplier  = 0f;
+            axeMelee.initialVelocity  = 0f;
+            axeMelee.minRange         = 0f;
+            axeMelee.maxRange         = 4f;
+            axeMelee.uses             = SpellUses.Attack;
+            axeMelee.additionalCasts  = new SubSpell[0];
+            AssignAssets(axeMelee, SpellButton.Melee, metalIcons, metalVideos);
+            if (hinderIcon != null)
+                axeMelee.icon = hinderIcon;
+            var meleePng = LoadPngIcon("melee.png");
+            if (meleePng != null)
+                axeMelee.icon = meleePng;
+            spellTable[Axe.AxeMelee]    = axeMelee;
+            axeSpellNames.Add(Axe.AxeMelee);
 
-            // ── Tomahawk (Secondary) ───────────────────────────────────────
-            var tomahawk = manager.gameObject.AddComponent<Tomahawk>();
-            tomahawk.spellName       = Axe.Tomahawk;
-            tomahawk.element         = Axe.Element;
-            tomahawk.spellButton     = SpellButton.Secondary;
-            tomahawk.description     = "Throw a tomahawk that sticks to the first target, then leaps to a second and pulls them together.";
-            tomahawk.cooldown        = 7f;
-            tomahawk.windUp          = 0.5f;
-            tomahawk.windDown        = 0.4f;
-            tomahawk.animationName   = "Secondary Spell";
-            tomahawk.curveMultiplier = 1.5f;
-            tomahawk.initialVelocity = 25f;
-            tomahawk.minRange        = 0f;
-            tomahawk.maxRange        = 40f;
-            tomahawk.uses            = SpellUses.Attack;
-            tomahawk.additionalCasts = new SubSpell[0];
-            AssignAssets(tomahawk, SpellButton.Secondary, metalIcons, metalVideos);
-            spellTable[Axe.Tomahawk] = tomahawk;
-            axeSpellNames.Add(Axe.Tomahawk);
+            // ── AxeSecondary (Secondary) ────────────────────────────────────
+            var axeSecondary = manager.gameObject.AddComponent<AxeSecondary>();
+            axeSecondary.spellName       = Axe.AxeSecondary;
+            axeSecondary.element         = Axe.Element;
+            axeSecondary.spellButton     = SpellButton.Secondary;
+            axeSecondary.description     = "Unleash two axes that arc outward and converge back, piercing through all enemies in their path.";
+            axeSecondary.cooldown        = 10f;
+            axeSecondary.windUp          = 0.35f;
+            axeSecondary.windDown        = 0.35f;
+            axeSecondary.animationName   = "Secondary Spell";
+            axeSecondary.curveMultiplier = 0f;
+            axeSecondary.initialVelocity = 30f;
+            axeSecondary.minRange        = 0f;
+            axeSecondary.maxRange        = 28f;
+            axeSecondary.uses            = SpellUses.Attack;
+            axeSecondary.additionalCasts = new SubSpell[0];
+            AssignAssets(axeSecondary, SpellButton.Primary, metalIcons, metalVideos); // fallback
+            var secondaryPng = LoadPngIcon("secondary.png");
+            if (secondaryPng != null)
+                axeSecondary.icon = secondaryPng;
+            spellTable[Axe.AxeSecondary] = axeSecondary;
+            axeSpellNames.Add(Axe.AxeSecondary);
 
-            // ── IronWard (Defensive) ───────────────────────────────────────
-            var ironWard = manager.gameObject.AddComponent<IronWard>();
-            ironWard.spellName       = Axe.IronWard;
-            ironWard.element         = Axe.Element;
-            ironWard.spellButton     = SpellButton.Defensive;
-            ironWard.description     = "Summon a ward that intercepts incoming damage and hurls it back at the attacker.";
-            ironWard.cooldown        = 10f;
-            ironWard.windUp          = 0.35f;
-            ironWard.windDown        = 0.35f;
-            ironWard.animationName   = "Defensive";
-            ironWard.curveMultiplier = 0f;
-            ironWard.initialVelocity = 0f;
-            ironWard.minRange        = 0f;
-            ironWard.maxRange        = 0f;
-            ironWard.uses            = SpellUses.Defend | SpellUses.Custom;
-            ironWard.additionalCasts = new SubSpell[0];
-            AssignAssets(ironWard, SpellButton.Defensive, metalIcons, metalVideos);
-            spellTable[Axe.IronWard] = ironWard;
-            axeSpellNames.Add(Axe.IronWard);
+            // ── AxeDefensive (Defensive) ───────────────────────────────────
+            var axeDefensive = manager.gameObject.AddComponent<AxeDefensive>();
+            axeDefensive.spellName       = Axe.AxeDefensive;
+            axeDefensive.element         = Axe.Element;
+            axeDefensive.spellButton     = SpellButton.Defensive;
+            axeDefensive.description     = "Brace for 1 second; if struck, vanish and reappear at your attacker, dealing 5 damage.";
+            axeDefensive.cooldown        = 6f;
+            axeDefensive.windUp          = 0.2f;
+            axeDefensive.windDown        = 0.2f;
+            axeDefensive.animationName   = "Defensive";
+            axeDefensive.curveMultiplier = 0f;
+            axeDefensive.initialVelocity = 0f;
+            axeDefensive.minRange        = 0f;
+            axeDefensive.maxRange        = 0f;
+            axeDefensive.uses            = SpellUses.Defend | SpellUses.Custom;
+            axeDefensive.additionalCasts = new SubSpell[0];
+            AssignAssets(axeDefensive, SpellButton.Ultimate, metalIcons, metalVideos); // use metal ult icon
+            var defensivePng = LoadPngIcon("defensive.png");
+            if (defensivePng != null)
+                axeDefensive.icon = defensivePng;
+            spellTable[Axe.AxeDefensive] = axeDefensive;
+            axeSpellNames.Add(Axe.AxeDefensive);
 
-            // ── Shatter (Utility) ──────────────────────────────────────────
-            var shatter = manager.gameObject.AddComponent<Shatter>();
-            shatter.spellName        = Axe.Shatter;
-            shatter.element          = Axe.Element;
-            shatter.spellButton      = SpellButton.Utility;
-            shatter.description      = "Launch a shatter-blade that, on hit, calls down a crushing hammer on the target.";
-            shatter.cooldown         = 8f;
-            shatter.windUp           = 0.35f;
-            shatter.windDown         = 0.35f;
-            shatter.animationName    = "Spell 360";
-            shatter.curveMultiplier  = 1.5f;
-            shatter.initialVelocity  = 35f;
-            shatter.minRange         = 0f;
-            shatter.maxRange         = 40f;
-            shatter.uses             = SpellUses.Attack;
-            shatter.additionalCasts  = new SubSpell[0];
-            AssignAssets(shatter, SpellButton.Utility, metalIcons, metalVideos);
-            spellTable[Axe.Shatter]  = shatter;
-            axeSpellNames.Add(Axe.Shatter);
+            // ── AxeUtility (Utility) ───────────────────────────────────
+            var axeUtility = manager.gameObject.AddComponent<AxeUtility>();
+            axeUtility.spellName        = Axe.AxeUtility;
+            axeUtility.element          = Axe.Element;
+            axeUtility.spellButton      = SpellButton.Utility;
+            axeUtility.description      = "Summon two spinning glaives to orbit you for 5 seconds, shredding nearby enemies.";
+            axeUtility.cooldown         = 12f;
+            axeUtility.windUp           = 0.25f;
+            axeUtility.windDown         = 0.8f;
+            axeUtility.animationName    = "Spell 360";
+            axeUtility.curveMultiplier  = 0f;
+            axeUtility.initialVelocity  = 0f;
+            axeUtility.minRange         = 0f;
+            axeUtility.maxRange         = 0f;
+            axeUtility.uses             = SpellUses.Attack | SpellUses.Custom;
+            axeUtility.additionalCasts  = new SubSpell[0];
+            if (sandUltIcon != null)
+                axeUtility.icon = sandUltIcon;
+            var utilityPng = LoadPngIcon("utility.png");
+            if (utilityPng != null)
+                axeUtility.icon = utilityPng;
+            spellTable[Axe.AxeUtility] = axeUtility;
+            axeSpellNames.Add(Axe.AxeUtility);
 
-            // ── Whirlwind (Ultimate) ───────────────────────────────────────
-            var whirlwind = manager.gameObject.AddComponent<Whirlwind>();
-            whirlwind.spellName       = Axe.Whirlwind;
-            whirlwind.element         = Axe.Element;
-            whirlwind.spellButton     = SpellButton.Ultimate;
-            whirlwind.description     = "Enter a berserker state; teleport to and devastate every enemy that has hurt you.";
-            whirlwind.cooldown        = 20f;
-            whirlwind.windUp          = 1.3f;
-            whirlwind.windDown        = 0.5f;
-            whirlwind.animationName   = "Spell Channel";
-            whirlwind.curveMultiplier = 0f;
-            whirlwind.initialVelocity = 0f;
-            whirlwind.minRange        = 0f;
-            whirlwind.maxRange        = 0f;
-            whirlwind.uses            = SpellUses.Attack | SpellUses.Custom;
-            whirlwind.additionalCasts = new SubSpell[0];
-            AssignAssets(whirlwind, SpellButton.Ultimate, metalIcons, metalVideos);
-            spellTable[Axe.Whirlwind] = whirlwind;
-            axeSpellNames.Add(Axe.Whirlwind);
+            // ── Blood Field (Ultimate) ─────────────────────────────────────────
+            var axeUltimate = manager.gameObject.AddComponent<AxeUltimate>();
+            axeUltimate.spellName       = Axe.AxeUltimate;
+            axeUltimate.element         = Axe.Element;
+            axeUltimate.spellButton     = SpellButton.Ultimate;
+            axeUltimate.description     = "Drive your weapon into the ground, saturating the area with a blood field. Enemies inside bleed and slow; every wound you deal to bleeding foes restores your health. Spell persists if enemies remain inside.";
+            axeUltimate.cooldown        = 25f;
+            axeUltimate.windUp          = 0.75f;
+            axeUltimate.windDown        = 0.5f;
+            axeUltimate.animationName   = "Melee";
+            axeUltimate.curveMultiplier = 0f;
+            axeUltimate.initialVelocity = 0f;
+            axeUltimate.minRange        = 0f;
+            axeUltimate.maxRange        = 0f;
+            axeUltimate.uses            = SpellUses.Attack | SpellUses.Custom;
+            axeUltimate.additionalCasts = new SubSpell[0];
+            AssignAssets(axeUltimate, SpellButton.Movement, metalIcons, metalVideos);
+            var ultimatePng = LoadPngIcon("ultimate.png");
+            if (ultimatePng != null)
+                axeUltimate.icon = ultimatePng;
+            spellTable[Axe.AxeUltimate] = axeUltimate;
+            axeSpellNames.Add(Axe.AxeUltimate);
 
             // ── AI draft priority ──────────────────────────────────────────
             var aiDraft = Traverse.Create(manager)
@@ -233,13 +305,13 @@ namespace AxeElement
                     if (aiDraft.ContainsKey(btn) && !aiDraft[btn].Contains(name))
                         aiDraft[btn].Add(name);
                 }
-                TryAddDraft(SpellButton.Primary,   Axe.Hatchet);
-                TryAddDraft(SpellButton.Movement,  Axe.Lunge);
-                TryAddDraft(SpellButton.Melee,     Axe.Cleave);
-                TryAddDraft(SpellButton.Secondary, Axe.Tomahawk);
-                TryAddDraft(SpellButton.Defensive, Axe.IronWard);
-                TryAddDraft(SpellButton.Utility,   Axe.Shatter);
-                TryAddDraft(SpellButton.Ultimate,  Axe.Whirlwind);
+                TryAddDraft(SpellButton.Primary,   Axe.AxePrimary);
+                TryAddDraft(SpellButton.Movement,  Axe.AxeMovement);
+                TryAddDraft(SpellButton.Melee,     Axe.AxeMelee);
+                TryAddDraft(SpellButton.Secondary, Axe.AxeSecondary);
+                TryAddDraft(SpellButton.Defensive, Axe.AxeDefensive);
+                TryAddDraft(SpellButton.Utility,   Axe.AxeUtility);
+                TryAddDraft(SpellButton.Ultimate,  Axe.AxeUltimate);
             }
 
             // ── UI colors ──────────────────────────────────────────────────
@@ -251,7 +323,7 @@ namespace AxeElement
                 manager.spellColors = expanded;
             }
             if (manager.spellColors != null && manager.spellColors.Length > 11)
-                manager.spellColors[11] = new Color(0.6f, 0.6f, 0.65f);
+                manager.spellColors[11] = new Color(0.55f, 0.06f, 0.06f);
 
             // Expand iconEmissionColors to include index 11
             if (Globals.iconEmissionColors != null && Globals.iconEmissionColors.Length <= 11)
@@ -261,7 +333,20 @@ namespace AxeElement
                 Globals.iconEmissionColors = expanded;
             }
             if (Globals.iconEmissionColors != null && Globals.iconEmissionColors.Length > 11)
-                Globals.iconEmissionColors[11] = new Color(0.35f, 0.35f, 0.38f);
+                Globals.iconEmissionColors[11] = new Color(0.30f, 0.03f, 0.03f);
+
+            // ── Load bleed effect prefab for AxeMelee ─────────────────────
+            try
+            {
+                var ignitePrefab = Resources.Load<GameObject>("Objects/Ignite");
+                var igniteComp = ignitePrefab?.GetComponent<IgniteObject>();
+                AxeMeleeObject.BleedEffectPrefab = igniteComp?.effect;
+                Plugin.Log.LogInfo($"[AxeReg] BleedEffectPrefab loaded: {AxeMeleeObject.BleedEffectPrefab != null}");
+            }
+            catch (System.Exception ex)
+            {
+                Plugin.Log.LogWarning($"[AxeReg] BleedEffectPrefab load failed: {ex.Message}");
+            }
 
             // ── Diagnostic: verify spell table state ──────────────────────────
             int axeCount = 0;
@@ -280,6 +365,41 @@ namespace AxeElement
                 .Field("spell_table")
                 .GetValue<Dictionary<SpellName, Spell>>();
             Plugin.Log.LogInfo($"[AxeReg] spellTable ref == globals ref: {object.ReferenceEquals(spellTable, globalsTable)}");
+        }
+
+
+        public static Sprite LoadPngIcon(string filename)
+        {
+            try
+            {
+                string dllDir = System.IO.Path.GetDirectoryName(
+                    typeof(Plugin).Assembly.Location);
+                string path = System.IO.Path.Combine(dllDir, "icons", filename);
+                if (!System.IO.File.Exists(path))
+                {
+                    Plugin.Log.LogWarning($"[AxeReg] Icon not found: {path}");
+                    return null;
+                }
+                byte[] data = System.IO.File.ReadAllBytes(path);
+                var tex = new Texture2D(2, 2, TextureFormat.RGBA32, false);
+                if (!ImageConversion.LoadImage(tex, data))
+                {
+                    Plugin.Log.LogWarning($"[AxeReg] Failed to decode: {filename}");
+                    return null;
+                }
+                var sprite = Sprite.Create(
+                    tex,
+                    new Rect(0, 0, tex.width, tex.height),
+                    new Vector2(0.5f, 0.5f),
+                    100f);
+                Plugin.Log.LogInfo($"[AxeReg] Loaded icon from disk: {filename} ({tex.width}x{tex.height})");
+                return sprite;
+            }
+            catch (System.Exception ex)
+            {
+                Plugin.Log.LogWarning($"[AxeReg] LoadPngIcon failed for {filename}: {ex.Message}");
+                return null;
+            }
         }
 
         private static void AssignAssets(

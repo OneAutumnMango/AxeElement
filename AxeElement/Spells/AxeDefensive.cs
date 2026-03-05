@@ -4,21 +4,23 @@ using UnityEngine;
 
 namespace AxeElement
 {
-    public class Whirlwind : Spell
+    public class AxeDefensive : Spell
     {
         public override void Initialize(Identity identity, Vector3 position, Quaternion rotation, float curve, int spellIndex, bool selfCast, SpellName spellNameForCooldown)
         {
-            Plugin.Log.LogInfo($"[Whirlwind] Initialize: owner={identity?.owner}, pos={position}, curve={curve}, spellIndex={spellIndex}");
+            Plugin.Log.LogInfo($"[AxeDefensive] Initialize: owner={identity?.owner}, pos={position}");
             try
             {
                 var go = GameUtility.Instantiate("Objects/Double Strike", position, rotation, 0);
                 var original = go.GetComponent<DoubleStrikeObject>();
+
                 UnityEngine.Object _impact = null;
                 ParticleSystem _distortionTrail = null;
                 ParticleSystem _distortion = null;
                 UnityEngine.Object _effect = null;
                 ParticleSystem _effectStart = null;
                 SmokeTrail _trail = null;
+
                 if (original != null)
                 {
                     _impact = original.impact;
@@ -28,21 +30,24 @@ namespace AxeElement
                     _effectStart = original.effectStart;
                     _trail = original.trail;
                 }
-                Plugin.Log.LogInfo($"[Whirlwind] Prefab fields: impact={_impact != null}, trail={_trail != null}, distortion={_distortion != null}");
+
+                Plugin.Log.LogInfo($"[AxeDefensive] Prefab fields: impact={_impact != null}, trail={_trail != null}, effectStart={_effectStart != null}");
                 UnityEngine.Object.DestroyImmediate(original);
-                var comp = go.AddComponent<WhirlwindObject>();
+
+                var comp = go.AddComponent<AxeDefensiveObject>();
                 comp.impact = _impact;
                 comp.distortionTrail = _distortionTrail;
                 comp.distortion = _distortion;
                 comp.effect = _effect;
                 comp.effectStart = _effectStart;
                 comp.trail = _trail;
-                comp.Init(identity, curve);
-                Plugin.Log.LogInfo("[Whirlwind] Spawned successfully");
+                comp.Init(identity);
+
+                Plugin.Log.LogInfo("[AxeDefensive] Spawned successfully");
             }
-            catch (System.Exception ex)
+            catch (Exception ex)
             {
-                Plugin.Log.LogError($"[Whirlwind] Initialize FAILED: {ex}");
+                Plugin.Log.LogError($"[AxeDefensive] Initialize FAILED: {ex}");
             }
         }
 
@@ -58,7 +63,7 @@ namespace AxeElement
 
         public override bool AvailableOverride(AiController ai, int owner, SpellUses use, int reactivate)
         {
-            return use != SpellUses.Custom || ai.spellComponent.WillStillBeDealingDamageOverTime(this.windUp);
+            return use != SpellUses.Custom || ai.spellComponent.WillStillBeTakingDamageOverTime(this.windUp, 2f);
         }
     }
 }

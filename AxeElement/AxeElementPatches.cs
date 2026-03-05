@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Reflection;
 using FMOD.Studio;
@@ -19,13 +20,13 @@ namespace AxeElement
     {
         public static readonly Element Element = (Element)11; // Tutorial slot
 
-        public static readonly SpellName Hatchet   = (SpellName)146;
-        public static readonly SpellName Lunge     = (SpellName)147;
-        public static readonly SpellName Cleave    = (SpellName)148;
-        public static readonly SpellName Tomahawk  = (SpellName)149;
-        public static readonly SpellName IronWard  = (SpellName)150;
-        public static readonly SpellName Shatter   = (SpellName)151;
-        public static readonly SpellName Whirlwind = (SpellName)152;
+        public static readonly SpellName AxePrimary  = (SpellName)146;
+        public static readonly SpellName AxeMovement = (SpellName)147;
+        public static readonly SpellName AxeMelee   = (SpellName)148;
+        public static readonly SpellName AxeSecondary = (SpellName)149;
+        public static readonly SpellName AxeDefensive = (SpellName)150;
+        public static readonly SpellName AxeUtility = (SpellName)151;
+        public static readonly SpellName AxeUltimate = (SpellName)152;
     }
 
     [HarmonyPatch]
@@ -117,7 +118,7 @@ namespace AxeElement
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    // WizardStatus.rpcApplyDamage — notify IronWard and Whirlwind objects
+    // WizardStatus.rpcApplyDamage — notify AxeDefensive objects
     // whenever the wizard takes damage.
     // ─────────────────────────────────────────────────────────────────────────
     [HarmonyPatch(typeof(WizardStatus), "rpcApplyDamage")]
@@ -128,8 +129,8 @@ namespace AxeElement
         {
             try
             {
-                IronWardObject.NotifyDamage(owner, damage, __instance);
-                WhirlwindObject.NotifyDamage(owner, damage, __instance as UnitStatus);
+                AxeDefensiveObject.NotifyDamage(owner, damage, __instance);
+                AxeUltimateObject.NotifyDamage(owner, damage, __instance as UnitStatus);
             }
             catch (System.Exception ex)
             {
@@ -248,17 +249,11 @@ namespace AxeElement
             {
                 var locksField = typeof(AvailableElements).GetField("locks",
                     BindingFlags.NonPublic | BindingFlags.Instance);
-                var iconsField = typeof(AvailableElements).GetField("elementIcons",
-                    BindingFlags.NonPublic | BindingFlags.Instance);
 
                 var locks = locksField?.GetValue(__instance) as Image[];
-                var icons = iconsField?.GetValue(__instance) as Image[];
 
                 if (locks != null && locks.Length > 10)
                     locks[10].enabled = false;
-
-                if (icons != null && icons.Length > 10)
-                    icons[10].color = new Color(0.4f, 0.4f, 0.4f);
             }
             catch (System.Exception ex)
             {
@@ -327,17 +322,25 @@ namespace AxeElement
                 {
                     // Clone Metal's child (index 8) — it already has the Metal sprite
                     var metalChild = tablet.GetChild(8);
-                    var newChild = Object.Instantiate(metalChild, tablet);
+                    var newChild = UnityEngine.Object.Instantiate(metalChild, tablet);
                     newChild.SetAsLastSibling();
 
-                    // Position next to Ice (index 9) using same grid offset
-                    var metalRT = metalChild.GetComponent<RectTransform>();
-                    var iceRT = tablet.GetChild(9).GetComponent<RectTransform>();
+                    // Place Axe as the 5th element of the center diagonal (children 0-3).
+                    // Step = (child3 - child0) / 3; new pos = child3 + step.
+                    var e0RT = tablet.GetChild(0).GetComponent<RectTransform>();
+                    var e3RT = tablet.GetChild(3).GetComponent<RectTransform>();
+                    var step = (e3RT.anchoredPosition - e0RT.anchoredPosition) / 3f;
                     var newRT = newChild.GetComponent<RectTransform>();
-                    float xStep = iceRT.anchoredPosition.x - metalRT.anchoredPosition.x;
-                    newRT.anchoredPosition = new Vector2(
-                        iceRT.anchoredPosition.x + xStep,
-                        metalRT.anchoredPosition.y);
+                    newRT.anchoredPosition = e3RT.anchoredPosition + step;
+
+                    // Match the prefab rotation baked into the other icons (clockwise tilt).
+                    // Copy from child 0 to guarantee parity regardless of clone behaviour.
+                    newRT.localEulerAngles = e0RT.localEulerAngles;
+
+                    // Replace Metal's symbol with the Axe icon PNG
+                    var axeSprite = AxeRegistration.LoadPngIcon("primary.png");
+                    if (axeSprite != null)
+                        newChild.GetComponent<Image>().sprite = axeSprite;
 
                     Plugin.Log.LogInfo("[AxeUI] AvailableElements: Cloned Metal icon as 11th tablet child for Axe");
                 }
@@ -360,13 +363,22 @@ namespace AxeElement
                 var elementIcons = iconsField.GetValue(__instance) as Image[];
                 if (elementIcons == null || elementIcons.Length < 11) return;
 
-                // Ensure index 10 (Axe) has the Metal sprite
+                // Ensure index 10 (Axe) has the Axe icon, falling back to Metal sprite
                 var metalIcon = elementIcons[8];
                 var axeIcon = elementIcons[10];
-                if (metalIcon != null && axeIcon != null && metalIcon.sprite != null)
+                if (axeIcon != null)
                 {
-                    axeIcon.sprite = metalIcon.sprite;
-                    Plugin.Log.LogInfo("[AxeUI] AvailableElements: Confirmed Metal icon on Axe slot (index 10)");
+                    var axeSprite = AxeRegistration.LoadPngIcon("primary.png");
+                    if (axeSprite != null)
+                    {
+                        axeIcon.sprite = axeSprite;
+                        Plugin.Log.LogInfo("[AxeUI] AvailableElements: Set Axe PNG icon on slot (index 10)");
+                    }
+                    else if (metalIcon != null && metalIcon.sprite != null)
+                    {
+                        axeIcon.sprite = metalIcon.sprite;
+                        Plugin.Log.LogInfo("[AxeUI] AvailableElements: Fallback — Metal icon on Axe slot (index 10)");
+                    }
                 }
             }
             catch (System.Exception ex)
@@ -400,7 +412,7 @@ namespace AxeElement
 
                 // Clone Metal icon (index 8) as template for Axe — already has Metal sprite
                 var template = elements[8];
-                var newObj = Object.Instantiate(template.gameObject, template.transform.parent);
+                var newObj = UnityEngine.Object.Instantiate(template.gameObject, template.transform.parent);
                 var newImage = newObj.GetComponent<Image>();
 
                 // Position next to Ice (index 9) using same grid offset
@@ -417,6 +429,11 @@ namespace AxeElement
                 elements.CopyTo(expanded, 0);
                 expanded[10] = newImage;
                 elementsField.SetValue(__instance, expanded);
+
+                // Replace Metal's element symbol with the Axe icon PNG
+                var axeSprite = AxeRegistration.LoadPngIcon("primary.png");
+                if (axeSprite != null)
+                    newImage.sprite = axeSprite;
 
                 // Initialize child indicators (Included/Banned/Lock) as hidden
                 newObj.transform.GetChild(0).gameObject.SetActive(false);
@@ -577,7 +594,7 @@ namespace AxeElement
                     darkColors = expanded;
                 }
                 if (darkColors != null && darkColors.Length > 11)
-                    darkColors[11] = new Color(0.3f, 0.3f, 0.35f);
+                    darkColors[11] = new Color(0.35f, 0.04f, 0.04f);
             }
 
             if (lightField != null)
@@ -591,13 +608,13 @@ namespace AxeElement
                     lightColors = expanded;
                 }
                 if (lightColors != null && lightColors.Length > 11)
-                    lightColors[11] = new Color(0.7f, 0.7f, 0.75f);
+                    lightColors[11] = new Color(0.75f, 0.25f, 0.20f);
             }
         }
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    // SelectionMenu.ShowElementTooltip — Replace "Tutorial" with "Axe" in
+    // SelectionMenu.ShowElementTooltip — Replace "Tutorial" with "Blood" in
     // the element name shown in the description text.
     // ─────────────────────────────────────────────────────────────────────────
     [HarmonyPatch(typeof(SelectionMenu), "ShowElementTooltip")]
@@ -612,7 +629,7 @@ namespace AxeElement
             {
                 var textObj = descField.GetValue(__instance);
                 if (textObj is Text uiText && uiText.text != null)
-                    uiText.text = uiText.text.Replace("Tutorial", "Axe");
+                    uiText.text = uiText.text.Replace("Tutorial", "Blood");
             }
         }
     }
@@ -715,6 +732,229 @@ namespace AxeElement
                 GamePreferences.current.prefs.LastUnlockedIndex = savedLastUnlockedIndex;
                 savedLastUnlockedIndex = -1;
             }
+        }
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // WizardStatus.ApplyDamage — Prefix:
+    //   • If target has AxeDefensive active  → counter and zero the damage.
+    //   • If target is bleeding              → refresh bleed timer.
+    // Lifesteal is handled in the rpcApplyDamage postfix below, which fires
+    // exactly once per actual damage application on the authoritative client.
+    // ─────────────────────────────────────────────────────────────────────────
+    [HarmonyPatch(typeof(WizardStatus), "ApplyDamage")]
+    public static class AxeBleedApplyDamagePatch
+    {
+        [HarmonyPrefix]
+        public static void Prefix(WizardStatus __instance, ref float damage, int owner, int source)
+        {
+            try
+            {
+                var targetId = __instance.GetComponent<Identity>();
+                if (targetId == null) return;
+
+                // If target has AxeDefensive active, trigger the counter and block the damage.
+                if (AxeDefensiveObject.activeDefensives.ContainsKey(targetId.owner) &&
+                    AxeDefensiveObject.activeDefensives[targetId.owner] != null)
+                {
+                    AxeDefensiveObject.NotifyDamage(owner, damage, __instance);
+                    damage = 0f;
+                    return;
+                }
+
+                if (BleedManager.IsBleedActive(targetId.owner))
+                {
+                    Plugin.Log.LogInfo($"[BloodField] owner={owner} target={targetId.owner} is bleeding");
+                    BleedManager.RefreshBleed(targetId.owner);
+
+                    // Axe player bonus: +10% damage and lifesteal vs bleeding enemies.
+                    bool isAxePlayer =
+                        PlayerManager.players.ContainsKey(owner) &&
+                        (
+                            (PlayerManager.players[owner].spell_library.TryGetValue(
+                                SpellButton.Ultimate, out SpellName ultName) && ultName == Axe.AxeUltimate) ||
+                            (PlayerManager.players[owner].spell_library.TryGetValue(
+                                SpellButton.Melee, out SpellName meleeName) && meleeName == Axe.AxeMelee)
+                        );
+
+                    if (isAxePlayer)
+                    {
+                        damage *= 1.1f;
+                        float heal = damage * 0.1f;
+                        Plugin.Log.LogInfo($"[BloodField] owner={owner} damage={damage:F2} heal={heal:F2}");
+                        GameUtility.GetWizard(owner)?.GetComponent<WizardStatus>()?.ApplyHealing(heal, owner);
+                    }
+                }
+            }
+            catch (System.Exception ex)
+            {
+                Plugin.Log.LogError($"[AxeBleed] Damage prefix failed: {ex}");
+            }
+        }
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // PhysicsBody.AddForceOwner — Block knockback from the parried hit.
+    // activeDefensives is already cleared when AddForceOwner is called (the
+    // parry consumes during ApplyDamage), so we use recentlyParriedUntil which
+    // stays set for 0.5 s, covering the same-frame AddForceOwner call.
+    // ─────────────────────────────────────────────────────────────────────────
+    [HarmonyPatch(typeof(PhysicsBody), "AddForceOwner")]
+    public static class AxeDefensiveKnockbackPatch
+    {
+        [HarmonyPrefix]
+        public static bool Prefix(PhysicsBody __instance)
+        {
+            var identity = __instance.GetComponent<Identity>();
+            if (identity == null) return true;
+
+            // Block while actively parrying.
+            if (AxeDefensiveObject.activeDefensives.TryGetValue(identity.owner, out var def) && def != null)
+                return false;
+
+            // Block briefly after the parry fires (covers same-frame AddForceOwner calls).
+            if (AxeDefensiveObject.recentlyParriedUntil.TryGetValue(identity.owner, out float until) &&
+                Time.time < until)
+                return false;
+
+            return true;
+        }
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // PracticeRangePauseMenu.Awake — Append 7 spell-cell buttons for the Axe
+    // column (index 10) and bump maxX so keyboard/gamepad navigation reaches it.
+    //
+    // Layout: this.spells children are laid out as:
+    //   [0..14]  = header row / misc UI (15 items, untouched)
+    //   [15 + i*7 + j] = spell cell for element column i, spell row j
+    // We append children 85..91 (= 15 + 10*7 + 0..6) for Axe.
+    // ─────────────────────────────────────────────────────────────────────────
+    [HarmonyPatch(typeof(PracticeRangePauseMenu), "Awake")]
+    public static class AxePracticeMenuPatch
+    {
+        [HarmonyPostfix]
+        public static void Postfix(PracticeRangePauseMenu __instance)
+        {
+            try
+            {
+                var spells = __instance.spells;
+                if (spells == null) return;
+
+                // Guard: only expand once
+                int expected = 15 + 11 * 7; // 92
+                if (spells.childCount >= expected) return;
+
+                // Clone Metal's cells (column i=8, children 71..77) as templates.
+                // Compute per-row column step from Metal→Ice (i=8→9) to place Axe at i=10.
+                for (int j = 0; j < 7; j++)
+                {
+                    var metalTemplate = spells.GetChild(15 + 8 * 7 + j);
+                    var iceTemplate   = spells.GetChild(15 + 9 * 7 + j);
+                    var metalRT = metalTemplate.GetComponent<RectTransform>();
+                    var iceRT   = iceTemplate.GetComponent<RectTransform>();
+                    Vector2 colStep = iceRT.anchoredPosition - metalRT.anchoredPosition;
+
+                    var newCell = UnityEngine.Object.Instantiate(metalTemplate, spells);
+                    newCell.SetAsLastSibling();
+
+                    // Position one column-step beyond Ice
+                    var newRT = newCell.GetComponent<RectTransform>();
+                    newRT.anchoredPosition = iceRT.anchoredPosition + colStep;
+
+                    // Replace Metal icon with the Axe spell icon loaded from disk.
+                    string[] iconFiles = { "primary.png", "movement.png", "melee.png",
+                                          "secondary.png", "defensive.png", "utility.png", "ultimate.png" };
+                    var axeSprite = AxeRegistration.LoadPngIcon(iconFiles[j]);
+
+                    var img = newCell.GetComponent<Image>();
+                    if (img != null)
+                    {
+                        img.color = Color.white;
+                        if (axeSprite != null)
+                            img.sprite = axeSprite;
+                        // else: keep Metal's cloned sprite so the cell remains visible
+                    }
+
+                    // Wire button click to navigate to this cell
+                    int captJ = j;
+                    var btn = newCell.GetComponent<Button>();
+                    if (btn != null)
+                    {
+                        btn.onClick = new Button.ButtonClickedEvent();
+                        btn.onClick.AddListener(() => __instance.UpdateCursor(10, captJ));
+                        btn.interactable = true;
+                    }
+                }
+
+                // Bump maxX to 11 so gamepad/keyboard navigation reaches the Axe column
+                var maxXField = typeof(PracticeRangePauseMenu).GetField("maxX",
+                    BindingFlags.NonPublic | BindingFlags.Instance);
+                if (maxXField != null)
+                {
+                    int cur = (int)maxXField.GetValue(__instance);
+                    if (cur < 11)
+                        maxXField.SetValue(__instance, 11);
+                }
+
+                Plugin.Log.LogInfo("[AxeUI] PracticeRangePauseMenu: Added Axe column, maxX >= 11");
+            }
+            catch (System.Exception ex)
+            {
+                Plugin.Log.LogError($"[AxeUI] PracticeRangePauseMenu patch failed: {ex}");
+            }
+        }
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // VideoSpellPlayer.HighlightSpell — Fix spell name display.
+    // SpellName values 146-152 are not defined in the vanilla enum, so
+    // .ToString() returns the integer ("146") and AddSpaces turns it into
+    // " 146". Both overloads set spellNameText.text the same way, so we
+    // patch both with the same postfix: if the trimmed text parses as an int,
+    // look it up in our name table and replace it.
+    // ─────────────────────────────────────────────────────────────────────────
+    internal static class AxeSpellDisplayNames
+    {
+        internal static readonly Dictionary<SpellName, string> Names =
+            new Dictionary<SpellName, string>
+            {
+                { Axe.AxePrimary,   "Rend" },
+                { Axe.AxeMovement,  "Lunge" },
+                { Axe.AxeMelee,     "Bleed" },
+                { Axe.AxeSecondary, "Wild Axes" },
+                { Axe.AxeDefensive, "Riposte" },
+                { Axe.AxeUtility,   "Blade Storm" },
+                { Axe.AxeUltimate,  "Sanguine Aura" },
+            };
+
+        internal static void FixNameText(VideoSpellPlayer vsp)
+        {
+            if (vsp == null || vsp.spellNameText == null) return;
+            string raw = vsp.spellNameText.text.Trim();
+            if (!int.TryParse(raw, out int id)) return;
+            if (Names.TryGetValue((SpellName)id, out string name))
+                vsp.spellNameText.text = name;
+        }
+    }
+
+    [HarmonyPatch(typeof(VideoSpellPlayer), "HighlightSpell", new Type[] { typeof(Element), typeof(int) })]
+    public static class AxeHighlightSpellElementPatch
+    {
+        [HarmonyPostfix]
+        public static void Postfix(VideoSpellPlayer __instance)
+        {
+            AxeSpellDisplayNames.FixNameText(__instance);
+        }
+    }
+
+    [HarmonyPatch(typeof(VideoSpellPlayer), "HighlightSpell", new Type[] { typeof(int) })]
+    public static class AxeHighlightSpellIndexPatch
+    {
+        [HarmonyPostfix]
+        public static void Postfix(VideoSpellPlayer __instance)
+        {
+            AxeSpellDisplayNames.FixNameText(__instance);
         }
     }
 }
