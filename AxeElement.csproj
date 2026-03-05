@@ -67,23 +67,23 @@
 		</Reference>
 
 		<Reference Include="UnityEngine.ParticleSystemModule">
-			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\MageQuit\MageQuit_Data\Managed\UnityEngine.ParticleSystemModule.dll</HintPath>
+			<HintPath>$(LibDir)\UnityEngine.ParticleSystemModule.dll</HintPath>
 		</Reference>
 
 		<Reference Include="UnityEngine.AnimationModule">
-			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\MageQuit\MageQuit_Data\Managed\UnityEngine.AnimationModule.dll</HintPath>
+			<HintPath>$(LibDir)\UnityEngine.AnimationModule.dll</HintPath>
 		</Reference>
 
 		<Reference Include="UnityEngine.Physics2DModule">
-			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\MageQuit\MageQuit_Data\Managed\UnityEngine.Physics2DModule.dll</HintPath>
+			<HintPath>$(LibDir)\UnityEngine.Physics2DModule.dll</HintPath>
 		</Reference>
 
 		<Reference Include="Unity.Postprocessing.Runtime">
-			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\MageQuit\MageQuit_Data\Managed\Unity.Postprocessing.Runtime.dll</HintPath>
+			<HintPath>$(LibDir)\Unity.Postprocessing.Runtime.dll</HintPath>
 		</Reference>
 
 		<Reference Include="UnityEngine.ImageConversionModule">
-			<HintPath>C:\Program Files (x86)\Steam\steamapps\common\MageQuit\MageQuit_Data\Managed\UnityEngine.ImageConversionModule.dll</HintPath>
+			<HintPath>$(LibDir)\UnityEngine.ImageConversionModule.dll</HintPath>
 		</Reference>
 	</ItemGroup>
 
