@@ -71,13 +71,6 @@ jobs:
           name: BepInEx
           path: BepInEx.zip
 
-      - name: Upload AxeElement.dll artifact
-        if: startsWith(github.ref, 'refs/tags/') == false
-        uses: actions/upload-artifact@v4
-        with:
-          name: AxeElement.dll
-          path: bin/Release/net472/AxeElement.dll
-
       - name: Create GitHub Release
         if: startsWith(github.ref, 'refs/tags/')
         uses: ncipollo/release-action@v1

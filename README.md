@@ -18,7 +18,7 @@ Adds the **Blood** element to MageQuit, playable in all standard game modes.
 
 1. Install [BepInEx](https://github.com/BepInEx/BepInEx) for MageQuit if you haven't already.
 2. Install the [MageQuit Mod Framework](https://github.com/magequit/MageQuitModFramework) dependency.
-3. Drop the compiled `AxeElement.dll` into your `BepInEx/plugins` folder.
+3. 3. Unzip `BepInEx.zip` into your MageQuit game folder.
 
 ## Known Limitations
 
