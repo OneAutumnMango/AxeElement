@@ -12,6 +12,8 @@ namespace AxeElement
         private static readonly Color BleedLightColor = new Color(0.20f, 0.04f, 0.02f);
         public const float BLEED_DURATION_PUBLIC = 5f;
         private const float BLEED_DURATION = BLEED_DURATION_PUBLIC;
+        public const float BLEED_DAMAGE_MULT = 1.3f;
+
 
         public static void ApplyBleed(int targetOwner, GameObject target, UnityEngine.Object prefab)
         {

@@ -21,6 +21,8 @@ namespace AxeElement
         private const float SLOW_MULT      = 0.875f;  // 12.5 % speed reduction
         private const float LINGER         = 0.5f;    // seconds slow persists after leaving
         private const float TICK           = 0.25f;   // AOE check interval
+        private const float TICK_DAMAGE    = 2f;      // damage per second inside field (multiplied by TICK)
+        public const float LIFESTEAL_MULT  = 0.4f;    // % of damage dealt is healed back
 
         // ── Network state ────────────────────────────────────────────────────────
         /// <summary>
@@ -153,7 +155,7 @@ namespace AxeElement
                 {
                     var us = go.GetComponent<UnitStatus>();
                     if (us != null)
-                        us.ApplyDamage(1f * TICK, this.id.owner, (int)Axe.AxeUltimate);
+                        us.ApplyDamage(TICK_DAMAGE * TICK, this.id.owner, (int)Axe.AxeUltimate);
                 }
 
                 // Apply or re-anchor slow

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Reflection.Metadata;
 using FMOD.Studio;
 using FMODUnity;
 using HarmonyLib;
@@ -796,8 +797,8 @@ namespace AxeElement
 
                     if (isAxePlayer)
                     {
-                        damage *= 1.1f;
-                        float heal = damage * 0.1f;
+                        float heal = damage * AxeUltimateObject.LIFESTEAL_MULT;
+                        damage *= BleedManager.BLEED_DAMAGE_MULT;
                         Plugin.Log.LogInfo($"[BloodField] owner={owner} damage={damage:F2} heal={heal:F2}");
                         GameUtility.GetWizard(owner)?.GetComponent<WizardStatus>()?.ApplyHealing(heal, owner);
                     }
