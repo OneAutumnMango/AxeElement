@@ -46,7 +46,7 @@ jobs:
 
           # Copy icons folder if it exists
           if [ -d "icons" ]; then
-            cp -r icons BepInEx/
+            cp -r icons BepInEx/plugins/
           fi
 
           zip -r BepInEx.zip BepInEx
