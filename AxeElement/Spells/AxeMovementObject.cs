@@ -45,20 +45,7 @@ namespace AxeElement
 
         public void Init(Identity identity)
         {
-            this.id.owner = identity.owner;
-            if (Globals.online)
-            {
-                if (base.photonView != null && base.photonView.isMine)
-                {
-                    int viewId = identity.gameObject.GetPhotonView()?.viewID ?? -1;
-                    base.photonView.RPCLocal(this, "rpcSpellObjectStart", PhotonTargets.All,
-                        new object[] { identity.owner, base.transform.position, base.transform.rotation, viewId });
-                }
-            }
-            else
-            {
-                this.localSpellObjectStart(identity.owner, identity.gameObject);
-            }
+            this.localSpellObjectStart(identity.owner, identity.gameObject);
         }
 
         private void localSpellObjectStart(int owner, GameObject wizardGo)
@@ -130,11 +117,7 @@ namespace AxeElement
 
             this.hitOwners.Add(ident.owner);
 
-            if (Globals.online && base.photonView != null)
-                base.photonView.RPCLocal(this, "rpcCollision", PhotonTargets.All,
-                    new object[] { base.transform.position });
-            else
-                this.rpcCollision(base.transform.position);
+            this.rpcCollision(base.transform.position);
 
             UnitStatus us = go.GetComponent<UnitStatus>();
             if (us != null)

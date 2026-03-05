@@ -128,7 +128,13 @@ namespace AxeElement
             }
 
             // Remote clients only need visuals — no hit detection or damage.
-            if (Globals.online && !this.isOwnerClient) return;
+            // Still check death timer so the GO is cleaned up when the lifetime expires.
+            if (Globals.online && !this.isOwnerClient)
+            {
+                if (!this.dying && Time.time >= this.deathTimer)
+                    this.SpellObjectDeath();
+                return;
+            }
             if (this.dying) return;
 
             // Lifetime check.
