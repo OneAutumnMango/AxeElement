@@ -248,17 +248,11 @@ namespace AxeElement
             {
                 var locksField = typeof(AvailableElements).GetField("locks",
                     BindingFlags.NonPublic | BindingFlags.Instance);
-                var iconsField = typeof(AvailableElements).GetField("elementIcons",
-                    BindingFlags.NonPublic | BindingFlags.Instance);
 
                 var locks = locksField?.GetValue(__instance) as Image[];
-                var icons = iconsField?.GetValue(__instance) as Image[];
 
                 if (locks != null && locks.Length > 10)
                     locks[10].enabled = false;
-
-                if (icons != null && icons.Length > 10)
-                    icons[10].color = new Color(0.45f, 0.05f, 0.05f);
             }
             catch (System.Exception ex)
             {
@@ -332,23 +326,19 @@ namespace AxeElement
 
                     // Position at the start of a 3rd row, aligned with the grid.
                     // Row 0: indices 0–4 (y = row0_y), Row 1: indices 5–9 (y = row1_y).
-                    // Row 2: index 10 → x = col 0, y = row1_y + rowStep.
+                    // Row 2: index 10 → x = col 0 + small right offset, y = row1_y + rowStep + small down offset.
                     var e0RT = tablet.GetChild(0).GetComponent<RectTransform>();
                     var e5RT = tablet.GetChild(5).GetComponent<RectTransform>();
                     var newRT = newChild.GetComponent<RectTransform>();
                     float rowStep = e5RT.anchoredPosition.y - e0RT.anchoredPosition.y;
                     newRT.anchoredPosition = new Vector2(
-                        e0RT.anchoredPosition.x,
-                        e5RT.anchoredPosition.y + rowStep);
+                        e0RT.anchoredPosition.x + 15f,
+                        e5RT.anchoredPosition.y + rowStep * 1.1f);
 
                     // Replace Metal's symbol with the Axe icon PNG
                     var axeSprite = AxeRegistration.LoadPngIcon("primary.png");
                     if (axeSprite != null)
-                    {
-                        var axeImage = newChild.GetComponent<Image>();
-                        axeImage.sprite = axeSprite;
-                        AxeRegistration.TintIconMaroon(axeImage, "tablet_clone");
-                    }
+                        newChild.GetComponent<Image>().sprite = axeSprite;
 
                     Plugin.Log.LogInfo("[AxeUI] AvailableElements: Cloned Metal icon as 11th tablet child for Axe");
                 }
@@ -380,7 +370,6 @@ namespace AxeElement
                     if (axeSprite != null)
                     {
                         axeIcon.sprite = axeSprite;
-                        AxeRegistration.TintIconMaroon(axeIcon, "tablet_postfix");
                         Plugin.Log.LogInfo("[AxeUI] AvailableElements: Set Axe PNG icon on slot (index 10)");
                     }
                     else if (metalIcon != null && metalIcon.sprite != null)
@@ -443,7 +432,6 @@ namespace AxeElement
                 var axeSprite = AxeRegistration.LoadPngIcon("primary.png");
                 if (axeSprite != null)
                     newImage.sprite = axeSprite;
-                AxeRegistration.TintIconMaroon(newImage, "selection_menu");
 
                 // Initialize child indicators (Included/Banned/Lock) as hidden
                 newObj.transform.GetChild(0).gameObject.SetActive(false);
