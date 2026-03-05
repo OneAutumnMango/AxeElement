@@ -258,7 +258,7 @@ namespace AxeElement
                     locks[10].enabled = false;
 
                 if (icons != null && icons.Length > 10)
-                    icons[10].color = new Color(0.4f, 0.4f, 0.4f);
+                    icons[10].color = new Color(0.45f, 0.05f, 0.05f);
             }
             catch (System.Exception ex)
             {
@@ -330,14 +330,25 @@ namespace AxeElement
                     var newChild = Object.Instantiate(metalChild, tablet);
                     newChild.SetAsLastSibling();
 
-                    // Position next to Ice (index 9) using same grid offset
-                    var metalRT = metalChild.GetComponent<RectTransform>();
-                    var iceRT = tablet.GetChild(9).GetComponent<RectTransform>();
+                    // Position at the start of a 3rd row, aligned with the grid.
+                    // Row 0: indices 0–4 (y = row0_y), Row 1: indices 5–9 (y = row1_y).
+                    // Row 2: index 10 → x = col 0, y = row1_y + rowStep.
+                    var e0RT = tablet.GetChild(0).GetComponent<RectTransform>();
+                    var e5RT = tablet.GetChild(5).GetComponent<RectTransform>();
                     var newRT = newChild.GetComponent<RectTransform>();
-                    float xStep = iceRT.anchoredPosition.x - metalRT.anchoredPosition.x;
+                    float rowStep = e5RT.anchoredPosition.y - e0RT.anchoredPosition.y;
                     newRT.anchoredPosition = new Vector2(
-                        iceRT.anchoredPosition.x + xStep,
-                        metalRT.anchoredPosition.y);
+                        e0RT.anchoredPosition.x,
+                        e5RT.anchoredPosition.y + rowStep);
+
+                    // Replace Metal's symbol with the Axe icon PNG
+                    var axeSprite = AxeRegistration.LoadPngIcon("primary.png");
+                    if (axeSprite != null)
+                    {
+                        var axeImage = newChild.GetComponent<Image>();
+                        axeImage.sprite = axeSprite;
+                        AxeRegistration.TintIconMaroon(axeImage, "tablet_clone");
+                    }
 
                     Plugin.Log.LogInfo("[AxeUI] AvailableElements: Cloned Metal icon as 11th tablet child for Axe");
                 }
@@ -360,13 +371,23 @@ namespace AxeElement
                 var elementIcons = iconsField.GetValue(__instance) as Image[];
                 if (elementIcons == null || elementIcons.Length < 11) return;
 
-                // Ensure index 10 (Axe) has the Metal sprite
+                // Ensure index 10 (Axe) has the Axe icon, falling back to Metal sprite
                 var metalIcon = elementIcons[8];
                 var axeIcon = elementIcons[10];
-                if (metalIcon != null && axeIcon != null && metalIcon.sprite != null)
+                if (axeIcon != null)
                 {
-                    axeIcon.sprite = metalIcon.sprite;
-                    Plugin.Log.LogInfo("[AxeUI] AvailableElements: Confirmed Metal icon on Axe slot (index 10)");
+                    var axeSprite = AxeRegistration.LoadPngIcon("primary.png");
+                    if (axeSprite != null)
+                    {
+                        axeIcon.sprite = axeSprite;
+                        AxeRegistration.TintIconMaroon(axeIcon, "tablet_postfix");
+                        Plugin.Log.LogInfo("[AxeUI] AvailableElements: Set Axe PNG icon on slot (index 10)");
+                    }
+                    else if (metalIcon != null && metalIcon.sprite != null)
+                    {
+                        axeIcon.sprite = metalIcon.sprite;
+                        Plugin.Log.LogInfo("[AxeUI] AvailableElements: Fallback — Metal icon on Axe slot (index 10)");
+                    }
                 }
             }
             catch (System.Exception ex)
@@ -417,6 +438,12 @@ namespace AxeElement
                 elements.CopyTo(expanded, 0);
                 expanded[10] = newImage;
                 elementsField.SetValue(__instance, expanded);
+
+                // Replace Metal's element symbol with the Axe icon PNG
+                var axeSprite = AxeRegistration.LoadPngIcon("primary.png");
+                if (axeSprite != null)
+                    newImage.sprite = axeSprite;
+                AxeRegistration.TintIconMaroon(newImage, "selection_menu");
 
                 // Initialize child indicators (Included/Banned/Lock) as hidden
                 newObj.transform.GetChild(0).gameObject.SetActive(false);
@@ -577,7 +604,7 @@ namespace AxeElement
                     darkColors = expanded;
                 }
                 if (darkColors != null && darkColors.Length > 11)
-                    darkColors[11] = new Color(0.3f, 0.3f, 0.35f);
+                    darkColors[11] = new Color(0.35f, 0.04f, 0.04f);
             }
 
             if (lightField != null)
@@ -591,7 +618,7 @@ namespace AxeElement
                     lightColors = expanded;
                 }
                 if (lightColors != null && lightColors.Length > 11)
-                    lightColors[11] = new Color(0.7f, 0.7f, 0.75f);
+                    lightColors[11] = new Color(0.75f, 0.25f, 0.20f);
             }
         }
     }
