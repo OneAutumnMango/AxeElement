@@ -46,6 +46,8 @@ namespace AxeElement
             }
             this.phys = base.GetComponent<PhysicsBody>();
             this.col = base.GetComponent<Collider>();
+            // Trigger so the projectile passes through enemies without a physics response.
+            if (this.col != null) this.col.isTrigger = true;
             if (this.sp != null)
                 this.sp.PlaySoundComponentInstantiate("event:/sfx/metal/glaive-cast", 5f);
             this.deathTimer = Time.time + this.START_TIME;
@@ -127,23 +129,18 @@ namespace AxeElement
             base.photonView.RPCLocal(this, "rpcSpellObjectDeath", PhotonTargets.All, Array.Empty<object>());
         }
 
-        private void OnCollisionEnter(Collision collision)
+        private void OnTriggerEnter(Collider other)
         {
             if (base.photonView.IsConnectedAndNotLocal()) return;
             if (this.dying) return;
 
-            GameObject go = collision.transform.root.gameObject;
+            GameObject go = other.transform.root.gameObject;
             Identity ident = go.GetComponent<Identity>();
             if (ident == null) return;
 
             if (GameUtility.IdentityCompare(go, UnitType.Unit) && !hitOwners.Contains(ident.owner))
             {
                 hitOwners.Add(ident.owner);
-
-                // Pierce: ignore future collision with this exact collider
-                Collider enemyCol = collision.collider;
-                if (enemyCol != null && this.col != null)
-                    Physics.IgnoreCollision(this.col, enemyCol, true);
 
                 base.photonView.RPCLocal(this, "rpcCollision", PhotonTargets.All,
                     new object[] { base.transform.position });

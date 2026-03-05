@@ -29,6 +29,10 @@ namespace AxeElement
         public static Dictionary<int, AxeDefensiveObject> activeDefensives =
             new Dictionary<int, AxeDefensiveObject>();
 
+        // Brief knockback immunity window after a parry fires (outlasts the ApplyDamage→AddForceOwner sequence).
+        public static Dictionary<int, float> recentlyParriedUntil =
+            new Dictionary<int, float>();
+
         public static void NotifyDamage(int attackerOwner, float damage, WizardStatus targetWizard)
         {
             if (targetWizard == null || damage <= 0f) return;
@@ -85,9 +89,10 @@ namespace AxeElement
             if (this.wc != null)
                 this.wc.rewindCount--;
 
-            // Remove from registry.
+            // Remove from registry and mark knockback immunity window.
             if (activeDefensives.ContainsKey(this.id.owner) && activeDefensives[this.id.owner] == this)
                 activeDefensives.Remove(this.id.owner);
+            recentlyParriedUntil[this.id.owner] = Time.time + 0.5f;
 
             if (Globals.online && base.photonView != null)
             {

@@ -791,4 +791,32 @@ namespace AxeElement
             }
         }
     }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // PhysicsBody.AddForceOwner — Block knockback from the parried hit.
+    // activeDefensives is already cleared when AddForceOwner is called (the
+    // parry consumes during ApplyDamage), so we use recentlyParriedUntil which
+    // stays set for 0.5 s, covering the same-frame AddForceOwner call.
+    // ─────────────────────────────────────────────────────────────────────────
+    [HarmonyPatch(typeof(PhysicsBody), "AddForceOwner")]
+    public static class AxeDefensiveKnockbackPatch
+    {
+        [HarmonyPrefix]
+        public static bool Prefix(PhysicsBody __instance)
+        {
+            var identity = __instance.GetComponent<Identity>();
+            if (identity == null) return true;
+
+            // Block while actively parrying.
+            if (AxeDefensiveObject.activeDefensives.TryGetValue(identity.owner, out var def) && def != null)
+                return false;
+
+            // Block briefly after the parry fires (covers same-frame AddForceOwner calls).
+            if (AxeDefensiveObject.recentlyParriedUntil.TryGetValue(identity.owner, out float until) &&
+                Time.time < until)
+                return false;
+
+            return true;
+        }
+    }
 }
