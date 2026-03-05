@@ -7,7 +7,7 @@ namespace AxeElement
 {
     public class AxePrimaryObject : SpellObject
     {
-        private static readonly Color AxeGreyColor = new Color(0.85f, 0.85f, 0.9f);
+        private static readonly Color AxeCrimsonColor = new Color(0.55f, 0.05f, 0.05f);
 
         public UnityEngine.Object impact;
 
@@ -69,20 +69,20 @@ namespace AxeElement
                     if (mat != null)
                     {
                         if (mat.HasProperty("_Color"))
-                            mat.color = AxeGreyColor;
+                            mat.color = AxeCrimsonColor;
                         if (mat.HasProperty("_EmissionColor"))
-                            mat.SetColor("_EmissionColor", AxeGreyColor * 2f);
+                            mat.SetColor("_EmissionColor", AxeCrimsonColor * 2f);
                     }
                 }
             }
             foreach (Light light in base.gameObject.GetComponentsInChildren<Light>(true))
             {
-                light.color = AxeGreyColor;
+                light.color = AxeCrimsonColor;
             }
             foreach (ParticleSystem ps in base.gameObject.GetComponentsInChildren<ParticleSystem>(true))
             {
                 var main = ps.main;
-                main.startColor = AxeGreyColor;
+                main.startColor = AxeCrimsonColor;
             }
         }
 

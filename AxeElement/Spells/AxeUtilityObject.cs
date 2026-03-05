@@ -7,7 +7,7 @@ namespace AxeElement
 {
     public class AxeUtilityObject : SpellObject
     {
-        private static readonly Color GlaiveGreyColor = new Color(0.85f, 0.85f, 0.9f);
+        private static readonly Color GlaiveCrimsonColor = new Color(0.55f, 0.05f, 0.05f);
 
         private const float ORBIT_RADIUS   = 2.5f;
         private const float ANGULAR_SPEED  = 150f;   // degrees/s — full orbit in ~2.4 s
@@ -92,18 +92,18 @@ namespace AxeElement
                     if (mat != null)
                     {
                         if (mat.HasProperty("_Color"))
-                            mat.color = GlaiveGreyColor;
+                            mat.color = GlaiveCrimsonColor;
                         if (mat.HasProperty("_EmissionColor"))
-                            mat.SetColor("_EmissionColor", GlaiveGreyColor * 2f);
+                            mat.SetColor("_EmissionColor", GlaiveCrimsonColor * 2f);
                     }
                 }
             }
             foreach (Light light in base.gameObject.GetComponentsInChildren<Light>(true))
-                light.color = GlaiveGreyColor;
+                light.color = GlaiveCrimsonColor;
             foreach (ParticleSystem ps in base.gameObject.GetComponentsInChildren<ParticleSystem>(true))
             {
                 var main = ps.main;
-                main.startColor = GlaiveGreyColor;
+                main.startColor = GlaiveCrimsonColor;
             }
         }
 

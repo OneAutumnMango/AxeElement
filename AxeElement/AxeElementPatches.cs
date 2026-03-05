@@ -324,16 +324,17 @@ namespace AxeElement
                     var newChild = Object.Instantiate(metalChild, tablet);
                     newChild.SetAsLastSibling();
 
-                    // Position at the start of a 3rd row, aligned with the grid.
-                    // Row 0: indices 0–4 (y = row0_y), Row 1: indices 5–9 (y = row1_y).
-                    // Row 2: index 10 → x = col 0 + small right offset, y = row1_y + rowStep + small down offset.
+                    // Place Axe as the 5th element of the center diagonal (children 0-3).
+                    // Step = (child3 - child0) / 3; new pos = child3 + step.
                     var e0RT = tablet.GetChild(0).GetComponent<RectTransform>();
-                    var e5RT = tablet.GetChild(5).GetComponent<RectTransform>();
+                    var e3RT = tablet.GetChild(3).GetComponent<RectTransform>();
+                    var step = (e3RT.anchoredPosition - e0RT.anchoredPosition) / 3f;
                     var newRT = newChild.GetComponent<RectTransform>();
-                    float rowStep = e5RT.anchoredPosition.y - e0RT.anchoredPosition.y;
-                    newRT.anchoredPosition = new Vector2(
-                        e0RT.anchoredPosition.x + 15f,
-                        e5RT.anchoredPosition.y + rowStep * 1.1f);
+                    newRT.anchoredPosition = e3RT.anchoredPosition + step;
+
+                    // Match the prefab rotation baked into the other icons (clockwise tilt).
+                    // Copy from child 0 to guarantee parity regardless of clone behaviour.
+                    newRT.localEulerAngles = e0RT.localEulerAngles;
 
                     // Replace Metal's symbol with the Axe icon PNG
                     var axeSprite = AxeRegistration.LoadPngIcon("primary.png");
