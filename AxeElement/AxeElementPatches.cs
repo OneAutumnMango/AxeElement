@@ -819,4 +819,89 @@ namespace AxeElement
             return true;
         }
     }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // PracticeRangePauseMenu.Awake — Append 7 spell-cell buttons for the Axe
+    // column (index 10) and bump maxX so keyboard/gamepad navigation reaches it.
+    //
+    // Layout: this.spells children are laid out as:
+    //   [0..14]  = header row / misc UI (15 items, untouched)
+    //   [15 + i*7 + j] = spell cell for element column i, spell row j
+    // We append children 85..91 (= 15 + 10*7 + 0..6) for Axe.
+    // ─────────────────────────────────────────────────────────────────────────
+    [HarmonyPatch(typeof(PracticeRangePauseMenu), "Awake")]
+    public static class AxePracticeMenuPatch
+    {
+        [HarmonyPostfix]
+        public static void Postfix(PracticeRangePauseMenu __instance)
+        {
+            try
+            {
+                var spells = __instance.spells;
+                if (spells == null) return;
+
+                // Guard: only expand once
+                int expected = 15 + 11 * 7; // 92
+                if (spells.childCount >= expected) return;
+
+                // Clone Metal's cells (column i=8, children 71..77) as templates.
+                // Compute per-row column step from Metal→Ice (i=8→9) to place Axe at i=10.
+                for (int j = 0; j < 7; j++)
+                {
+                    var metalTemplate = spells.GetChild(15 + 8 * 7 + j);
+                    var iceTemplate   = spells.GetChild(15 + 9 * 7 + j);
+                    var metalRT = metalTemplate.GetComponent<RectTransform>();
+                    var iceRT   = iceTemplate.GetComponent<RectTransform>();
+                    Vector2 colStep = iceRT.anchoredPosition - metalRT.anchoredPosition;
+
+                    var newCell = Object.Instantiate(metalTemplate, spells);
+                    newCell.SetAsLastSibling();
+
+                    // Position one column-step beyond Ice
+                    var newRT = newCell.GetComponent<RectTransform>();
+                    newRT.anchoredPosition = iceRT.anchoredPosition + colStep;
+
+                    // Replace Metal icon with the Axe spell icon loaded from disk.
+                    string[] iconFiles = { "primary.png", "movement.png", "melee.png",
+                                          "secondary.png", "defensive.png", "utility.png", "ultimate.png" };
+                    var axeSprite = AxeRegistration.LoadPngIcon(iconFiles[j]);
+
+                    var img = newCell.GetComponent<Image>();
+                    if (img != null)
+                    {
+                        img.color = Color.white;
+                        if (axeSprite != null)
+                            img.sprite = axeSprite;
+                        // else: keep Metal's cloned sprite so the cell remains visible
+                    }
+
+                    // Wire button click to navigate to this cell
+                    int captJ = j;
+                    var btn = newCell.GetComponent<Button>();
+                    if (btn != null)
+                    {
+                        btn.onClick = new Button.ButtonClickedEvent();
+                        btn.onClick.AddListener(() => __instance.UpdateCursor(10, captJ));
+                        btn.interactable = true;
+                    }
+                }
+
+                // Bump maxX to 11 so gamepad/keyboard navigation reaches the Axe column
+                var maxXField = typeof(PracticeRangePauseMenu).GetField("maxX",
+                    BindingFlags.NonPublic | BindingFlags.Instance);
+                if (maxXField != null)
+                {
+                    int cur = (int)maxXField.GetValue(__instance);
+                    if (cur < 11)
+                        maxXField.SetValue(__instance, 11);
+                }
+
+                Plugin.Log.LogInfo("[AxeUI] PracticeRangePauseMenu: Added Axe column, maxX >= 11");
+            }
+            catch (System.Exception ex)
+            {
+                Plugin.Log.LogError($"[AxeUI] PracticeRangePauseMenu patch failed: {ex}");
+            }
+        }
+    }
 }
