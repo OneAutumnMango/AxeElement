@@ -20,21 +20,46 @@ namespace AxeElement
             Plugin.Log.LogInfo($"[BloodField] Initialize: owner={identity?.owner}, pos={position}");
             try
             {
-                // Objects/Push provides a clean networked SpellObject container
-                // with PhotonView and SoundPlayer already wired up.
-                var go       = GameUtility.Instantiate("Objects/Push", position, rotation, 0);
-                var original = go.GetComponent<PushObject>();
-                if (original != null)
-                    UnityEngine.Object.DestroyImmediate(original);
+                SpawnFieldLocal(identity.owner, isOwner: true);
 
-                var comp = go.AddComponent<AxeUltimateObject>();
-                comp.Init(identity);
+                if (Globals.online)
+                {
+                    var pv = GameUtility.GetWizard(identity.owner)?.GetComponent<PhotonView>();
+                    if (pv != null)
+                        pv.RPC("rpcAxeFieldStart", PhotonTargets.Others,
+                            new object[] { identity.owner });
+                }
 
                 Plugin.Log.LogInfo("[BloodField] Spawned successfully");
             }
             catch (Exception ex)
             {
                 Plugin.Log.LogError($"[BloodField] Initialize FAILED: {ex}");
+            }
+        }
+
+        // ── Called on EVERY client (caster directly, remote via wizard RPC) ──
+        public static void SpawnFieldLocal(int owner, bool isOwner = false)
+        {
+            try
+            {
+                var wizGo = GameUtility.GetWizard(owner)?.gameObject;
+                var pos   = wizGo?.transform.position ?? Vector3.zero;
+
+                var go = (GameObject)UnityEngine.Object.Instantiate(
+                    Resources.Load("Objects/Push", typeof(GameObject)), pos, Quaternion.identity);
+                if (go == null) return;
+
+                var original = go.GetComponent<PushObject>();
+                if (original != null) UnityEngine.Object.DestroyImmediate(original);
+
+                var comp = go.AddComponent<AxeUltimateObject>();
+                comp.isOwnerClient = isOwner;
+                comp.InitLocal(owner, wizGo);
+            }
+            catch (Exception ex)
+            {
+                Plugin.Log.LogError($"[BloodField] SpawnFieldLocal FAILED: {ex}");
             }
         }
 
@@ -53,8 +78,7 @@ namespace AxeElement
         public override bool AvailableOverride(
             AiController ai, int owner, SpellUses use, int reactivate)
         {
-            // Always available when off cooldown (use == Custom means "is the AI
-            // still going to deal damage over time?"; for a field we always say yes)
+            // Always available when off cooldown
             return true;
         }
     }

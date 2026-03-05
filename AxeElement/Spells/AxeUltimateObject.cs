@@ -22,6 +22,19 @@ namespace AxeElement
         private const float LINGER         = 0.5f;    // seconds slow persists after leaving
         private const float TICK           = 0.25f;   // AOE check interval
 
+        // ── Network state ────────────────────────────────────────────────────────
+        /// <summary>
+        /// True on the casting client; false on all remote clients.
+        /// Controls whether this instance sends field-death RPC.
+        /// </summary>
+        public bool isOwnerClient = false;
+
+        /// <summary>
+        /// Maps owner id → active field instance, for RemoteKill lookups.
+        /// </summary>
+        public static Dictionary<int, AxeUltimateObject> activeFields
+            = new Dictionary<int, AxeUltimateObject>();
+
         // ── Instance state ───────────────────────────────────────────────────────
         // Maps enemy owner id → (WizardController, when-the-linger-expires).
         // float.MaxValue = target is still inside the field (linger not yet started).
@@ -45,31 +58,19 @@ namespace AxeElement
             if (id == null) id = new Identity();
         }
 
-        // ── Init: called by AxeUltimate.cs immediately after AddComponent ─────────
-        public void Init(Identity identity)
+        // ── Init: called by AxeUltimate.SpawnFieldLocal on every client ──────────
+        public void InitLocal(int owner, GameObject wizardGo)
         {
-            this.id.owner = identity.owner;
-
-            if (Globals.online)
-            {
-                if (base.photonView != null && base.photonView.isMine)
-                {
-                    base.photonView.RPCLocal(this, "rpcFieldStart", PhotonTargets.All,
-                        new object[] { identity.owner, identity.gameObject.GetPhotonView().viewID });
-                }
-                // Non-owner clients receive the RPC; nothing else required.
-            }
-            else
-            {
-                this.localFieldStart(identity.owner, identity.gameObject);
-            }
+            this.id.owner = owner;
+            activeFields[owner] = this;
+            this.localFieldStart(owner, wizardGo);
         }
 
-        [PunRPC]
-        public void rpcFieldStart(int owner, int wizardViewId)
+        // ── Called on remote clients by AxeNetworkBridge.rpcAxeFieldDeath ────────
+        public static void RemoteKill(int owner)
         {
-            var go = PhotonView.Find(wizardViewId)?.gameObject;
-            this.localFieldStart(owner, go);
+            if (activeFields.TryGetValue(owner, out var field) && field != null)
+                field.BeginDie();
         }
 
         private void localFieldStart(int owner, GameObject wizardGo)
@@ -226,25 +227,31 @@ namespace AxeElement
         {
             if (this._dying) return;
             this._dying = true;
+
+            // Notify remote clients to kill their local copy
+            if (this.isOwnerClient && Globals.online)
+            {
+                var pv = GameUtility.GetWizard(this.id.owner)?.GetComponent<PhotonView>();
+                if (pv != null)
+                    pv.RPC("rpcAxeFieldDeath", PhotonTargets.Others,
+                        new object[] { this.id.owner });
+            }
+
             this.CleanupAll();
-            this.rpcSpellObjectDeath();
+            activeFields.Remove(this.id.owner);
+            UnityEngine.Object.Destroy(base.gameObject, 0.5f);
         }
 
         private void OnDestroy()
         {
             this.CleanupAll();
+            activeFields.Remove(this.id.owner);
         }
 
         public override void SpellObjectDeath()
         {
-            base.photonView.RPCLocal(this, "rpcSpellObjectDeath", PhotonTargets.All, Array.Empty<object>());
-        }
-
-        [PunRPC]
-        public void rpcSpellObjectDeath()
-        {
-            this.CleanupAll();
-            UnityEngine.Object.Destroy(base.gameObject, 0.5f);
+            // GO is local-only; no Photon serialization needed.
+            this.BeginDie();
         }
 
         // ── Visual: blood pool with rising tendril particles ─────────────────────
@@ -319,8 +326,10 @@ namespace AxeElement
                 var vel = ps.velocityOverLifetime;
                 vel.enabled = true;
                 vel.space   = ParticleSystemSimulationSpace.World;
-                vel.y       = new ParticleSystem.MinMaxCurve(1.0f, 3.0f);   // upward rise
-                vel.radial  = new ParticleSystem.MinMaxCurve(-0.5f, 0.0f);  // inward pull
+                vel.x      = new ParticleSystem.MinMaxCurve(0f, 0f);
+                vel.y      = new ParticleSystem.MinMaxCurve(1.0f, 3.0f);   // upward rise
+                vel.z      = new ParticleSystem.MinMaxCurve(0f, 0f);
+                vel.radial = new ParticleSystem.MinMaxCurve(-0.5f, 0.0f);  // inward pull
 
                 // Low frequency noise = smooth large-scale curl (not scatter)
                 var noise = ps.noise;
@@ -415,6 +424,9 @@ namespace AxeElement
             }
         }
 
-        private void OnPhotonSerializeView(PhotonStream stream, PhotonMessageInfo info) { }
+        private void OnPhotonSerializeView(PhotonStream stream, PhotonMessageInfo info)
+        {
+            // GO is local-only; no Photon serialization needed.
+        }
     }
 }

@@ -28,57 +28,50 @@ namespace AxeElement
             if (id == null) id = new Identity();
         }
 
-        public void Init(Identity identity)
+        // ── Called on the CASTER's client; returns enemy owner IDs for wizard RPC ──
+        public int[] InitLocal(Identity identity)
         {
             this.id.owner = identity.owner;
 
             Collider[] hits = GameUtility.GetAllInSphere(base.transform.position, RADIUS, identity.owner, new UnitType[1]);
 
-            var viewIds = new List<int>();
-            var enemies = new List<GameObject>();
-            var seen = new System.Collections.Generic.HashSet<GameObject>();
+            var ownerIds = new List<int>();
+            var enemies  = new List<GameObject>();
+            var seen     = new HashSet<GameObject>();
 
             foreach (Collider col in hits)
             {
                 GameObject go = col.transform.root.gameObject;
                 if (!seen.Add(go)) continue;
+                var eid = go.GetComponent<Identity>() ?? go.GetComponentInParent<Identity>();
+                if (eid == null) continue;
                 enemies.Add(go);
-                viewIds.Add(go.GetPhotonView().viewID);
+                ownerIds.Add(eid.owner);
             }
 
-            bool anyHit = enemies.Count > 0;
-
-            int casterViewId = -1;
-            if (identity != null && identity.gameObject != null)
-            {
-                PhotonView cpv = identity.gameObject.GetPhotonView();
-                if (cpv != null) casterViewId = cpv.viewID;
-            }
-
-            if (Globals.online)
-            {
-                base.photonView.RPCLocal(this, "rpcImpact", PhotonTargets.All,
-                    new object[] { identity.owner, anyHit, viewIds.ToArray(), casterViewId });
-            }
-            else
-            {
-                localImpact(identity.owner, anyHit, enemies.ToArray(), identity.gameObject);
-            }
-
+            localImpact(identity.owner, enemies.Count > 0, enemies.ToArray(), identity.gameObject);
             UnityEngine.Object.Destroy(base.gameObject, 1.6f);
+            return ownerIds.ToArray();
         }
 
-        [PunRPC]
-        public void rpcImpact(int owner, bool hit, int[] viewIds, int casterViewId)
+        // ── Called on remote clients by AxeNetworkBridge.rpcAxeMeleeImpact ────────
+        public static void RemoteImpact(int owner, bool hit, int[] enemyOwnerIds)
         {
-            var enemies = new GameObject[viewIds.Length];
-            for (int i = 0; i < viewIds.Length; i++)
+            var casterPos = GameUtility.GetWizard(owner)?.transform.position ?? Vector3.zero;
+            foreach (int eid in enemyOwnerIds)
             {
-                PhotonView pv = PhotonView.Find(viewIds[i]);
-                enemies[i] = (pv != null) ? pv.gameObject : null;
+                var enemyGo = GameUtility.GetWizard(eid)?.gameObject;
+                if (enemyGo == null) continue;
+
+                // Apply bleed visual on ALL clients
+                BleedManager.ApplyBleed(eid, enemyGo, BleedEffectPrefab);
+
+                // Force + damage only on the enemy's own client
+                if (Globals.online && enemyGo.GetPhotonView().IsConnectedAndNotLocal()) continue;
+                enemyGo.GetComponent<PhysicsBody>()?.AddForceOwner(
+                    GameUtility.GetForceVector(casterPos, enemyGo.transform.position, 20f));
+                enemyGo.GetComponent<UnitStatus>()?.ApplyDamage(7f, owner, SOURCE_ID);
             }
-            PhotonView casterPv = PhotonView.Find(casterViewId);
-            localImpact(owner, hit, enemies, (casterPv != null) ? casterPv.gameObject : null);
         }
 
         public void localImpact(int owner, bool hit, GameObject[] enemies, GameObject caster)
@@ -117,6 +110,7 @@ namespace AxeElement
 
         private void OnPhotonSerializeView(PhotonStream stream, PhotonMessageInfo info)
         {
+            // GO is local-only; no Photon serialization needed.
         }
     }
 }

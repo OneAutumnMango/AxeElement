@@ -77,7 +77,7 @@ namespace AxeElement
             this.phaseTimer = Time.time + BACKSTEP_TIME;
 
             if (this.sp != null)
-                this.sp.PlaySoundComponentInstantiate("event:/sfx/metal/double-strike-cast", 5f);
+                this.sp.PlaySoundComponentInstantiate("event:/sfx/metal/glaive-cast", 5f);
 
             if (wizardGo != null)
                 base.transform.position = wizardGo.transform.position;

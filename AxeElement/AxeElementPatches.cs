@@ -100,6 +100,22 @@ namespace AxeElement
     }
 
     // ─────────────────────────────────────────────────────────────────────────
+    // WizardController.Awake — attach AxeNetworkBridge to every wizard GO so
+    // that wizard-level RPCs can route Axe spell events to remote clients.
+    // ─────────────────────────────────────────────────────────────────────────
+    [HarmonyPatch(typeof(WizardController), "Awake")]
+    public static class AxeWizardBridgePatch
+    {
+        [HarmonyPostfix]
+        public static void Postfix(WizardController __instance)
+        {
+            if (__instance == null) return;
+            if (__instance.GetComponent<AxeNetworkBridge>() == null)
+                __instance.gameObject.AddComponent<AxeNetworkBridge>();
+        }
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
     // SpellManager.Awake — register all 7 Axe spells after the vanilla
     // spells have been populated.
     // ─────────────────────────────────────────────────────────────────────────
@@ -750,6 +766,7 @@ namespace AxeElement
         {
             try
             {
+                if (__instance == null) return;
                 var targetId = __instance.GetComponent<Identity>();
                 if (targetId == null) return;
 

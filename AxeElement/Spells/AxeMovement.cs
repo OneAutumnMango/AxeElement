@@ -20,6 +20,12 @@ namespace AxeElement
                 var comp = go.AddComponent<AxeMovementObject>();
                 comp.impact = impact;
                 comp.Init(identity);
+
+                if (Globals.online)
+                {
+                    var pv = GameUtility.GetWizard(identity.owner)?.GetComponent<PhotonView>();
+                    pv?.RPC("rpcAxeMovementSound", PhotonTargets.Others);
+                }
             }
             catch (Exception ex)
             {

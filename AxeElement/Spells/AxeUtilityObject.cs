@@ -20,6 +20,12 @@ namespace AxeElement
 
         public UnityEngine.Object impact;
 
+        /// <summary>
+        /// True on the casting client; false on all remote clients.
+        /// Controls whether this instance runs hit-detection and applies damage.
+        /// </summary>
+        public bool isOwnerClient = false;
+
         private float angle;
         private float spinAngle;
         private UnitStatus wizardUs;
@@ -44,22 +50,17 @@ namespace AxeElement
             this.deathTimer = Time.time + LIFETIME;
         }
 
+        // ── Called by AxeUtility.SpawnGlaive on the caster ─────────────────
         public void Init(Identity identity, float startAngle)
         {
-            this.id.owner = identity.owner;
-            if (Globals.online)
-            {
-                if (base.photonView != null && base.photonView.isMine)
-                {
-                    int viewId = identity.gameObject.GetPhotonView()?.viewID ?? -1;
-                    base.photonView.RPCLocal(this, "rpcSpellObjectStart", PhotonTargets.All,
-                        new object[] { identity.owner, viewId, startAngle });
-                }
-            }
-            else
-            {
-                this.localSpellObjectStart(identity.owner, identity.gameObject, startAngle);
-            }
+            this.isOwnerClient = true;
+            this.InitRemote(identity.owner, identity.gameObject, startAngle);
+        }
+
+        // ── Called on EVERY client (via AxeUtility.SpawnGlaiveLocal) ────────
+        public void InitRemote(int owner, GameObject wizardGo, float startAngle)
+        {
+            this.localSpellObjectStart(owner, wizardGo, startAngle);
         }
 
         private void localSpellObjectStart(int owner, GameObject wizardGo, float startAngle)
@@ -126,8 +127,8 @@ namespace AxeElement
                         * Quaternion.Euler(0, this.spinAngle, 0);
             }
 
-            // Remote clients only need visuals.
-            if (Globals.online && base.photonView != null && base.photonView.IsConnectedAndNotLocal()) return;
+            // Remote clients only need visuals — no hit detection or damage.
+            if (Globals.online && !this.isOwnerClient) return;
             if (this.dying) return;
 
             // Lifetime check.
@@ -153,11 +154,8 @@ namespace AxeElement
 
                 this.hitCooldowns[ident.owner] = Time.time + HIT_COOLDOWN;
 
-                if (Globals.online && base.photonView != null)
-                    base.photonView.RPCLocal(this, "rpcCollision", PhotonTargets.All,
-                        new object[] { base.transform.position });
-                else
-                    this.rpcCollision(base.transform.position);
+                // Impact effect + sound (local only — GO has no PhotonView)
+                this.rpcCollision(base.transform.position);
 
                 UnitStatus us = col.GetComponent<UnitStatus>();
                 if (us != null)
@@ -175,23 +173,8 @@ namespace AxeElement
 
         public override void SpellObjectDeath()
         {
-            if (Globals.online && base.photonView != null)
-                base.photonView.RPCLocal(this, "rpcSpellObjectDeath", PhotonTargets.All,
-                    Array.Empty<object>());
-            else
-                this.rpcSpellObjectDeath();
-        }
-
-        [PunRPC]
-        public void rpcSpellObjectStart(int owner, int viewId, float startAngle)
-        {
-            GameObject wizardGo = null;
-            if (viewId != -1)
-            {
-                PhotonView pv = PhotonView.Find(viewId);
-                wizardGo = pv?.gameObject;
-            }
-            this.localSpellObjectStart(owner, wizardGo, startAngle);
+            // GO has no PhotonView — just handle locally.
+            this.rpcSpellObjectDeath();
         }
 
         [PunRPC]
@@ -228,7 +211,7 @@ namespace AxeElement
 
         private void OnPhotonSerializeView(PhotonStream stream, PhotonMessageInfo info)
         {
-            this.BaseSerialize(stream, info);
+            // GO is local-only; no Photon serialization needed.
         }
     }
 }

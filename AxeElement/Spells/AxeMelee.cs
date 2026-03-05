@@ -10,15 +10,27 @@ namespace AxeElement
             Plugin.Log.LogInfo($"[AxeMelee] Initialize: owner={identity?.owner}, pos={position}");
             try
             {
-                var go = GameUtility.Instantiate("Objects/Push", position + rotation * Vector3.forward * 4f, rotation, 0);
+                var spawnPos = position + rotation * Vector3.forward * 4f;
+                var go = (GameObject)UnityEngine.Object.Instantiate(
+                    Resources.Load("Objects/Push", typeof(GameObject)), spawnPos, rotation);
+                if (go == null) return;
+
                 var original = go.GetComponent<PushObject>();
-                UnityEngine.Object _impact = null;
-                if (original != null)
-                    _impact = original.impact;
-                UnityEngine.Object.DestroyImmediate(original);
+                UnityEngine.Object _impact = original?.impact;
+                if (original != null) UnityEngine.Object.DestroyImmediate(original);
+
                 var comp = go.AddComponent<AxeMeleeObject>();
                 comp.impact = _impact;
-                comp.Init(identity);
+                int[] enemyOwnerIds = comp.InitLocal(identity);
+
+                if (Globals.online && enemyOwnerIds != null)
+                {
+                    var pv = GameUtility.GetWizard(identity.owner)?.GetComponent<PhotonView>();
+                    if (pv != null)
+                        pv.RPC("rpcAxeMeleeImpact", PhotonTargets.Others,
+                            new object[] { identity.owner, enemyOwnerIds.Length > 0, enemyOwnerIds });
+                }
+
                 Plugin.Log.LogInfo("[AxeMelee] Spawned successfully");
             }
             catch (System.Exception ex)
