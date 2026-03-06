@@ -752,6 +752,45 @@ namespace AxeElement
     }
 
     // ─────────────────────────────────────────────────────────────────────────
+    // OnlineLobbyCursor.UpdateActions — Temporarily bump LastUnlockedIndex to 6
+    // so the element ban validation's .Take(LastUnlockedIndex+5) includes Blood
+    // at index 10. Mirrors AxePlayerSelectionUpdatePatch for online mode.
+    // ─────────────────────────────────────────────────────────────────────────
+    [HarmonyPatch(typeof(OnlineLobbyCursor), "UpdateActions")]
+    public static class AxeOnlineLobbyUpdateActionsPatch
+    {
+        private static int savedLastUnlockedIndex = -1;
+
+        [HarmonyPrefix]
+        public static void Prefix()
+        {
+            AxeElementPatches.EnsureElementsArraySize();
+
+            if (GamePreferences.current != null &&
+                GamePreferences.current.prefs != null)
+            {
+                savedLastUnlockedIndex = GamePreferences.current.prefs.LastUnlockedIndex;
+                if (GamePreferences.current.prefs.LastUnlockedIndex < 6)
+                {
+                    GamePreferences.current.prefs.LastUnlockedIndex = 6;
+                }
+            }
+        }
+
+        [HarmonyPostfix]
+        public static void Postfix()
+        {
+            if (savedLastUnlockedIndex >= 0 &&
+                GamePreferences.current != null &&
+                GamePreferences.current.prefs != null)
+            {
+                GamePreferences.current.prefs.LastUnlockedIndex = savedLastUnlockedIndex;
+                savedLastUnlockedIndex = -1;
+            }
+        }
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
     // WizardStatus.ApplyDamage — Prefix:
     //   • If target has AxeDefensive active  → counter and zero the damage.
     //   • If target is bleeding              → refresh bleed timer.
