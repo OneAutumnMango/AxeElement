@@ -24,6 +24,7 @@ namespace AxeElement
         private NetworkedWizard nw;
         private AxeDefensiveState state = AxeDefensiveState.Dead;
         private float stateTimer;
+        private bool _speedReduced;
 
         // Static registry: defender owner ID → active AxeDefensiveObject
         public static Dictionary<int, AxeDefensiveObject> activeDefensives =
@@ -85,9 +86,12 @@ namespace AxeElement
             if (this.state != AxeDefensiveState.Active) return;
             this.state = AxeDefensiveState.Dead;
 
-            // Unfreeze the player.
+            // Unfreeze the player and restore movement speed.
             if (this.wc != null)
+            {
                 this.wc.rewindCount--;
+                if (this._speedReduced) { this.wc.MOVEMENT_SPEED /= 0.4f; this._speedReduced = false; }
+            }
 
             // Remove from registry and mark knockback immunity window.
             if (activeDefensives.ContainsKey(this.id.owner) && activeDefensives[this.id.owner] == this)
@@ -119,7 +123,10 @@ namespace AxeElement
             this.state = AxeDefensiveState.Dead;
 
             if (this.wc != null)
+            {
                 this.wc.rewindCount--;
+                if (this._speedReduced) { this.wc.MOVEMENT_SPEED /= 0.4f; this._speedReduced = false; }
+            }
 
             if (activeDefensives.ContainsKey(this.id.owner) && activeDefensives[this.id.owner] == this)
                 activeDefensives.Remove(this.id.owner);
@@ -163,10 +170,12 @@ namespace AxeElement
             // Register so damage notifications reach us.
             activeDefensives[owner] = this;
 
-            // Freeze the player.
+            // Freeze the player (blocks casting); also reduce movement speed to 40%.
             if (this.wc != null)
             {
                 this.wc.rewindCount++;
+                this._speedReduced = true;
+                this.wc.MOVEMENT_SPEED *= 0.4f;
                 this.wc.ResetMove();
             }
 
@@ -247,9 +256,14 @@ namespace AxeElement
 
         private void OnDestroy()
         {
-            // Safety: ensure player is never left frozen.
+            // Safety: ensure player is never left frozen or slowed.
             if (this.state == AxeDefensiveState.Active && this.wc != null)
                 this.wc.rewindCount--;
+            if (this._speedReduced && this.wc != null)
+            {
+                this.wc.MOVEMENT_SPEED /= 0.4f;
+                this._speedReduced = false;
+            }
 
             if (activeDefensives.ContainsKey(this.id.owner) && activeDefensives[this.id.owner] == this)
                 activeDefensives.Remove(this.id.owner);

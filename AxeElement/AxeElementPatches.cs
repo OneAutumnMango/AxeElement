@@ -8,6 +8,7 @@ using MageQuitModFramework.Data;
 using UnityEngine;
 using UnityEngine.Rendering.PostProcessing;
 using UnityEngine.UI;
+using UnityEngine.Video;
 
 namespace AxeElement
 {
@@ -1011,6 +1012,60 @@ namespace AxeElement
         public static void Postfix(VideoSpellPlayer __instance)
         {
             AxeSpellDisplayNames.FixNameText(__instance);
+        }
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // PlayVideo null-guard patches.
+    // Axe spells have no VideoClip assigned, so spell.video is null.
+    // Without these guards, Dictionary lookups with a null key throw
+    // ArgumentNullException in InitClips and ChangeVideo.
+    // ─────────────────────────────────────────────────────────────────────────
+    [HarmonyPatch(typeof(PlayVideo), "ChangeVideo")]
+    public static class AxePlayVideoChangeVideoPatch
+    {
+        [HarmonyPrefix]
+        public static bool Prefix(VideoClip clip) => clip != null;
+    }
+
+    [HarmonyPatch(typeof(PlayVideo), "InitClips")]
+    public static class AxePlayVideoInitClipsPatch
+    {
+        [HarmonyPrefix]
+        public static void Prefix(ref VideoClip[] clips)
+        {
+            clips = System.Linq.Enumerable.ToArray(
+                System.Linq.Enumerable.Where(clips, c => c != null));
+        }
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // WizardController.Update — allow 40% movement during Axe counter parry.
+    // rewindCount still blocks casting; this prefix injects movement input
+    // so the wizard can move at reduced speed during the parry window.
+    // ─────────────────────────────────────────────────────────────────────────
+    [HarmonyPatch(typeof(WizardController), "Update")]
+    public static class AxeWizardCounterMovePatch
+    {
+        [HarmonyPrefix]
+        public static void Prefix(WizardController __instance)
+        {
+            if (__instance.rewindCount <= 0) return;
+            if (__instance.petrifyCount > 0) return;
+            if (!__instance.active) return;
+            if (__instance.input == null) return;
+
+            Identity id = __instance.GetComponent<Identity>();
+            if (id == null || !AxeDefensiveObject.activeDefensives.ContainsKey(id.owner)) return;
+
+            Vector3 inputMove = __instance.input.GetAxis();
+            if (inputMove.magnitude > 1f) inputMove.Normalize();
+            if (Mathf.Pow(inputMove.x, 2f) + Mathf.Pow(inputMove.z, 2f) < 0.03f)
+            {
+                inputMove.x = 0f;
+                inputMove.z = 0f;
+            }
+            Traverse.Create(__instance).Field("move").SetValue(inputMove);
         }
     }
 }

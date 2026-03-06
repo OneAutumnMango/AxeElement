@@ -9,10 +9,10 @@ namespace AxeElement
     {
         private enum Phase { BackStep, Dash, Done }
 
-        private const float BACKSTEP_SPEED = 10f;  // ~2 units in 0.2 s
-        private const float BACKSTEP_TIME  = 0.2f;
-        private const float DASH_SPEED     = 20f;
-        private const float DASH_TIME      = 0.4f;
+        private const float BACKSTEP_SPEED = 5f;
+        private const float BACKSTEP_TIME  = 0.3f;
+        private const float DASH_SPEED     = 40f;
+        private const float DASH_TIME      = 0.2f;
 
         public UnityEngine.Object impact;
 
@@ -164,6 +164,7 @@ namespace AxeElement
         public void rpcSpellObjectDeath()
         {
             this.dying = true;
+            this.phase = Phase.Done;
 
             if (this.phys != null)
                 this.phys.abilityVelocity = Vector3.zero;
