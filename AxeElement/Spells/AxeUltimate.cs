@@ -20,11 +20,11 @@ namespace AxeElement
             Plugin.Log.LogInfo($"[BloodField] Initialize: owner={identity?.owner}, pos={position}");
             try
             {
-                SpawnFieldLocal(identity.owner, isOwner: true);
+                SpawnFieldLocal(identity.owner, identity.gameObject, isOwner: true);
 
                 if (Globals.online)
                 {
-                    var pv = GameUtility.GetWizard(identity.owner)?.GetComponent<PhotonView>();
+                    var pv = identity.gameObject?.GetComponent<PhotonView>();
                     if (pv != null)
                         pv.RPC("rpcAxeFieldStart", PhotonTargets.Others,
                             new object[] { identity.owner });
@@ -39,11 +39,13 @@ namespace AxeElement
         }
 
         // ── Called on EVERY client (caster directly, remote via wizard RPC) ──
-        public static void SpawnFieldLocal(int owner, bool isOwner = false)
+        public static void SpawnFieldLocal(int owner, GameObject wizGo = null, bool isOwner = false)
         {
             try
             {
-                var wizGo = GameUtility.GetWizard(owner)?.gameObject;
+                // Fallback to GameUtility.GetWizard if wizGo is null (for RPC calls without GameObject)
+                if (wizGo == null)
+                    wizGo = GameUtility.GetWizard(owner)?.gameObject;
                 var pos   = wizGo?.transform.position ?? Vector3.zero;
 
                 var go = (GameObject)UnityEngine.Object.Instantiate(

@@ -25,13 +25,12 @@ namespace AxeElement
         {
             // Create locally (not via PhotonNetwork.Instantiate) so we fully
             // control what component runs on this client.
-            SpawnGlaiveLocal(identity.owner, startAngle, isOwner: true);
+            SpawnGlaiveLocal(identity.owner, identity.gameObject, startAngle, isOwner: true);
 
             // Tell all other clients to create their own local copy.
             if (Globals.online)
             {
-                var wc  = GameUtility.GetWizard(identity.owner);
-                var pv  = wc?.GetComponent<PhotonView>();
+                var pv  = identity.gameObject?.GetComponent<PhotonView>();
                 if (pv != null)
                     pv.RPC("rpcAxeGlaiveStart", PhotonTargets.Others,
                         new object[] { identity.owner, startAngle });
@@ -39,11 +38,14 @@ namespace AxeElement
         }
 
         // ── Called on EVERY client (caster directly, remote via wizard RPC) ──
-        public static void SpawnGlaiveLocal(int owner, float startAngle, bool isOwner = false)
+        public static void SpawnGlaiveLocal(int owner, GameObject wizGo, float startAngle, bool isOwner = false)
         {
             try
             {
-                var wizGo = GameUtility.GetWizard(owner)?.gameObject;
+                // Fallback to GameUtility.GetWizard if wizGo is null (for RPC calls without GameObject)
+                if (wizGo == null)
+                    wizGo = GameUtility.GetWizard(owner)?.gameObject;
+                    
                 var pos   = wizGo?.transform.position ?? Vector3.zero;
 
                 var go = (GameObject)UnityEngine.Object.Instantiate(

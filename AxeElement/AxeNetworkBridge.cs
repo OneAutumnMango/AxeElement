@@ -20,7 +20,7 @@ namespace AxeElement
         [PunRPC]
         public void rpcAxeGlaiveStart(int owner, float startAngle)
         {
-            AxeUtility.SpawnGlaiveLocal(owner, startAngle);
+            AxeUtility.SpawnGlaiveLocal(owner, this.gameObject, startAngle);
         }
 
         // ── Ultimate: blood field ─────────────────────────────────────────────
@@ -28,7 +28,7 @@ namespace AxeElement
         [PunRPC]
         public void rpcAxeFieldStart(int owner)
         {
-            AxeUltimate.SpawnFieldLocal(owner);
+            AxeUltimate.SpawnFieldLocal(owner, this.gameObject);
         }
 
         [PunRPC]

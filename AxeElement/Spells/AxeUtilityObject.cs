@@ -7,13 +7,13 @@ namespace AxeElement
 {
     public class AxeUtilityObject : SpellObject
     {
-        private const float ORBIT_RADIUS   = 3.5f;
+        private const float ORBIT_RADIUS   = 4f;
         private const float ANGULAR_SPEED  = 180f;   // degrees/s — full orbit in ~2.0 s
         private const float LIFETIME       = 5f;
         private const float HIT_RADIUS     = 1.5f;
         private const float HIT_DAMAGE     = 5f;
         private const float HIT_COOLDOWN   = 1.0f;   // min seconds between hits on same target
-        private const float HIT_PUSH       = 1f;  // basically no knockback
+        private const float HIT_PUSH       = -5f;
         private const float SPIN_SPEED     = 360f*1.5f;   // degrees/s self-spin on local Y axis
 
         public UnityEngine.Object impact;
