@@ -248,6 +248,13 @@ namespace AxeElement
                     us.ApplyDamage(COUNTER_DAMAGE, this.id.owner, 62);
             }
 
+            // Apply bleed to the attacker.
+            Identity attackerId = attackerGo.GetComponent<Identity>();
+            if (attackerId != null)
+            {
+                BleedManager.ApplyBleed(attackerId.owner, attackerGo, AxeMeleeObject.BleedEffectPrefab);
+            }
+
             if (this.trail != null)
                 this.trail.Emit = false;
 

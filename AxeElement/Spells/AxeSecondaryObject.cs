@@ -7,8 +7,6 @@ namespace AxeElement
 {
     public class AxeSecondaryObject : SpellObject
     {
-        private static readonly Color AxeCrimsonColor = new Color(0.55f, 0.05f, 0.05f);
-
         public UnityEngine.Object impact;
 
         private PhysicsBody phys;
@@ -51,7 +49,7 @@ namespace AxeElement
             if (this.sp != null)
                 this.sp.PlaySoundComponentInstantiate("event:/sfx/metal/glaive-cast", 5f);
             this.deathTimer = Time.time + this.START_TIME;
-            ApplyGreyColor();
+            AxeColorUtility.ApplyCrimsonColor(base.gameObject);
         }
 
         public void Init(int owner, float arcRate, float velocity)
@@ -61,35 +59,11 @@ namespace AxeElement
             this.velSpeed = velocity;
             this.hitOwners.Add(owner); // never hit caster
             base.ChangeToSpellLayerDelayed(velocity);
-            ApplyGreyColor();
+            AxeColorUtility.ApplyCrimsonColor(base.gameObject);
             if (!base.photonView.IsConnectedAndNotLocal())
             {
                 base.photonView.RPCLocal(this, "rpcSpellObjectStart", PhotonTargets.All,
                     new object[] { owner, base.transform.position, base.transform.rotation, arcRate, velocity });
-            }
-        }
-
-        private void ApplyGreyColor()
-        {
-            foreach (Renderer renderer in base.gameObject.GetComponentsInChildren<Renderer>(true))
-            {
-                foreach (Material mat in renderer.materials)
-                {
-                    if (mat != null)
-                    {
-                        if (mat.HasProperty("_Color"))
-                            mat.color = AxeCrimsonColor;
-                        if (mat.HasProperty("_EmissionColor"))
-                            mat.SetColor("_EmissionColor", AxeCrimsonColor * 2f);
-                    }
-                }
-            }
-            foreach (Light light in base.gameObject.GetComponentsInChildren<Light>(true))
-                light.color = AxeCrimsonColor;
-            foreach (ParticleSystem ps in base.gameObject.GetComponentsInChildren<ParticleSystem>(true))
-            {
-                var main = ps.main;
-                main.startColor = AxeCrimsonColor;
             }
         }
 
@@ -189,7 +163,7 @@ namespace AxeElement
             this.arcRate = arcRate;
             this.velSpeed = velocity;
             this.deathTimer = Time.time + this.START_TIME;
-            ApplyGreyColor();
+            AxeColorUtility.ApplyCrimsonColor(base.gameObject);
         }
 
         [PunRPC]

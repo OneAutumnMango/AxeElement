@@ -7,8 +7,6 @@ namespace AxeElement
 {
     public class AxeUtilityObject : SpellObject
     {
-        private static readonly Color GlaiveCrimsonColor = new Color(0.55f, 0.05f, 0.05f);
-
         private const float ORBIT_RADIUS   = 3.5f;
         private const float ANGULAR_SPEED  = 180f;   // degrees/s — full orbit in ~2.0 s
         private const float LIFETIME       = 5f;
@@ -76,36 +74,12 @@ namespace AxeElement
                     new Vector3(Mathf.Sin(rad), 0.2f, Mathf.Cos(rad)) * ORBIT_RADIUS;
             }
 
-            ApplyGreyColor();
+            AxeColorUtility.ApplyCrimsonColor(base.gameObject);
 
             if (this.sp != null)
                 this.sp.PlaySoundComponentInstantiate("event:/sfx/metal/glaive-cast", 5f);
 
             this.deathTimer = Time.time + LIFETIME;
-        }
-
-        private void ApplyGreyColor()
-        {
-            foreach (Renderer renderer in base.gameObject.GetComponentsInChildren<Renderer>(true))
-            {
-                foreach (Material mat in renderer.materials)
-                {
-                    if (mat != null)
-                    {
-                        if (mat.HasProperty("_Color"))
-                            mat.color = GlaiveCrimsonColor;
-                        if (mat.HasProperty("_EmissionColor"))
-                            mat.SetColor("_EmissionColor", GlaiveCrimsonColor * 2f);
-                    }
-                }
-            }
-            foreach (Light light in base.gameObject.GetComponentsInChildren<Light>(true))
-                light.color = GlaiveCrimsonColor;
-            foreach (ParticleSystem ps in base.gameObject.GetComponentsInChildren<ParticleSystem>(true))
-            {
-                var main = ps.main;
-                main.startColor = GlaiveCrimsonColor;
-            }
         }
 
         private void FixedUpdate()
