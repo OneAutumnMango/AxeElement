@@ -1,4 +1,5 @@
 using System;
+using MageQuitModFramework.Spells;
 using UnityEngine;
 
 namespace AxeElement
@@ -21,6 +22,10 @@ namespace AxeElement
 
                 var comp = go.AddComponent<AxeMeleeObject>();
                 comp.impact = _impact;
+                // Apply current spell modifier table values (DAMAGE, RADIUS, POWER) before
+                // InitLocal runs. Necessary because AxeMeleeObject uses InitLocal, which
+                // is not patched by SpellModificationSystem.PatchAllSpellObjects ("Init" only).
+                SpellModificationSystem.ApplyCurrentTableModifiers(comp, Axe.AxeMelee);
                 int[] enemyOwnerIds = comp.InitLocal(identity);
 
                 if (Globals.online && enemyOwnerIds != null)

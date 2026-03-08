@@ -33,6 +33,8 @@ namespace AxeElement
         public AxeUtilityObject()
         {
             this.DAMAGE     = HIT_DAMAGE;
+            this.RADIUS     = HIT_RADIUS;  // hit detection sphere radius; modifiable via SpellModificationSystem
+            this.POWER      = HIT_PUSH;    // push force (negative = pull toward caster); modifiable
             this.START_TIME = LIFETIME;
         }
 
@@ -119,7 +121,7 @@ namespace AxeElement
             }
 
             // Hit detection.
-            var cols = GameUtility.GetAllInSphere(base.transform.position, HIT_RADIUS,
+            var cols = GameUtility.GetAllInSphere(base.transform.position, this.RADIUS,
                 this.id.owner, new UnitType[] { UnitType.Unit });
             foreach (var col in cols)
             {
@@ -139,14 +141,14 @@ namespace AxeElement
 
                 UnitStatus us = col.GetComponent<UnitStatus>();
                 if (us != null)
-                    us.ApplyDamage(HIT_DAMAGE, this.id.owner, 0);
+                    us.ApplyDamage(this.DAMAGE, this.id.owner, 0);
 
                 PhysicsBody pb = col.GetComponent<PhysicsBody>();
                 if (pb != null && this.wizardUs != null)
                 {
                     Vector3 pushDir = (col.transform.position - this.wizardUs.transform.position).WithY(0f);
                     if (pushDir == Vector3.zero) pushDir = base.transform.forward;
-                    pb.AddForceOwner(pushDir.normalized * HIT_PUSH);
+                    pb.AddForceOwner(pushDir.normalized * this.POWER);
                 }
             }
         }

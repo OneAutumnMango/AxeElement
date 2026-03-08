@@ -1,4 +1,5 @@
 using System;
+using MageQuitModFramework.Spells;
 using UnityEngine;
 
 namespace AxeElement
@@ -57,6 +58,9 @@ namespace AxeElement
 
                 var comp = go.AddComponent<AxeUltimateObject>();
                 comp.isOwnerClient = isOwner;
+                // Apply current spell modifier table values (DAMAGE, RADIUS) before InitLocal
+                // runs. Necessary because AxeUltimateObject uses InitLocal, not Init.
+                SpellModificationSystem.ApplyCurrentTableModifiers(comp, Axe.AxeUltimate);
                 comp.InitLocal(owner, wizGo);
             }
             catch (Exception ex)

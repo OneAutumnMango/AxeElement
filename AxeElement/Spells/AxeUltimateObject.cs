@@ -54,6 +54,12 @@ namespace AxeElement
         public static void NotifyDamage(int owner, float damage, UnitStatus unit) { }
 
         // ── SpellObject base plumbing ────────────────────────────────────────────
+        public AxeUltimateObject()
+        {
+            this.DAMAGE = TICK_DAMAGE;   // damage-per-second applied inside the field (scaled by tick interval)
+            this.RADIUS = FIELD_RADIUS;  // blood field radius; modifiable via SpellModificationSystem
+        }
+
         protected override void Awake()
         {
             base.Awake();
@@ -92,7 +98,7 @@ namespace AxeElement
             this.SweepBleed();
 
             // Spawn the dark ground disc — parented to this object so it follows
-            this._disc = CreateFieldDisc();
+            this._disc = CreateFieldDisc(this.RADIUS);
             if (this._disc != null)
             {
                 this._disc.transform.SetParent(base.transform, worldPositionStays: false);
@@ -135,7 +141,7 @@ namespace AxeElement
         private void TickField()
         {
             Collider[] hits = GameUtility.GetAllInSphere(
-                base.transform.position, FIELD_RADIUS, this.id.owner, new UnitType[1]);
+                base.transform.position, this.RADIUS, this.id.owner, new UnitType[1]);
 
             var inField = new HashSet<int>();
 
@@ -155,7 +161,7 @@ namespace AxeElement
                 {
                     var us = go.GetComponent<UnitStatus>();
                     if (us != null)
-                        us.ApplyDamage(TICK_DAMAGE * TICK, this.id.owner, (int)Axe.AxeUltimate);
+                        us.ApplyDamage(this.DAMAGE * TICK, this.id.owner, (int)Axe.AxeUltimate);
                 }
 
                 // Apply or re-anchor slow
@@ -185,7 +191,7 @@ namespace AxeElement
         private void SweepBleed()
         {
             Collider[] hits = GameUtility.GetAllInSphere(
-                base.transform.position, FIELD_RADIUS, this.id.owner, new UnitType[1]);
+                base.transform.position, this.RADIUS, this.id.owner, new UnitType[1]);
             var seen = new HashSet<int>();
             foreach (Collider col in hits)
             {
@@ -257,17 +263,17 @@ namespace AxeElement
         }
 
         // ── Visual: blood pool with rising tendril particles ─────────────────────
-        private static GameObject CreateFieldDisc()
+        private static GameObject CreateFieldDisc(float fieldRadius)
         {
             try
             {
                 // Parent container — position/parent set by caller
                 var root = new GameObject("BloodField");
 
-                // ── Ground pool disc ─────────────────────────────────────────────
+                // ── Ground pool disc ──────────────────────────────────────────
                 var disc = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
                 disc.transform.SetParent(root.transform, false);
-                disc.transform.localScale    = new Vector3(FIELD_RADIUS * 2f, 0.05f, FIELD_RADIUS * 2f);
+                disc.transform.localScale    = new Vector3(fieldRadius * 2f, 0.05f, fieldRadius * 2f);
                 disc.transform.localPosition = Vector3.zero;
 
                 var discCol = disc.GetComponent<Collider>();
@@ -322,7 +328,7 @@ namespace AxeElement
                 var shape = ps.shape;
                 shape.enabled         = true;
                 shape.shapeType       = ParticleSystemShapeType.Circle;
-                shape.radius          = FIELD_RADIUS * 0.85f;  // cover full disc area
+                shape.radius          = fieldRadius * 0.85f;  // cover full disc area
                 shape.radiusThickness = 1.0f;
 
                 var vel = ps.velocityOverLifetime;

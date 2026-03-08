@@ -17,6 +17,11 @@ namespace AxeElement
             // can show friendly names even before the first round loads.
             AxeRegistration.RegisterSpellDisplayNames();
 
+            // Register spell object types early — before OnGameDataLoaded fires — so that
+            // SpellModificationSystem.PatchAllSpellObjects (called by BoostedModule) finds
+            // AxeXxxObject types regardless of which OnGameDataLoaded subscriber runs first.
+            AxeRegistration.RegisterSpellObjectTypes();
+
             // Subscribe to the framework's game-data-loaded event so spell registration
             // always happens after GameDataInitializer has finished snapshotting the table
             // and initialising SpellModificationSystem. The event fires every round.

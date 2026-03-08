@@ -448,12 +448,24 @@ namespace AxeElement
 
         /// <summary>
         /// Registers human-readable display names for all Axe spell names.
-        /// Called at mod load so friendly names are available before game data is ready.
+        /// Called at mod load so names are available before game data is ready.
         /// </summary>
         public static void RegisterSpellDisplayNames()
         {
             foreach (var (spell, displayName) in AxeDisplayNames)
                 SpellNameRegistry.Register(spell, displayName);
+        }
+
+        /// <summary>
+        /// Registers all Axe SpellObject types with SpellModificationSystem so that
+        /// PatchAllSpellObjects and GetSpellNameFromTypeName resolve them correctly.
+        /// Call this from OnLoad (before any PatchAllSpellObjects call) and also
+        /// on each game data load for safety.
+        /// </summary>
+        public static void RegisterSpellObjectTypes()
+        {
+            foreach (var (spellName, objectType) in AxeSpellObjectMap)
+                SpellModificationSystem.RegisterSpellObjectType(spellName, objectType);
         }
 
         /// <summary>
@@ -523,9 +535,9 @@ namespace AxeElement
                     HEAL            = new AttributeModifier(0f),
                 };
 
-                // Inject into the live default table so it can be used as a basis for
-                // named tables (e.g. RegisterTable("myMod") copies from default).
-                defaultTable.Modifiers[spellName] = mods;
+                // Inject into the default table AND any already-registered named tables
+                // (e.g. "boosted") in case they were created before we ran.
+                SpellModificationSystem.InjectIntoAllTables(spellName, mods);
 
                 // Mirror into the framework's canonical snapshots so any code that reads
                 // GameDataInitializer.DefaultSpellTable / DefaultClassAttributes also sees Axe.
@@ -537,6 +549,9 @@ namespace AxeElement
             }
 
             Plugin.Log.LogInfo("[AxeReg] Axe spells registered with SpellModificationSystem");
+
+            // Re-register spell object types in case BoostedPatch.PatchAll runs after us.
+            RegisterSpellObjectTypes();
         }
     }
 }
