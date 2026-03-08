@@ -1,18 +1,18 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using PigeonCoopToolkit.Effects.Trails;
 using UnityEngine;
 
-namespace AxeElement
+namespace BloodElement
 {
-    public class AxeDefensiveObject : SpellObject
+    public class BloodDefensiveObject : SpellObject
     {
         // Configurable: how long the player stands still waiting for a hit.
         public float parryWindow = 1f;
 
         private const float COUNTER_DAMAGE = 5f;
 
-        public AxeDefensiveObject()
+        public BloodDefensiveObject()
         {
             // Wire base field so SpellModificationSystem can scale it.
             this.DAMAGE = COUNTER_DAMAGE;
@@ -28,13 +28,13 @@ namespace AxeElement
 
         private WizardController wc;
         private NetworkedWizard nw;
-        private AxeDefensiveState state = AxeDefensiveState.Dead;
+        private BloodDefensiveState state = BloodDefensiveState.Dead;
         private float stateTimer;
         private bool _speedReduced;
 
-        // Static registry: defender owner ID → active AxeDefensiveObject
-        public static Dictionary<int, AxeDefensiveObject> activeDefensives =
-            new Dictionary<int, AxeDefensiveObject>();
+        // Static registry: defender owner ID → active BloodDefensiveObject
+        public static Dictionary<int, BloodDefensiveObject> activeDefensives =
+            new Dictionary<int, BloodDefensiveObject>();
 
         // Brief knockback immunity window after a parry fires (outlasts the ApplyDamage→AddForceOwner sequence).
         public static Dictionary<int, float> recentlyParriedUntil =
@@ -83,14 +83,14 @@ namespace AxeElement
             if (this.wc != null)
                 base.transform.position = this.wc.transform.position;
 
-            if (this.state == AxeDefensiveState.Active && this.stateTimer < Time.time)
+            if (this.state == BloodDefensiveState.Active && this.stateTimer < Time.time)
                 this.EndWithoutTrigger();
         }
 
         private void RegisterDamage(int attackerOwner, float damage)
         {
-            if (this.state != AxeDefensiveState.Active) return;
-            this.state = AxeDefensiveState.Dead;
+            if (this.state != BloodDefensiveState.Active) return;
+            this.state = BloodDefensiveState.Dead;
 
             // Unfreeze the player and restore movement speed.
             if (this.wc != null)
@@ -125,8 +125,8 @@ namespace AxeElement
 
         private void EndWithoutTrigger()
         {
-            if (this.state != AxeDefensiveState.Active) return;
-            this.state = AxeDefensiveState.Dead;
+            if (this.state != BloodDefensiveState.Active) return;
+            this.state = BloodDefensiveState.Dead;
 
             if (this.wc != null)
             {
@@ -170,7 +170,7 @@ namespace AxeElement
             this.wc = go.GetComponent<WizardController>();
             this.nw = go.GetComponent<NetworkedWizard>();
 
-            this.state = AxeDefensiveState.Active;
+            this.state = BloodDefensiveState.Active;
             this.stateTimer = Time.time + this.parryWindow;
 
             // Register so damage notifications reach us.
@@ -198,7 +198,7 @@ namespace AxeElement
                 this.sp.PlaySound("event:/sfx/metal/double-strike-cast").SetPitch(1f);
 
             // Hint the AI not to attack the caster during the window.
-            AxePhotonExtensions.AiEventHandler.DoNotAttackWizardFor(go, this.parryWindow + 0.1f, 0);
+            BloodPhotonExtensions.AiEventHandler.DoNotAttackWizardFor(go, this.parryWindow + 0.1f, 0);
         }
 
         [PunRPC]
@@ -236,7 +236,7 @@ namespace AxeElement
                 this.wc.transform.position = dest;
             base.transform.position = dest;
 
-            AxePhotonExtensions.AiEventHandler.OnTeleport(this.id.owner);
+            BloodPhotonExtensions.AiEventHandler.OnTeleport(this.id.owner);
 
             // Impact visual.
             if (this.impact != null)
@@ -258,7 +258,7 @@ namespace AxeElement
             Identity attackerId = attackerGo.GetComponent<Identity>();
             if (attackerId != null)
             {
-                BleedManager.ApplyBleed(attackerId.owner, attackerGo, AxeMeleeObject.BleedEffectPrefab);
+                BleedManager.ApplyBleed(attackerId.owner, attackerGo, BloodMeleeObject.BleedEffectPrefab);
             }
 
             if (this.trail != null)
@@ -270,7 +270,7 @@ namespace AxeElement
         private void OnDestroy()
         {
             // Safety: ensure player is never left frozen or slowed.
-            if (this.state == AxeDefensiveState.Active && this.wc != null)
+            if (this.state == BloodDefensiveState.Active && this.wc != null)
                 this.wc.rewindCount--;
             if (this._speedReduced && this.wc != null)
             {
@@ -286,7 +286,7 @@ namespace AxeElement
         {
         }
 
-        private enum AxeDefensiveState
+        private enum BloodDefensiveState
         {
             Active,
             Dead

@@ -1,11 +1,11 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using DG.Tweening;
 using UnityEngine;
 
-namespace AxeElement
+namespace BloodElement
 {
-    public class AxeSecondaryObject : SpellObject
+    public class BloodSecondaryObject : SpellObject
     {
         public UnityEngine.Object impact;
 
@@ -17,7 +17,7 @@ namespace AxeElement
         private Transform child;
         private HashSet<int> hitOwners = new HashSet<int>();
 
-        public AxeSecondaryObject()
+        public BloodSecondaryObject()
         {
             DAMAGE = 8f;
             RADIUS = 2.5f;
@@ -49,7 +49,7 @@ namespace AxeElement
             if (this.sp != null)
                 this.sp.PlaySoundComponentInstantiate("event:/sfx/metal/glaive-cast", 5f);
             this.deathTimer = Time.time + this.START_TIME;
-            AxeColorUtility.ApplyCrimsonColor(base.gameObject);
+            BloodColorUtility.ApplyCrimsonColor(base.gameObject);
         }
 
         public void Init(int owner, float arcRate, float velocity)
@@ -59,7 +59,7 @@ namespace AxeElement
             this.velSpeed = velocity;
             this.hitOwners.Add(owner); // never hit caster
             base.ChangeToSpellLayerDelayed(velocity);
-            AxeColorUtility.ApplyCrimsonColor(base.gameObject);
+            BloodColorUtility.ApplyCrimsonColor(base.gameObject);
             if (!base.photonView.IsConnectedAndNotLocal())
             {
                 base.photonView.RPCLocal(this, "rpcSpellObjectStart", PhotonTargets.All,
@@ -163,7 +163,7 @@ namespace AxeElement
             this.arcRate = arcRate;
             this.velSpeed = velocity;
             this.deathTimer = Time.time + this.START_TIME;
-            AxeColorUtility.ApplyCrimsonColor(base.gameObject);
+            BloodColorUtility.ApplyCrimsonColor(base.gameObject);
         }
 
         [PunRPC]

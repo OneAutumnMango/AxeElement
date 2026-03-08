@@ -1,14 +1,14 @@
-using System;
+﻿using System;
 using UnityEngine;
 
-namespace AxeElement
+namespace BloodElement
 {
-    public class AxeUtility : Spell
+    public class BloodUtility : Spell
     {
         public override void Initialize(Identity identity, Vector3 position, Quaternion rotation,
             float curve, int spellIndex, bool selfCast, SpellName spellNameForCooldown)
         {
-            Plugin.Log.LogInfo($"[AxeUtility] Initialize: owner={identity?.owner}");
+            Plugin.Log.LogInfo($"[BloodUtility] Initialize: owner={identity?.owner}");
             try
             {
                 SpawnGlaive(identity, 0f);
@@ -16,7 +16,7 @@ namespace AxeElement
             }
             catch (Exception ex)
             {
-                Plugin.Log.LogError($"[AxeUtility] Initialize FAILED: {ex}");
+                Plugin.Log.LogError($"[BloodUtility] Initialize FAILED: {ex}");
             }
         }
 
@@ -32,7 +32,7 @@ namespace AxeElement
             {
                 var pv  = identity.gameObject?.GetComponent<PhotonView>();
                 if (pv != null)
-                    pv.RPC("rpcAxeGlaiveStart", PhotonTargets.Others,
+                    pv.RPC("rpcBloodGlaiveStart", PhotonTargets.Others,
                         new object[] { identity.owner, startAngle });
             }
         }
@@ -56,14 +56,14 @@ namespace AxeElement
                 UnityEngine.Object impact = original?.impact;
                 if (original != null) UnityEngine.Object.DestroyImmediate(original);
 
-                var comp         = go.AddComponent<AxeUtilityObject>();
+                var comp         = go.AddComponent<BloodUtilityObject>();
                 comp.impact      = impact;
                 comp.isOwnerClient = isOwner;
                 comp.InitRemote(owner, wizGo, startAngle);
             }
             catch (Exception ex)
             {
-                Plugin.Log.LogError($"[AxeUtility] SpawnGlaiveLocal FAILED: {ex}");
+                Plugin.Log.LogError($"[BloodUtility] SpawnGlaiveLocal FAILED: {ex}");
             }
         }
 

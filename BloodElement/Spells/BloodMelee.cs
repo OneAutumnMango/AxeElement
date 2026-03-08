@@ -1,14 +1,14 @@
-using System;
+﻿using System;
 using MageQuitModFramework.Spells;
 using UnityEngine;
 
-namespace AxeElement
+namespace BloodElement
 {
-    public class AxeMelee : Spell
+    public class BloodMelee : Spell
     {
         public override void Initialize(Identity identity, Vector3 position, Quaternion rotation, float curve, int spellIndex, bool selfCast, SpellName spellNameForCooldown)
         {
-            Plugin.Log.LogInfo($"[AxeMelee] Initialize: owner={identity?.owner}, pos={position}");
+            Plugin.Log.LogInfo($"[BloodMelee] Initialize: owner={identity?.owner}, pos={position}");
             try
             {
                 var spawnPos = position + rotation * Vector3.forward * 4f;
@@ -20,27 +20,27 @@ namespace AxeElement
                 UnityEngine.Object _impact = original?.impact;
                 if (original != null) UnityEngine.Object.DestroyImmediate(original);
 
-                var comp = go.AddComponent<AxeMeleeObject>();
+                var comp = go.AddComponent<BloodMeleeObject>();
                 comp.impact = _impact;
                 // Apply current spell modifier table values (DAMAGE, RADIUS, POWER) before
-                // InitLocal runs. Necessary because AxeMeleeObject uses InitLocal, which
+                // InitLocal runs. Necessary because BloodMeleeObject uses InitLocal, which
                 // is not patched by SpellModificationSystem.PatchAllSpellObjects ("Init" only).
-                SpellModificationSystem.ApplyCurrentTableModifiers(comp, Axe.AxeMelee);
+                SpellModificationSystem.ApplyCurrentTableModifiers(comp, Blood.BloodMelee);
                 int[] enemyOwnerIds = comp.InitLocal(identity);
 
                 if (Globals.online && enemyOwnerIds != null)
                 {
                     var pv = GameUtility.GetWizard(identity.owner)?.GetComponent<PhotonView>();
                     if (pv != null)
-                        pv.RPC("rpcAxeMeleeImpact", PhotonTargets.Others,
+                        pv.RPC("rpcBloodMeleeImpact", PhotonTargets.Others,
                             new object[] { identity.owner, enemyOwnerIds.Length > 0, enemyOwnerIds });
                 }
 
-                Plugin.Log.LogInfo("[AxeMelee] Spawned successfully");
+                Plugin.Log.LogInfo("[BloodMelee] Spawned successfully");
             }
             catch (System.Exception ex)
             {
-                Plugin.Log.LogError($"[AxeMelee] Initialize FAILED: {ex}");
+                Plugin.Log.LogError($"[BloodMelee] Initialize FAILED: {ex}");
             }
         }
 

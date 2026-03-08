@@ -1,6 +1,6 @@
-using UnityEngine;
+﻿using UnityEngine;
 
-namespace AxeElement
+namespace BloodElement
 {
     /// <summary>
     /// Added at runtime to every wizard GameObject (via a Harmony patch on
@@ -9,46 +9,46 @@ namespace AxeElement
     /// client using that wizard's PhotonView — regardless of which spell objects
     /// are (or aren't) present on the remote client.
     ///
-    /// Each Axe spell that needs a remote visual calls:
+    /// Each Blood spell that needs a remote visual calls:
     ///     wizardPv.RPC("rpc...", PhotonTargets.Others, args);
     /// and this component receives it on the other side.
     /// </summary>
-    public class AxeNetworkBridge : MonoBehaviour
+    public class BloodNetworkBridge : MonoBehaviour
     {
         // ── Utility: orbiting glaives ─────────────────────────────────────────
 
         [PunRPC]
-        public void rpcAxeGlaiveStart(int owner, float startAngle)
+        public void rpcBloodGlaiveStart(int owner, float startAngle)
         {
-            AxeUtility.SpawnGlaiveLocal(owner, this.gameObject, startAngle);
+            BloodUtility.SpawnGlaiveLocal(owner, this.gameObject, startAngle);
         }
 
         // ── Ultimate: blood field ─────────────────────────────────────────────
 
         [PunRPC]
-        public void rpcAxeFieldStart(int owner)
+        public void rpcBloodFieldStart(int owner)
         {
-            AxeUltimate.SpawnFieldLocal(owner, this.gameObject);
+            BloodUltimate.SpawnFieldLocal(owner, this.gameObject);
         }
 
         [PunRPC]
-        public void rpcAxeFieldDeath(int owner)
+        public void rpcBloodFieldDeath(int owner)
         {
-            AxeUltimateObject.RemoteKill(owner);
+            BloodUltimateObject.RemoteKill(owner);
         }
 
         // ── Melee: bleed / impact visuals ────────────────────────────────────
 
         [PunRPC]
-        public void rpcAxeMeleeImpact(int owner, bool hit, int[] enemyOwnerIds)
+        public void rpcBloodMeleeImpact(int owner, bool hit, int[] enemyOwnerIds)
         {
-            AxeMeleeObject.RemoteImpact(owner, hit, enemyOwnerIds);
+            BloodMeleeObject.RemoteImpact(owner, hit, enemyOwnerIds);
         }
 
         // ── Movement: cast sound ─────────────────────────────────────────────
 
         [PunRPC]
-        public void rpcAxeMovementSound()
+        public void rpcBloodMovementSound()
         {
             var sp = GetComponent<SoundPlayer>();
             if (sp != null)

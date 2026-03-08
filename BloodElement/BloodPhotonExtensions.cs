@@ -1,14 +1,14 @@
-using System;
+﻿using System;
 using System.Reflection;
 
-namespace AxeElement
+namespace BloodElement
 {
     // ─────────────────────────────────────────────────────────────────────────
     // Replicates the extension methods from GameExtensions (internal in
     // Assembly-CSharp and therefore inaccessible from external assemblies).
     // Also provides reflection-based accessors for internal Globals fields.
     // ─────────────────────────────────────────────────────────────────────────
-    public static class AxePhotonExtensions
+    public static class BloodPhotonExtensions
     {
         // ── Globals.ai_event_handler (internal field) ─────────────────────
         private static readonly FieldInfo _aiField =

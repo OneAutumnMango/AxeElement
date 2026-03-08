@@ -1,7 +1,7 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 
-namespace AxeElement
+namespace BloodElement
 {
     public static class BleedManager
     {

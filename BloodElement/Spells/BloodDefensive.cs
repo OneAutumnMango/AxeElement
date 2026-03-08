@@ -1,14 +1,14 @@
-using System;
+﻿using System;
 using PigeonCoopToolkit.Effects.Trails;
 using UnityEngine;
 
-namespace AxeElement
+namespace BloodElement
 {
-    public class AxeDefensive : Spell
+    public class BloodDefensive : Spell
     {
         public override void Initialize(Identity identity, Vector3 position, Quaternion rotation, float curve, int spellIndex, bool selfCast, SpellName spellNameForCooldown)
         {
-            Plugin.Log.LogInfo($"[AxeDefensive] Initialize: owner={identity?.owner}, pos={position}");
+            Plugin.Log.LogInfo($"[BloodDefensive] Initialize: owner={identity?.owner}, pos={position}");
             try
             {
                 var go = GameUtility.Instantiate("Objects/Double Strike", position, rotation, 0);
@@ -31,10 +31,10 @@ namespace AxeElement
                     _trail = original.trail;
                 }
 
-                Plugin.Log.LogInfo($"[AxeDefensive] Prefab fields: impact={_impact != null}, trail={_trail != null}, effectStart={_effectStart != null}");
+                Plugin.Log.LogInfo($"[BloodDefensive] Prefab fields: impact={_impact != null}, trail={_trail != null}, effectStart={_effectStart != null}");
                 UnityEngine.Object.DestroyImmediate(original);
 
-                var comp = go.AddComponent<AxeDefensiveObject>();
+                var comp = go.AddComponent<BloodDefensiveObject>();
                 comp.impact = _impact;
                 comp.distortionTrail = _distortionTrail;
                 comp.distortion = _distortion;
@@ -43,11 +43,11 @@ namespace AxeElement
                 comp.trail = _trail;
                 comp.Init(identity);
 
-                Plugin.Log.LogInfo("[AxeDefensive] Spawned successfully");
+                Plugin.Log.LogInfo("[BloodDefensive] Spawned successfully");
             }
             catch (Exception ex)
             {
-                Plugin.Log.LogError($"[AxeDefensive] Initialize FAILED: {ex}");
+                Plugin.Log.LogError($"[BloodDefensive] Initialize FAILED: {ex}");
             }
         }
 

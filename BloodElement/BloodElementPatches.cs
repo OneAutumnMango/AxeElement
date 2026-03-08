@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Reflection;
 using FMOD.Studio;
@@ -10,43 +10,43 @@ using UnityEngine.Rendering.PostProcessing;
 using UnityEngine.UI;
 using UnityEngine.Video;
 
-namespace AxeElement
+namespace BloodElement
 {
     // ─────────────────────────────────────────────────────────────────────────
-    // Constant aliases for the Axe element and its seven SpellName values.
-    // Element.Tutorial == 11 is used as the Axe slot. Ice stays vanilla.
+    // Constant aliases for the Blood element and its seven SpellName values.
+    // Element.Tutorial == 11 is used as the Blood slot. Ice stays vanilla.
     // SpellNames 146-152 are appended after ColdFusion (145).
     // ─────────────────────────────────────────────────────────────────────────
-    public static class Axe
+    public static class Blood
     {
         public static readonly Element Element = (Element)11; // Tutorial slot
 
-        public static readonly SpellName AxePrimary  = (SpellName)146;
-        public static readonly SpellName AxeMovement = (SpellName)147;
-        public static readonly SpellName AxeMelee   = (SpellName)148;
-        public static readonly SpellName AxeSecondary = (SpellName)149;
-        public static readonly SpellName AxeDefensive = (SpellName)150;
-        public static readonly SpellName AxeUtility = (SpellName)151;
-        public static readonly SpellName AxeUltimate = (SpellName)152;
+        public static readonly SpellName BloodPrimary  = (SpellName)146;
+        public static readonly SpellName BloodMovement = (SpellName)147;
+        public static readonly SpellName BloodMelee   = (SpellName)148;
+        public static readonly SpellName BloodSecondary = (SpellName)149;
+        public static readonly SpellName BloodDefensive = (SpellName)150;
+        public static readonly SpellName BloodUtility = (SpellName)151;
+        public static readonly SpellName BloodUltimate = (SpellName)152;
     }
 
     [HarmonyPatch]
-    public static class AxeElementPatches
+    public static class BloodElementPatches
     {
         public static void Initialize()
         {
-            // Expand unlockOrder to include Axe (Tutorial element) as the 11th entry.
+            // Expand unlockOrder to include Blood (Tutorial element) as the 11th entry.
             // This runs at mod load, before any Unity lifecycle methods.
             if (AvailableElements.unlockOrder != null && AvailableElements.unlockOrder.Length <= 10)
             {
                 var expanded = new Element[11];
                 AvailableElements.unlockOrder.CopyTo(expanded, 0);
-                expanded[10] = Axe.Element;
+                expanded[10] = Blood.Element;
                 AvailableElements.unlockOrder = expanded;
-                Plugin.Log.LogInfo("[AxeInit] Expanded unlockOrder to 11 elements (added Axe at index 10)");
+                Plugin.Log.LogInfo("[BloodInit] Expanded unlockOrder to 11 elements (added Blood at index 10)");
             }
 
-            // Inject Axe element into SpellHandler's static sound dictionaries.
+            // Inject Blood element into SpellHandler's static sound dictionaries.
             // Both map Element → FMOD event path; all vanilla elements use the same path.
             try
             {
@@ -55,10 +55,10 @@ namespace AxeElement
                 if (castField != null)
                 {
                     var dict = castField.GetValue(null) as Dictionary<Element, string>;
-                    if (dict != null && !dict.ContainsKey(Axe.Element))
+                    if (dict != null && !dict.ContainsKey(Blood.Element))
                     {
-                        dict[Axe.Element] = "event:/sfx/wizard/spell-attack";
-                        Plugin.Log.LogInfo("[AxeInit] Injected Axe into SpellHandler.castSounds");
+                        dict[Blood.Element] = "event:/sfx/wizard/spell-attack";
+                        Plugin.Log.LogInfo("[BloodInit] Injected Blood into SpellHandler.castSounds");
                     }
                 }
 
@@ -67,23 +67,23 @@ namespace AxeElement
                 if (ultField != null)
                 {
                     var dict = ultField.GetValue(null) as Dictionary<Element, string>;
-                    if (dict != null && !dict.ContainsKey(Axe.Element))
+                    if (dict != null && !dict.ContainsKey(Blood.Element))
                     {
-                        dict[Axe.Element] = "event:/sfx/wizard/spell-attack";
-                        Plugin.Log.LogInfo("[AxeInit] Injected Axe into SpellHandler.ultimateCastSounds");
+                        dict[Blood.Element] = "event:/sfx/wizard/spell-attack";
+                        Plugin.Log.LogInfo("[BloodInit] Injected Blood into SpellHandler.ultimateCastSounds");
                     }
                 }
             }
             catch (System.Exception ex)
             {
-                Plugin.Log.LogError($"[AxeInit] Failed to inject SpellHandler sound dictionaries: {ex}");
+                Plugin.Log.LogError($"[BloodInit] Failed to inject SpellHandler sound dictionaries: {ex}");
             }
         }
 
         /// <summary>
         /// Ensures GameSettings.elements array is large enough for all unlockOrder entries,
         /// and bumps LastUnlockedIndex so vanilla .Take(LastUnlockedIndex+5) thresholds
-        /// include Axe at index 10.
+        /// include Blood at index 10.
         /// Called from multiple guard patches to prevent IndexOutOfRange when presets
         /// reset the array to size 10.
         /// </summary>
@@ -101,69 +101,69 @@ namespace AxeElement
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    // WizardController.Awake — attach AxeNetworkBridge to every wizard GO so
-    // that wizard-level RPCs can route Axe spell events to remote clients.
+    // WizardController.Awake — attach BloodNetworkBridge to every wizard GO so
+    // that wizard-level RPCs can route Blood spell events to remote clients.
     // ─────────────────────────────────────────────────────────────────────────
     [HarmonyPatch(typeof(WizardController), "Awake")]
-    public static class AxeWizardBridgePatch
+    public static class BloodWizardBridgePatch
     {
         [HarmonyPostfix]
         public static void Postfix(WizardController __instance)
         {
             if (__instance == null) return;
-            if (__instance.GetComponent<AxeNetworkBridge>() == null)
-                __instance.gameObject.AddComponent<AxeNetworkBridge>();
+            if (__instance.GetComponent<BloodNetworkBridge>() == null)
+                __instance.gameObject.AddComponent<BloodNetworkBridge>();
         }
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    // WizardStatus.rpcApplyDamage — notify AxeDefensive objects
+    // WizardStatus.rpcApplyDamage — notify BloodDefensive objects
     // whenever the wizard takes damage.
     // ─────────────────────────────────────────────────────────────────────────
     [HarmonyPatch(typeof(WizardStatus), "rpcApplyDamage")]
-    public static class AxeWizardStatusPatch
+    public static class BloodWizardStatusPatch
     {
         [HarmonyPostfix]
         public static void Postfix(WizardStatus __instance, float damage, int owner, int source)
         {
             try
             {
-                AxeDefensiveObject.NotifyDamage(owner, damage, __instance);
-                AxeUltimateObject.NotifyDamage(owner, damage, __instance as UnitStatus);
+                BloodDefensiveObject.NotifyDamage(owner, damage, __instance);
+                BloodUltimateObject.NotifyDamage(owner, damage, __instance as UnitStatus);
             }
             catch (System.Exception ex)
             {
-                Plugin.Log.LogError($"[AxeDmg] rpcApplyDamage hook failed: damage={damage}, owner={owner}, source={source}: {ex}");
+                Plugin.Log.LogError($"[BloodDmg] rpcApplyDamage hook failed: damage={damage}, owner={owner}, source={source}: {ex}");
             }
         }
     }
 
     // ─────────────────────────────────────────────────────────────────────────
     // GameSettings constructor — ensure elements array is large enough for
-    // 11 elements (Axe occupies the Tutorial slot at index 10).
+    // 11 elements (Blood occupies the Tutorial slot at index 10).
     // ─────────────────────────────────────────────────────────────────────────
     [HarmonyPatch(typeof(GameSettings), MethodType.Constructor)]
-    public static class AxeGameSettingsPatch
+    public static class BloodGameSettingsPatch
     {
         [HarmonyPostfix]
         public static void Postfix(GameSettings __instance)
         {
-            AxeElementPatches.EnsureElementsArraySize();
+            BloodElementPatches.EnsureElementsArraySize();
         }
     }
 
     // ─────────────────────────────────────────────────────────────────────────
     // Guard: SelectionMenu.ShowElements — ensure arrays are correct size.
     // Prefix: expand GameSettings.elements; skip if Image array not ready.
-    // Postfix: force-unlock Axe (index 10) past LastUnlockedIndex threshold.
+    // Postfix: force-unlock Blood (index 10) past LastUnlockedIndex threshold.
     // ─────────────────────────────────────────────────────────────────────────
     [HarmonyPatch(typeof(SelectionMenu), "ShowElements")]
-    public static class AxeElementsArrayGuardPatch
+    public static class BloodElementsArrayGuardPatch
     {
         [HarmonyPrefix]
         public static bool Prefix(SelectionMenu __instance)
         {
-            AxeElementPatches.EnsureElementsArraySize();
+            BloodElementPatches.EnsureElementsArraySize();
 
             // If SelectionMenu's Image array hasn't been expanded to 11 yet
             // (Start prefix hasn't run), skip ShowElements to avoid crash
@@ -182,7 +182,7 @@ namespace AxeElement
         [HarmonyPostfix]
         public static void Postfix(SelectionMenu __instance)
         {
-            // Force unlock Axe (index 10) — the vanilla condition
+            // Force unlock Blood (index 10) — the vanilla condition
             // i < LastUnlockedIndex + 5 excludes our modded element
             var elementsField = typeof(SelectionMenu).GetField("elements",
                 BindingFlags.Public | BindingFlags.Instance);
@@ -190,12 +190,12 @@ namespace AxeElement
             var elements = elementsField.GetValue(__instance) as Image[];
             if (elements == null || elements.Length < 11) return;
 
-            var axeImage = elements[10];
-            if (axeImage != null)
+            var bloodImage = elements[10];
+            if (bloodImage != null)
             {
-                if (axeImage.transform.childCount > 2)
-                    axeImage.transform.GetChild(2).gameObject.SetActive(false);
-                var btn = axeImage.GetComponent<Button>();
+                if (bloodImage.transform.childCount > 2)
+                    bloodImage.transform.GetChild(2).gameObject.SetActive(false);
+                var btn = bloodImage.GetComponent<Button>();
                 if (btn != null)
                     btn.interactable = true;
             }
@@ -205,41 +205,41 @@ namespace AxeElement
     // ─────────────────────────────────────────────────────────────────────────
     // Guard: AvailableElements.GetAvailableAndIncludedElements — ensure
     // GameSettings.elements is large enough before the loop, and include
-    // Axe (index 10) in the available/included lists afterward.
+    // Blood (index 10) in the available/included lists afterward.
     // ─────────────────────────────────────────────────────────────────────────
     [HarmonyPatch(typeof(AvailableElements), "GetAvailableAndIncludedElements")]
-    public static class AxeGetAvailableGuardPatch
+    public static class BloodGetAvailableGuardPatch
     {
         [HarmonyPrefix]
         public static void Prefix()
         {
-            AxeElementPatches.EnsureElementsArraySize();
+            BloodElementPatches.EnsureElementsArraySize();
         }
 
         [HarmonyPostfix]
         public static void Postfix(ref List<Element> available, ref List<Element> included)
         {
             // The vanilla loop only iterates i <= lastUnlockedIndex + 4 (up to index 9).
-            // Manually check index 10 (Axe) and add to the correct list.
+            // Manually check index 10 (Blood) and add to the correct list.
             if (PlayerManager.gameSettings.elements != null &&
                 PlayerManager.gameSettings.elements.Length > 10)
             {
                 var mode = PlayerManager.gameSettings.elements[10];
-                if (mode == ElementInclusionMode.Possible && !available.Contains(Axe.Element))
-                    available.Add(Axe.Element);
-                else if (mode == ElementInclusionMode.Included && !included.Contains(Axe.Element))
-                    included.Add(Axe.Element);
+                if (mode == ElementInclusionMode.Possible && !available.Contains(Blood.Element))
+                    available.Add(Blood.Element);
+                else if (mode == ElementInclusionMode.Included && !included.Contains(Blood.Element))
+                    included.Add(Blood.Element);
             }
         }
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    // AvailableElements.ShowAvailableElements — Force-unlock Axe (index 10)
+    // AvailableElements.ShowAvailableElements — Force-unlock Blood (index 10)
     // on the round display tablet. The vanilla threshold LastUnlockedIndex + 5
     // excludes our modded element.
     // ─────────────────────────────────────────────────────────────────────────
     [HarmonyPatch(typeof(AvailableElements), "ShowAvailableElements")]
-    public static class AxeAvailableElementsUnlockPatch
+    public static class BloodAvailableElementsUnlockPatch
     {
         [HarmonyPostfix]
         public static void Postfix(AvailableElements __instance)
@@ -256,18 +256,18 @@ namespace AxeElement
             }
             catch (System.Exception ex)
             {
-                Plugin.Log.LogError($"[AxeUI] AvailableElements unlock postfix failed: {ex}");
+                Plugin.Log.LogError($"[BloodUI] AvailableElements unlock postfix failed: {ex}");
             }
         }
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    // SelectionMenu.ChangeElement — Extend the cycle range to include Axe.
+    // SelectionMenu.ChangeElement — Extend the cycle range to include Blood.
     // Vanilla uses LastUnlockedIndex + 5 as modulo cap, which excludes
     // our 11th element (index 10).
     // ─────────────────────────────────────────────────────────────────────────
     [HarmonyPatch(typeof(SelectionMenu), "ChangeElement")]
-    public static class AxeChangeElementPatch
+    public static class BloodChangeElementPatch
     {
         [HarmonyPrefix]
         public static bool Prefix(SelectionMenu __instance, bool up)
@@ -291,7 +291,7 @@ namespace AxeElement
             }
             catch (System.Exception ex)
             {
-                Plugin.Log.LogError($"[AxeUI] ChangeElement patch failed: {ex}");
+                Plugin.Log.LogError($"[BloodUI] ChangeElement patch failed: {ex}");
                 return true; // Fallback to vanilla
             }
         }
@@ -302,7 +302,7 @@ namespace AxeElement
     // 11th icon slot; Postfix verifies the Metal sprite is applied.
     // ─────────────────────────────────────────────────────────────────────────
     [HarmonyPatch(typeof(AvailableElements), "Awake")]
-    public static class AxeAvailableElementsPatch
+    public static class BloodAvailableElementsPatch
     {
         [HarmonyPrefix]
         public static void Prefix(AvailableElements __instance)
@@ -311,7 +311,7 @@ namespace AxeElement
             {
                 // Ensure unlockOrder is expanded (safety — Initialize should have done this)
                 if (AvailableElements.unlockOrder.Length <= 10)
-                    AxeElementPatches.Initialize();
+                    BloodElementPatches.Initialize();
 
                 // Clone a tablet child to create the 11th icon slot.
                 // Awake's body iterates tablet.GetChild(i) for i=0..unlockOrder.Length-1,
@@ -324,7 +324,7 @@ namespace AxeElement
                     var newChild = UnityEngine.Object.Instantiate(metalChild, tablet);
                     newChild.SetAsLastSibling();
 
-                    // Place Axe as the 5th element of the center diagonal (children 0-3).
+                    // Place Blood as the 5th element of the center diagonal (children 0-3).
                     // Step = (child3 - child0) / 3; new pos = child3 + step.
                     var e0RT = tablet.GetChild(0).GetComponent<RectTransform>();
                     var e3RT = tablet.GetChild(3).GetComponent<RectTransform>();
@@ -336,17 +336,17 @@ namespace AxeElement
                     // Copy from child 0 to guarantee parity regardless of clone behaviour.
                     newRT.localEulerAngles = e0RT.localEulerAngles;
 
-                    // Replace Metal's symbol with the Axe icon PNG
-                    var axeSprite = AxeRegistration.LoadPngIcon("primary.png");
-                    if (axeSprite != null)
-                        newChild.GetComponent<Image>().sprite = axeSprite;
+                    // Replace Metal's symbol with the Blood icon PNG
+                    var bloodSprite = BloodRegistration.LoadPngIcon("primary.png");
+                    if (bloodSprite != null)
+                        newChild.GetComponent<Image>().sprite = bloodSprite;
 
-                    Plugin.Log.LogInfo("[AxeUI] AvailableElements: Cloned Metal icon as 11th tablet child for Axe");
+                    Plugin.Log.LogInfo("[BloodUI] AvailableElements: Cloned Metal icon as 11th tablet child for Blood");
                 }
             }
             catch (System.Exception ex)
             {
-                Plugin.Log.LogError($"[AxeUI] AvailableElements tablet clone failed: {ex}");
+                Plugin.Log.LogError($"[BloodUI] AvailableElements tablet clone failed: {ex}");
             }
         }
 
@@ -362,27 +362,27 @@ namespace AxeElement
                 var elementIcons = iconsField.GetValue(__instance) as Image[];
                 if (elementIcons == null || elementIcons.Length < 11) return;
 
-                // Ensure index 10 (Axe) has the Axe icon, falling back to Metal sprite
+                // Ensure index 10 (Blood) has the Blood icon, falling back to Metal sprite
                 var metalIcon = elementIcons[8];
-                var axeIcon = elementIcons[10];
-                if (axeIcon != null)
+                var bloodIcon = elementIcons[10];
+                if (bloodIcon != null)
                 {
-                    var axeSprite = AxeRegistration.LoadPngIcon("primary.png");
-                    if (axeSprite != null)
+                    var bloodSprite = BloodRegistration.LoadPngIcon("primary.png");
+                    if (bloodSprite != null)
                     {
-                        axeIcon.sprite = axeSprite;
-                        Plugin.Log.LogInfo("[AxeUI] AvailableElements: Set Axe PNG icon on slot (index 10)");
+                        bloodIcon.sprite = bloodSprite;
+                        Plugin.Log.LogInfo("[BloodUI] AvailableElements: Set Blood PNG icon on slot (index 10)");
                     }
                     else if (metalIcon != null && metalIcon.sprite != null)
                     {
-                        axeIcon.sprite = metalIcon.sprite;
-                        Plugin.Log.LogInfo("[AxeUI] AvailableElements: Fallback — Metal icon on Axe slot (index 10)");
+                        bloodIcon.sprite = metalIcon.sprite;
+                        Plugin.Log.LogInfo("[BloodUI] AvailableElements: Fallback — Metal icon on Blood slot (index 10)");
                     }
                 }
             }
             catch (System.Exception ex)
             {
-                Plugin.Log.LogError($"[AxeUI] AvailableElements icon assignment failed: {ex}");
+                Plugin.Log.LogError($"[BloodUI] AvailableElements icon assignment failed: {ex}");
             }
         }
     }
@@ -392,7 +392,7 @@ namespace AxeElement
     // element toggle grid before Start's body calls Refresh → ShowElements.
     // ─────────────────────────────────────────────────────────────────────────
     [HarmonyPatch(typeof(SelectionMenu), "Start")]
-    public static class AxeSelectionMenuIconPatch
+    public static class BloodSelectionMenuIconPatch
     {
         [HarmonyPrefix]
         public static void Prefix(SelectionMenu __instance)
@@ -400,7 +400,7 @@ namespace AxeElement
             try
             {
                 // Ensure GameSettings.elements array can hold 11 entries
-                AxeElementPatches.EnsureElementsArraySize();
+                BloodElementPatches.EnsureElementsArraySize();
 
                 var elementsField = typeof(SelectionMenu).GetField("elements",
                     BindingFlags.Public | BindingFlags.Instance);
@@ -409,7 +409,7 @@ namespace AxeElement
                 var elements = elementsField.GetValue(__instance) as Image[];
                 if (elements == null || elements.Length != 10) return;
 
-                // Clone Metal icon (index 8) as template for Axe — already has Metal sprite
+                // Clone Metal icon (index 8) as template for Blood — already has Metal sprite
                 var template = elements[8];
                 var newObj = UnityEngine.Object.Instantiate(template.gameObject, template.transform.parent);
                 var newImage = newObj.GetComponent<Image>();
@@ -429,10 +429,10 @@ namespace AxeElement
                 expanded[10] = newImage;
                 elementsField.SetValue(__instance, expanded);
 
-                // Replace Metal's element symbol with the Axe icon PNG
-                var axeSprite = AxeRegistration.LoadPngIcon("primary.png");
-                if (axeSprite != null)
-                    newImage.sprite = axeSprite;
+                // Replace Metal's element symbol with the Blood icon PNG
+                var bloodSprite = BloodRegistration.LoadPngIcon("primary.png");
+                if (bloodSprite != null)
+                    newImage.sprite = bloodSprite;
 
                 // Initialize child indicators (Included/Banned/Lock) as hidden
                 newObj.transform.GetChild(0).gameObject.SetActive(false);
@@ -440,7 +440,7 @@ namespace AxeElement
                 if (newObj.transform.childCount > 2)
                     newObj.transform.GetChild(2).gameObject.SetActive(false);
 
-                // Fix button onClick to call ClickElement(10) for the Axe slot
+                // Fix button onClick to call ClickElement(10) for the Blood slot
                 var btn = newObj.GetComponent<Button>();
                 if (btn != null)
                 {
@@ -449,22 +449,22 @@ namespace AxeElement
                     btn.interactable = true;
                 }
 
-                Plugin.Log.LogInfo("[AxeUI] SelectionMenu: Created 11th element Image for Axe");
+                Plugin.Log.LogInfo("[BloodUI] SelectionMenu: Created 11th element Image for Blood");
             }
             catch (System.Exception ex)
             {
-                Plugin.Log.LogError($"[AxeUI] SelectionMenu element creation failed: {ex}");
+                Plugin.Log.LogError($"[BloodUI] SelectionMenu element creation failed: {ex}");
             }
         }
     }
 
     // ─────────────────────────────────────────────────────────────────────────
     // SpellHandler.Start — Expand elementEffects (EmissionModule[]) and
-    // ultimateEffects (ParticleSystem[]) to include index 11 for Axe.
+    // ultimateEffects (ParticleSystem[]) to include index 11 for Blood.
     // Reuse Metal's effects (index 9).
     // ─────────────────────────────────────────────────────────────────────────
     [HarmonyPatch(typeof(SpellHandler), "Start")]
-    public static class AxeSpellHandlerPatch
+    public static class BloodSpellHandlerPatch
     {
         [HarmonyPostfix]
         public static void Postfix(SpellHandler __instance)
@@ -481,10 +481,10 @@ namespace AxeElement
                     {
                         var expanded = new ParticleSystem.EmissionModule[12];
                         emArr.CopyTo(expanded, 0);
-                        // Reuse Metal's emission (index 9) for Axe (index 11)
+                        // Reuse Metal's emission (index 9) for Blood (index 11)
                         expanded[11] = emArr[9];
                         elemField.SetValue(__instance, expanded);
-                        Plugin.Log.LogInfo($"[AxeUI] SpellHandler: Expanded elementEffects from {emArr.Length} to 12");
+                        Plugin.Log.LogInfo($"[BloodUI] SpellHandler: Expanded elementEffects from {emArr.Length} to 12");
                     }
                 }
 
@@ -500,28 +500,28 @@ namespace AxeElement
                         arr.CopyTo(expanded, 0);
                         expanded[11] = arr[9];
                         ultFxField.SetValue(__instance, expanded);
-                        Plugin.Log.LogInfo($"[AxeUI] SpellHandler: Expanded ultimateEffects from {arr.Length} to 12");
+                        Plugin.Log.LogInfo($"[BloodUI] SpellHandler: Expanded ultimateEffects from {arr.Length} to 12");
                     }
                 }
             }
             catch (System.Exception ex)
             {
-                Plugin.Log.LogError($"[AxeUI] SpellHandler FX expansion failed: {ex}");
+                Plugin.Log.LogError($"[BloodUI] SpellHandler FX expansion failed: {ex}");
             }
         }
     }
 
     // ─────────────────────────────────────────────────────────────────────────
     // ElementColorMapping.Start — Override stage visuals with steel/grey
-    // for the Axe element. Skips Practice Range to avoid FMOD conflicts.
+    // for the Blood element. Skips Practice Range to avoid FMOD conflicts.
     // ─────────────────────────────────────────────────────────────────────────
     [HarmonyPatch(typeof(ElementColorMapping), "Start")]
-    public static class AxeElementColorMappingPatch
+    public static class BloodElementColorMappingPatch
     {
         [HarmonyPostfix]
         public static void Postfix(ElementColorMapping __instance)
         {
-            if (__instance.element != Axe.Element)
+            if (__instance.element != Blood.Element)
                 return;
 
             // Skip in Practice Range to avoid FMOD/visual conflicts
@@ -568,11 +568,11 @@ namespace AxeElement
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    // VideoSpellPlayer — Override draft UI colors for element index 11 (Axe).
+    // VideoSpellPlayer — Override draft UI colors for element index 11 (Blood).
     // Expands the color arrays if needed since vanilla only has indices 0-10.
     // ─────────────────────────────────────────────────────────────────────────
     [HarmonyPatch(typeof(VideoSpellPlayer), "SlideIn")]
-    public static class AxeVideoSpellPlayerPatch
+    public static class BloodVideoSpellPlayerPatch
     {
         [HarmonyPrefix]
         public static void Prefix(VideoSpellPlayer __instance)
@@ -617,7 +617,7 @@ namespace AxeElement
     // the element name shown in the description text.
     // ─────────────────────────────────────────────────────────────────────────
     [HarmonyPatch(typeof(SelectionMenu), "ShowElementTooltip")]
-    public static class AxeSelectionMenuPatch
+    public static class BloodSelectionMenuPatch
     {
         [HarmonyPostfix]
         public static void Postfix(SelectionMenu __instance)
@@ -637,28 +637,28 @@ namespace AxeElement
     // DEBUG: Trace GetSpellByRoundAndElement to diagnose element display.
     // ─────────────────────────────────────────────────────────────────────────
     [HarmonyPatch(typeof(GameUtility), "GetSpellByRoundAndElement", typeof(Element), typeof(int))]
-    public static class AxeGetSpellDebugPatch
+    public static class BloodGetSpellDebugPatch
     {
         [HarmonyPostfix]
         public static void Postfix(Element el, int round, Spell __result)
         {
-            if (el == Axe.Element)
+            if (el == Blood.Element)
             {
                 if (__result != null)
-                    Plugin.Log.LogInfo($"[AxeDbg] GetSpellByRoundAndElement(Tutorial/Axe, round={round}) => {__result.spellName} el={__result.element} btn={__result.spellButton}");
+                    Plugin.Log.LogInfo($"[BloodDbg] GetSpellByRoundAndElement(Tutorial/Blood, round={round}) => {__result.spellName} el={__result.element} btn={__result.spellButton}");
                 else
-                    Plugin.Log.LogWarning($"[AxeDbg] GetSpellByRoundAndElement(Tutorial/Axe, round={round}) => NULL");
+                    Plugin.Log.LogWarning($"[BloodDbg] GetSpellByRoundAndElement(Tutorial/Blood, round={round}) => NULL");
             }
         }
     }
 
     // ─────────────────────────────────────────────────────────────────────────
     // PracticeRangeManager.Awake — Preemptive guard to ensure Practice Range
-    // FMOD state stays on Tutorial music. Since Tutorial == Axe.Element,
+    // FMOD state stays on Tutorial music. Since Tutorial == Blood.Element,
     // we confirm the element assignment after the vanilla Awake runs.
     // ─────────────────────────────────────────────────────────────────────────
     [HarmonyPatch(typeof(PracticeRangeManager), "Awake")]
-    public static class AxePracticeRangeGuardPatch
+    public static class BloodPracticeRangeGuardPatch
     {
         [HarmonyPostfix]
         public static void Postfix()
@@ -677,23 +677,23 @@ namespace AxeElement
                 if (elementField == null) return;
 
                 elementField.SetValue(fmod, (Element)11);
-                Plugin.Log.LogInfo("[AxeUI] Practice Range guard: confirmed currentElement = Tutorial/11");
+                Plugin.Log.LogInfo("[BloodUI] Practice Range guard: confirmed currentElement = Tutorial/11");
             }
             catch (System.Exception ex)
             {
-                Plugin.Log.LogError($"[AxeUI] Practice Range guard failed: {ex}");
+                Plugin.Log.LogError($"[BloodUI] Practice Range guard failed: {ex}");
             }
         }
     }
 
     // ─────────────────────────────────────────────────────────────────────────
     // PlayerSelection.Update — Temporarily bump LastUnlockedIndex to 6 so
-    // ErrorCheck's .Take(LastUnlockedIndex+5) includes Axe at index 10.
+    // ErrorCheck's .Take(LastUnlockedIndex+5) includes Blood at index 10.
     // Restored in the postfix so other systems (GetRandomAvailable, etc.)
-    // see the vanilla value and select Axe spells correctly.
+    // see the vanilla value and select Blood spells correctly.
     // ─────────────────────────────────────────────────────────────────────────
     [HarmonyPatch(typeof(PlayerSelection), "Update")]
-    public static class AxePlayerSelectionUpdatePatch
+    public static class BloodPlayerSelectionUpdatePatch
     {
         private static int savedLastUnlockedIndex = -1;
         private static bool logged = false;
@@ -701,7 +701,7 @@ namespace AxeElement
         [HarmonyPrefix]
         public static void Prefix()
         {
-            AxeElementPatches.EnsureElementsArraySize();
+            BloodElementPatches.EnsureElementsArraySize();
 
             if (GamePreferences.current != null &&
                 GamePreferences.current.prefs != null)
@@ -715,7 +715,7 @@ namespace AxeElement
                 if (!logged)
                 {
                     logged = true;
-                    Plugin.Log.LogInfo("[AxeUI] PlayerSelection.Update prefix: " +
+                    Plugin.Log.LogInfo("[BloodUI] PlayerSelection.Update prefix: " +
                         $"bumped LastUnlockedIndex from {savedLastUnlockedIndex} to 6");
                 }
             }
@@ -737,17 +737,17 @@ namespace AxeElement
     // ─────────────────────────────────────────────────────────────────────────
     // OnlineLobbyCursor.UpdateActions — Temporarily bump LastUnlockedIndex to 6
     // so the element ban validation's .Take(LastUnlockedIndex+5) includes Blood
-    // at index 10. Mirrors AxePlayerSelectionUpdatePatch for online mode.
+    // at index 10. Mirrors BloodPlayerSelectionUpdatePatch for online mode.
     // ─────────────────────────────────────────────────────────────────────────
     [HarmonyPatch(typeof(OnlineLobbyCursor), "UpdateActions")]
-    public static class AxeOnlineLobbyUpdateActionsPatch
+    public static class BloodOnlineLobbyUpdateActionsPatch
     {
         private static int savedLastUnlockedIndex = -1;
 
         [HarmonyPrefix]
         public static void Prefix()
         {
-            AxeElementPatches.EnsureElementsArraySize();
+            BloodElementPatches.EnsureElementsArraySize();
 
             if (GamePreferences.current != null &&
                 GamePreferences.current.prefs != null)
@@ -775,13 +775,13 @@ namespace AxeElement
 
     // ─────────────────────────────────────────────────────────────────────────
     // WizardStatus.ApplyDamage — Prefix:
-    //   • If target has AxeDefensive active  → counter and zero the damage.
+    //   • If target has BloodDefensive active  → counter and zero the damage.
     //   • If target is bleeding              → refresh bleed timer.
     // Lifesteal is handled in the rpcApplyDamage postfix below, which fires
     // exactly once per actual damage application on the authoritative client.
     // ─────────────────────────────────────────────────────────────────────────
     [HarmonyPatch(typeof(WizardStatus), "ApplyDamage")]
-    public static class AxeBleedApplyDamagePatch
+    public static class BloodBleedApplyDamagePatch
     {
         [HarmonyPrefix]
         public static void Prefix(WizardStatus __instance, ref float damage, int owner, int source)
@@ -792,11 +792,11 @@ namespace AxeElement
                 var targetId = __instance.GetComponent<Identity>();
                 if (targetId == null) return;
 
-                // If target has AxeDefensive active, trigger the counter and block the damage.
-                if (AxeDefensiveObject.activeDefensives.ContainsKey(targetId.owner) &&
-                    AxeDefensiveObject.activeDefensives[targetId.owner] != null)
+                // If target has BloodDefensive active, trigger the counter and block the damage.
+                if (BloodDefensiveObject.activeDefensives.ContainsKey(targetId.owner) &&
+                    BloodDefensiveObject.activeDefensives[targetId.owner] != null)
                 {
-                    AxeDefensiveObject.NotifyDamage(owner, damage, __instance);
+                    BloodDefensiveObject.NotifyDamage(owner, damage, __instance);
                     damage = 0f;
                     return;
                 }
@@ -806,19 +806,19 @@ namespace AxeElement
                     Plugin.Log.LogInfo($"[BloodField] owner={owner} target={targetId.owner} is bleeding");
                     BleedManager.RefreshBleed(targetId.owner);
 
-                    // Axe player bonus: +10% damage and lifesteal vs bleeding enemies.
-                    bool isAxePlayer =
+                    // Blood player bonus: +10% damage and lifesteal vs bleeding enemies.
+                    bool isBloodPlayer =
                         PlayerManager.players.ContainsKey(owner) &&
                         (
                             (PlayerManager.players[owner].spell_library.TryGetValue(
-                                SpellButton.Ultimate, out SpellName ultName) && ultName == Axe.AxeUltimate) ||
+                                SpellButton.Ultimate, out SpellName ultName) && ultName == Blood.BloodUltimate) ||
                             (PlayerManager.players[owner].spell_library.TryGetValue(
-                                SpellButton.Melee, out SpellName meleeName) && meleeName == Axe.AxeMelee)
+                                SpellButton.Melee, out SpellName meleeName) && meleeName == Blood.BloodMelee)
                         );
 
-                    if (isAxePlayer)
+                    if (isBloodPlayer)
                     {
-                        float heal = damage * AxeUltimateObject.LIFESTEAL_MULT;
+                        float heal = damage * BloodUltimateObject.LIFESTEAL_MULT;
                         damage *= BleedManager.BLEED_DAMAGE_MULT;
                         Plugin.Log.LogInfo($"[BloodField] owner={owner} damage={damage:F2} heal={heal:F2}");
                         GameUtility.GetWizard(owner)?.GetComponent<WizardStatus>()?.ApplyHealing(heal, owner);
@@ -827,7 +827,7 @@ namespace AxeElement
             }
             catch (System.Exception ex)
             {
-                Plugin.Log.LogError($"[AxeBleed] Damage prefix failed: {ex}");
+                Plugin.Log.LogError($"[BloodBleed] Damage prefix failed: {ex}");
             }
         }
     }
@@ -839,7 +839,7 @@ namespace AxeElement
     // stays set for 0.5 s, covering the same-frame AddForceOwner call.
     // ─────────────────────────────────────────────────────────────────────────
     [HarmonyPatch(typeof(PhysicsBody), "AddForceOwner")]
-    public static class AxeDefensiveKnockbackPatch
+    public static class BloodDefensiveKnockbackPatch
     {
         [HarmonyPrefix]
         public static bool Prefix(PhysicsBody __instance)
@@ -848,11 +848,11 @@ namespace AxeElement
             if (identity == null) return true;
 
             // Block while actively parrying.
-            if (AxeDefensiveObject.activeDefensives.TryGetValue(identity.owner, out var def) && def != null)
+            if (BloodDefensiveObject.activeDefensives.TryGetValue(identity.owner, out var def) && def != null)
                 return false;
 
             // Block briefly after the parry fires (covers same-frame AddForceOwner calls).
-            if (AxeDefensiveObject.recentlyParriedUntil.TryGetValue(identity.owner, out float until) &&
+            if (BloodDefensiveObject.recentlyParriedUntil.TryGetValue(identity.owner, out float until) &&
                 Time.time < until)
                 return false;
 
@@ -861,16 +861,16 @@ namespace AxeElement
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    // PracticeRangePauseMenu.Awake — Append 7 spell-cell buttons for the Axe
+    // PracticeRangePauseMenu.Awake — Append 7 spell-cell buttons for the Blood
     // column (index 10) and bump maxX so keyboard/gamepad navigation reaches it.
     //
     // Layout: this.spells children are laid out as:
     //   [0..14]  = header row / misc UI (15 items, untouched)
     //   [15 + i*7 + j] = spell cell for element column i, spell row j
-    // We append children 85..91 (= 15 + 10*7 + 0..6) for Axe.
+    // We append children 85..91 (= 15 + 10*7 + 0..6) for Blood.
     // ─────────────────────────────────────────────────────────────────────────
     [HarmonyPatch(typeof(PracticeRangePauseMenu), "Awake")]
-    public static class AxePracticeMenuPatch
+    public static class BloodPracticeMenuPatch
     {
         [HarmonyPostfix]
         public static void Postfix(PracticeRangePauseMenu __instance)
@@ -885,7 +885,7 @@ namespace AxeElement
                 if (spells.childCount >= expected) return;
 
                 // Clone Metal's cells (column i=8, children 71..77) as templates.
-                // Compute per-row column step from Metal→Ice (i=8→9) to place Axe at i=10.
+                // Compute per-row column step from Metal→Ice (i=8→9) to place Blood at i=10.
                 for (int j = 0; j < 7; j++)
                 {
                     var metalTemplate = spells.GetChild(15 + 8 * 7 + j);
@@ -901,17 +901,17 @@ namespace AxeElement
                     var newRT = newCell.GetComponent<RectTransform>();
                     newRT.anchoredPosition = iceRT.anchoredPosition + colStep;
 
-                    // Replace Metal icon with the Axe spell icon loaded from disk.
+                    // Replace Metal icon with the Blood spell icon loaded from disk.
                     string[] iconFiles = { "primary.png", "movement.png", "melee.png",
                                           "secondary.png", "defensive.png", "utility.png", "ultimate.png" };
-                    var axeSprite = AxeRegistration.LoadPngIcon(iconFiles[j]);
+                    var bloodSprite = BloodRegistration.LoadPngIcon(iconFiles[j]);
 
                     var img = newCell.GetComponent<Image>();
                     if (img != null)
                     {
                         img.color = Color.white;
-                        if (axeSprite != null)
-                            img.sprite = axeSprite;
+                        if (bloodSprite != null)
+                            img.sprite = bloodSprite;
                         // else: keep Metal's cloned sprite so the cell remains visible
                     }
 
@@ -926,7 +926,7 @@ namespace AxeElement
                     }
                 }
 
-                // Bump maxX to 11 so gamepad/keyboard navigation reaches the Axe column
+                // Bump maxX to 11 so gamepad/keyboard navigation reaches the Blood column
                 var maxXField = typeof(PracticeRangePauseMenu).GetField("maxX",
                     BindingFlags.NonPublic | BindingFlags.Instance);
                 if (maxXField != null)
@@ -936,11 +936,11 @@ namespace AxeElement
                         maxXField.SetValue(__instance, 11);
                 }
 
-                Plugin.Log.LogInfo("[AxeUI] PracticeRangePauseMenu: Added Axe column, maxX >= 11");
+                Plugin.Log.LogInfo("[BloodUI] PracticeRangePauseMenu: Added Blood column, maxX >= 11");
             }
             catch (System.Exception ex)
             {
-                Plugin.Log.LogError($"[AxeUI] PracticeRangePauseMenu patch failed: {ex}");
+                Plugin.Log.LogError($"[BloodUI] PracticeRangePauseMenu patch failed: {ex}");
             }
         }
     }
@@ -953,18 +953,18 @@ namespace AxeElement
     // patch both with the same postfix: if the trimmed text parses as an int,
     // look it up in our name table and replace it.
     // ─────────────────────────────────────────────────────────────────────────
-    internal static class AxeSpellDisplayNames
+    internal static class BloodSpellDisplayNames
     {
         internal static readonly Dictionary<SpellName, string> Names =
             new Dictionary<SpellName, string>
             {
-                { Axe.AxePrimary,   "Rend" },
-                { Axe.AxeMovement,  "Lunge" },
-                { Axe.AxeMelee,     "Bleed" },
-                { Axe.AxeSecondary, "Wild Axes" },
-                { Axe.AxeDefensive, "Riposte" },
-                { Axe.AxeUtility,   "Blade Storm" },
-                { Axe.AxeUltimate,  "Sanguine Aura" },
+                { Blood.BloodPrimary,   "Rend" },
+                { Blood.BloodMovement,  "Lunge" },
+                { Blood.BloodMelee,     "Bleed" },
+                { Blood.BloodSecondary, "Wild Blades" },
+                { Blood.BloodDefensive, "Riposte" },
+                { Blood.BloodUtility,   "Blade Storm" },
+                { Blood.BloodUltimate,  "Sanguine Aura" },
             };
 
         internal static void FixNameText(VideoSpellPlayer vsp)
@@ -978,40 +978,40 @@ namespace AxeElement
     }
 
     [HarmonyPatch(typeof(VideoSpellPlayer), "HighlightSpell", new Type[] { typeof(Element), typeof(int) })]
-    public static class AxeHighlightSpellElementPatch
+    public static class BloodHighlightSpellElementPatch
     {
         [HarmonyPostfix]
         public static void Postfix(VideoSpellPlayer __instance)
         {
-            AxeSpellDisplayNames.FixNameText(__instance);
+            BloodSpellDisplayNames.FixNameText(__instance);
         }
     }
 
     [HarmonyPatch(typeof(VideoSpellPlayer), "HighlightSpell", new Type[] { typeof(int) })]
-    public static class AxeHighlightSpellIndexPatch
+    public static class BloodHighlightSpellIndexPatch
     {
         [HarmonyPostfix]
         public static void Postfix(VideoSpellPlayer __instance)
         {
-            AxeSpellDisplayNames.FixNameText(__instance);
+            BloodSpellDisplayNames.FixNameText(__instance);
         }
     }
 
     // ─────────────────────────────────────────────────────────────────────────
     // PlayVideo null-guard patches.
-    // Axe spells have no VideoClip assigned, so spell.video is null.
+    // Blood spells have no VideoClip assigned, so spell.video is null.
     // Without these guards, Dictionary lookups with a null key throw
     // ArgumentNullException in InitClips and ChangeVideo.
     // ─────────────────────────────────────────────────────────────────────────
     [HarmonyPatch(typeof(PlayVideo), "ChangeVideo")]
-    public static class AxePlayVideoChangeVideoPatch
+    public static class BloodPlayVideoChangeVideoPatch
     {
         [HarmonyPrefix]
         public static bool Prefix(VideoClip clip) => clip != null;
     }
 
     [HarmonyPatch(typeof(PlayVideo), "InitClips")]
-    public static class AxePlayVideoInitClipsPatch
+    public static class BloodPlayVideoInitClipsPatch
     {
         [HarmonyPrefix]
         public static void Prefix(ref VideoClip[] clips)
@@ -1022,12 +1022,12 @@ namespace AxeElement
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    // WizardController.Update — allow 40% movement during Axe counter parry.
+    // WizardController.Update — allow 40% movement during Blood counter parry.
     // rewindCount still blocks casting; this prefix injects movement input
     // so the wizard can move at reduced speed during the parry window.
     // ─────────────────────────────────────────────────────────────────────────
     [HarmonyPatch(typeof(WizardController), "Update")]
-    public static class AxeWizardCounterMovePatch
+    public static class BloodWizardCounterMovePatch
     {
         [HarmonyPrefix]
         public static void Prefix(WizardController __instance)
@@ -1038,7 +1038,7 @@ namespace AxeElement
             if (__instance.input == null) return;
 
             Identity id = __instance.GetComponent<Identity>();
-            if (id == null || !AxeDefensiveObject.activeDefensives.ContainsKey(id.owner)) return;
+            if (id == null || !BloodDefensiveObject.activeDefensives.ContainsKey(id.owner)) return;
 
             Vector3 inputMove = __instance.input.GetAxis();
             if (inputMove.magnitude > 1f) inputMove.Normalize();

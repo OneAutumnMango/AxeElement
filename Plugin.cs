@@ -1,11 +1,11 @@
-using BepInEx;
+﻿using BepInEx;
 using BepInEx.Logging;
 using MageQuitModFramework.Modding;
 using MageQuitModFramework.UI;
 
-namespace AxeElement
+namespace BloodElement
 {
-    [BepInPlugin("com.magequit.axeelement", "Axe Element", "1.3.0")]
+    [BepInPlugin("com.magequit.bloodelement", "Blood Element", "1.3.0")]
     [BepInDependency("com.magequit.modframework", "1.1.0")]
     public class Plugin : BaseUnityPlugin
     {
@@ -18,19 +18,19 @@ namespace AxeElement
         {
             Instance = this;
             Log = Logger;
-            Log.LogInfo("Axe Element loading...");
+            Log.LogInfo("Blood Element loading...");
 
-            _moduleManager = ModManager.RegisterMod("Axe Element", "com.magequit.axeelement");
-            _moduleManager.RegisterModule(new AxeElementModule());
+            _moduleManager = ModManager.RegisterMod("Blood Element", "com.magequit.bloodelement");
+            _moduleManager.RegisterModule(new BloodElementModule());
 
             ModUIRegistry.RegisterMod(
-                "Axe Element",
-                "Adds a new Axe element featuring 7 unique spells",
+                "Blood Element",
+                "Adds a new Blood element featuring 7 unique spells",
                 BuildModUI,
                 priority: 10
             );
 
-            Log.LogInfo("Axe Element loaded!");
+            Log.LogInfo("Blood Element loaded!");
         }
 
         private void BuildModUI() { }

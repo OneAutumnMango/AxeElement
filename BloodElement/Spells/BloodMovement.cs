@@ -1,14 +1,14 @@
-using System;
+﻿using System;
 using UnityEngine;
 
-namespace AxeElement
+namespace BloodElement
 {
-    public class AxeMovement : Spell
+    public class BloodMovement : Spell
     {
         public override void Initialize(Identity identity, Vector3 position, Quaternion rotation,
             float curve, int spellIndex, bool selfCast, SpellName spellNameForCooldown)
         {
-            Plugin.Log.LogInfo($"[AxeMovement] Initialize: owner={identity?.owner}, spellIndex={spellIndex}");
+            Plugin.Log.LogInfo($"[BloodMovement] Initialize: owner={identity?.owner}, spellIndex={spellIndex}");
             try
             {
                 var go = GameUtility.Instantiate("Objects/Double Strike", position, rotation, 0);
@@ -17,19 +17,19 @@ namespace AxeElement
                 if (original != null)
                     impact = original.impact;
                 UnityEngine.Object.DestroyImmediate(original);
-                var comp = go.AddComponent<AxeMovementObject>();
+                var comp = go.AddComponent<BloodMovementObject>();
                 comp.impact = impact;
                 comp.Init(identity);
 
                 if (Globals.online)
                 {
                     var pv = GameUtility.GetWizard(identity.owner)?.GetComponent<PhotonView>();
-                    pv?.RPC("rpcAxeMovementSound", PhotonTargets.Others);
+                    pv?.RPC("rpcBloodMovementSound", PhotonTargets.Others);
                 }
             }
             catch (Exception ex)
             {
-                Plugin.Log.LogError($"[AxeMovement] Initialize FAILED: {ex}");
+                Plugin.Log.LogError($"[BloodMovement] Initialize FAILED: {ex}");
             }
         }
 

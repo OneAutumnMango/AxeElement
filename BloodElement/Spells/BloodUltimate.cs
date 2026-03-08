@@ -1,17 +1,17 @@
-using System;
+﻿using System;
 using MageQuitModFramework.Spells;
 using UnityEngine;
 
-namespace AxeElement
+namespace BloodElement
 {
     /// <summary>
     /// Blood Field ultimate.
-    /// Slams an axe into the ground to soak the area in a persistent crimson field:
+    /// Slams a blade into the ground to soak the area in a persistent crimson field:
     ///   - enemies inside are immediately bled and slowed
     ///   - field persists as long as enemies remain inside (up to 5 s)
     ///   - all damage you deal to bleeding targets heals you for 10 %
     /// </summary>
-    public class AxeUltimate : Spell
+    public class BloodUltimate : Spell
     {
         public override void Initialize(
             Identity identity, Vector3 position, Quaternion rotation,
@@ -27,7 +27,7 @@ namespace AxeElement
                 {
                     var pv = identity.gameObject?.GetComponent<PhotonView>();
                     if (pv != null)
-                        pv.RPC("rpcAxeFieldStart", PhotonTargets.Others,
+                        pv.RPC("rpcBloodFieldStart", PhotonTargets.Others,
                             new object[] { identity.owner });
                 }
 
@@ -56,11 +56,11 @@ namespace AxeElement
                 var original = go.GetComponent<PushObject>();
                 if (original != null) UnityEngine.Object.DestroyImmediate(original);
 
-                var comp = go.AddComponent<AxeUltimateObject>();
+                var comp = go.AddComponent<BloodUltimateObject>();
                 comp.isOwnerClient = isOwner;
                 // Apply current spell modifier table values (DAMAGE, RADIUS) before InitLocal
-                // runs. Necessary because AxeUltimateObject uses InitLocal, not Init.
-                SpellModificationSystem.ApplyCurrentTableModifiers(comp, Axe.AxeUltimate);
+                // runs. Necessary because BloodUltimateObject uses InitLocal, not Init.
+                SpellModificationSystem.ApplyCurrentTableModifiers(comp, Blood.BloodUltimate);
                 comp.InitLocal(owner, wizGo);
             }
             catch (Exception ex)

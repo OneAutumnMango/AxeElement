@@ -1,12 +1,12 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
 		<TargetFramework>net472</TargetFramework>
 		<OutputType>Library</OutputType>
 		<LangVersion>latest</LangVersion>
 		<PlatformTarget>AnyCPU</PlatformTarget>
-		<AssemblyName>AxeElement</AssemblyName>
-		<RootNamespace>AxeElement</RootNamespace>
+		<AssemblyName>BloodElement</AssemblyName>
+		<RootNamespace>BloodElement</RootNamespace>
 	</PropertyGroup>
 
 	<PropertyGroup>
@@ -108,7 +108,7 @@
 			Condition="Exists('$(BepInExPluginDir)')">
 
 		<ItemGroup>
-			<PluginDlls Include="$(OutputPath)AxeElement.dll" />
+			<PluginDlls Include="$(OutputPath)BloodElement.dll" />
 		</ItemGroup>
 
 		<Copy SourceFiles="@(PluginDlls)"

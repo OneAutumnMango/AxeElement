@@ -1,8 +1,8 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace AxeElement
+namespace BloodElement
 {
     /// <summary>
     /// Blood Field ultimate: creates a persistent dark field that follows the caster.
@@ -13,7 +13,7 @@ namespace AxeElement
     /// Deals no direct damage — the surrounding Bleed / lifesteal patches supply the
     /// offensive payoff.
     /// </summary>
-    public class AxeUltimateObject : SpellObject
+    public class BloodUltimateObject : SpellObject
     {
         // ── Tuning ──────────────────────────────────────────────────────────────
         private const float FIELD_RADIUS   = 10f;
@@ -34,8 +34,8 @@ namespace AxeElement
         /// <summary>
         /// Maps owner id → active field instance, for RemoteKill lookups.
         /// </summary>
-        public static Dictionary<int, AxeUltimateObject> activeFields
-            = new Dictionary<int, AxeUltimateObject>();
+        public static Dictionary<int, BloodUltimateObject> activeFields
+            = new Dictionary<int, BloodUltimateObject>();
 
         // ── Instance state ───────────────────────────────────────────────────────
         // Maps enemy owner id → (WizardController, when-the-linger-expires).
@@ -50,11 +50,11 @@ namespace AxeElement
         private GameObject       _disc;           // dark ground-plane visual
         private WizardController _casterWc;       // caster reference for position tracking
 
-        // ── Compatibility stub — AxeWizardStatusPatch still calls this ─────────
+        // ── Compatibility stub — BloodWizardStatusPatch still calls this ─────────
         public static void NotifyDamage(int owner, float damage, UnitStatus unit) { }
 
         // ── SpellObject base plumbing ────────────────────────────────────────────
-        public AxeUltimateObject()
+        public BloodUltimateObject()
         {
             this.DAMAGE = TICK_DAMAGE;   // damage-per-second applied inside the field (scaled by tick interval)
             this.RADIUS = FIELD_RADIUS;  // blood field radius; modifiable via SpellModificationSystem
@@ -66,7 +66,7 @@ namespace AxeElement
             if (id == null) id = new Identity();
         }
 
-        // ── Init: called by AxeUltimate.SpawnFieldLocal on every client ──────────
+        // ── Init: called by BloodUltimate.SpawnFieldLocal on every client ──────────
         public void InitLocal(int owner, GameObject wizardGo)
         {
             this.id.owner = owner;
@@ -74,7 +74,7 @@ namespace AxeElement
             this.localFieldStart(owner, wizardGo);
         }
 
-        // ── Called on remote clients by AxeNetworkBridge.rpcAxeFieldDeath ────────
+        // ── Called on remote clients by BloodNetworkBridge.rpcBloodFieldDeath ────────
         public static void RemoteKill(int owner)
         {
             if (activeFields.TryGetValue(owner, out var field) && field != null)
@@ -154,14 +154,14 @@ namespace AxeElement
                 if (!inField.Add(eid.owner)) continue;   // deduplicate per wizard
 
                 // Keep bleed refreshed
-                BleedManager.ApplyBleed(eid.owner, go, AxeMeleeObject.BleedEffectPrefab);
+                BleedManager.ApplyBleed(eid.owner, go, BloodMeleeObject.BleedEffectPrefab);
 
                 // 1 DPS — apply on the local authority for each target
                 if (!Globals.online || !go.GetPhotonView().IsConnectedAndNotLocal())
                 {
                     var us = go.GetComponent<UnitStatus>();
                     if (us != null)
-                        us.ApplyDamage(this.DAMAGE * TICK, this.id.owner, (int)Axe.AxeUltimate);
+                        us.ApplyDamage(this.DAMAGE * TICK, this.id.owner, (int)Blood.BloodUltimate);
                 }
 
                 // Apply or re-anchor slow
@@ -198,7 +198,7 @@ namespace AxeElement
                 GameObject go = col.transform.root.gameObject;
                 var eid = go.GetComponent<Identity>();
                 if (eid == null || !seen.Add(eid.owner)) continue;
-                BleedManager.ApplyBleed(eid.owner, go, AxeMeleeObject.BleedEffectPrefab);
+                BleedManager.ApplyBleed(eid.owner, go, BloodMeleeObject.BleedEffectPrefab);
             }
         }
 
@@ -241,7 +241,7 @@ namespace AxeElement
             {
                 var pv = GameUtility.GetWizard(this.id.owner)?.GetComponent<PhotonView>();
                 if (pv != null)
-                    pv.RPC("rpcAxeFieldDeath", PhotonTargets.Others,
+                    pv.RPC("rpcBloodFieldDeath", PhotonTargets.Others,
                         new object[] { this.id.owner });
             }
 

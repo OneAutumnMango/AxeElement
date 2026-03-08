@@ -26,13 +26,13 @@ jobs:
 
       - name: Build
         run: |
-          dotnet build AxeElement.sln --configuration Release
+          dotnet build BloodElement.sln --configuration Release
 
       - name: Create BepInEx package
         run: |
           set -e
 
-          DLL_PATH="bin/Release/net472/AxeElement.dll"
+          DLL_PATH="bin/Release/net472/BloodElement.dll"
 
           if [ ! -f "$DLL_PATH" ]; then
             echo "Error: $DLL_PATH not found" >&2
@@ -42,7 +42,7 @@ jobs:
           fi
 
           mkdir -p BepInEx/plugins
-          cp "$DLL_PATH" BepInEx/plugins/AxeElement.dll
+          cp "$DLL_PATH" BepInEx/plugins/BloodElement.dll
 
           # Copy icons folder if it exists
           if [ -d "icons" ]; then
@@ -76,5 +76,5 @@ jobs:
         uses: ncipollo/release-action@v1
         with:
           tag: ${{ github.ref_name }}
-          artifacts: "BepInEx.zip,bin/Release/net472/AxeElement.dll"
+          artifacts: "BepInEx.zip,bin/Release/net472/BloodElement.dll"
           bodyFile: README.md

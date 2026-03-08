@@ -1,11 +1,11 @@
-using System;
+﻿using System;
 using DG.Tweening;
 using FMOD.Studio;
 using UnityEngine;
 
-namespace AxeElement
+namespace BloodElement
 {
-    public class AxePrimaryObject : SpellObject
+    public class BloodPrimaryObject : SpellObject
     {
         public UnityEngine.Object impact;
 
@@ -18,7 +18,7 @@ namespace AxeElement
         private new float curve;
         private new float velocity;
 
-        public AxePrimaryObject()
+        public BloodPrimaryObject()
         {
             DAMAGE = 7f;
             RADIUS = 3f;
@@ -41,7 +41,7 @@ namespace AxeElement
             if (this.sp != null)
                 this.sp.PlaySoundComponentInstantiate("event:/sfx/metal/glaive-cast", 5f);
             this.deathTimer = Time.time + this.START_TIME;
-            AxeColorUtility.ApplyCrimsonColor(base.gameObject);
+            BloodColorUtility.ApplyCrimsonColor(base.gameObject);
         }
 
         public void Init(int owner, float curve, float velocity)
@@ -50,7 +50,7 @@ namespace AxeElement
             this.curve = curve;
             this.velocity = velocity;
             base.ChangeToSpellLayerDelayed(velocity);
-            AxeColorUtility.ApplyCrimsonColor(base.gameObject);
+            BloodColorUtility.ApplyCrimsonColor(base.gameObject);
             if (!base.photonView.IsConnectedAndNotLocal())
             {
                 base.photonView.RPCLocal(this, "rpcSpellObjectStart", PhotonTargets.All,
@@ -171,14 +171,14 @@ namespace AxeElement
             this.curve = curve;
             this.velocity = velocity;
             this.deathTimer = Time.time + this.START_TIME;
-            AxeColorUtility.ApplyCrimsonColor(base.gameObject);
+            BloodColorUtility.ApplyCrimsonColor(base.gameObject);
             // Delayed recolor to ensure materials are loaded on remote clients
             Invoke("ApplyCrimsonColorDelayed", 0.05f);
         }
 
         private void ApplyCrimsonColorDelayed()
         {
-            AxeColorUtility.ApplyCrimsonColor(base.gameObject);
+            BloodColorUtility.ApplyCrimsonColor(base.gameObject);
         }
 
         [PunRPC]

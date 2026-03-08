@@ -1,19 +1,19 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using UnityEngine;
 
-namespace AxeElement
+namespace BloodElement
 {
-    public class AxeMeleeObject : SpellObject
+    public class BloodMeleeObject : SpellObject
     {
         public UnityEngine.Object impact;
 
-        // Set by AxeRegistration after RegisterSpells
+        // Set by BloodRegistration after RegisterSpells
         public static UnityEngine.Object BleedEffectPrefab;
 
-        private const int SOURCE_ID = 148; // (int)Axe.AxeMelee — registered in spell_table for kill feed
+        private const int SOURCE_ID = 148; // (int)Blood.BloodMelee — registered in spell_table for kill feed
 
-        public AxeMeleeObject()
+        public BloodMeleeObject()
         {
             DAMAGE = 7f;
             RADIUS = 3f;
@@ -54,7 +54,7 @@ namespace AxeElement
             return ownerIds.ToArray();
         }
 
-        // ── Called on remote clients by AxeNetworkBridge.rpcAxeMeleeImpact ────────
+        // ── Called on remote clients by BloodNetworkBridge.rpcBloodMeleeImpact ────────
         public static void RemoteImpact(int owner, bool hit, int[] enemyOwnerIds)
         {
             var casterPos = GameUtility.GetWizard(owner)?.transform.position ?? Vector3.zero;

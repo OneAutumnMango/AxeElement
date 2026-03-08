@@ -1,8 +1,8 @@
-using UnityEngine;
+﻿using UnityEngine;
 
-namespace AxeElement
+namespace BloodElement
 {
-    public static class AxeColorUtility
+    public static class BloodColorUtility
     {
         public static readonly Color CrimsonColor = new Color(0.40f, 0.02f, 0.02f);
 

@@ -1,26 +1,26 @@
-using HarmonyLib;
+﻿using HarmonyLib;
 using MageQuitModFramework.Data;
 using MageQuitModFramework.Modding;
 
-namespace AxeElement
+namespace BloodElement
 {
-    public class AxeElementModule : BaseModule
+    public class BloodElementModule : BaseModule
     {
-        public override string ModuleName => "Axe Element";
+        public override string ModuleName => "Blood Element";
 
         protected override void OnLoad(Harmony harmony)
         {
-            AxeElementPatches.Initialize();
-            PatchGroup(harmony, typeof(AxeElementPatches));
+            BloodElementPatches.Initialize();
+            PatchGroup(harmony, typeof(BloodElementPatches));
 
             // Register display names immediately so UI code (e.g. Boosted upgrade picker)
             // can show friendly names even before the first round loads.
-            AxeRegistration.RegisterSpellDisplayNames();
+            BloodRegistration.RegisterSpellDisplayNames();
 
             // Register spell object types early — before OnGameDataLoaded fires — so that
             // SpellModificationSystem.PatchAllSpellObjects (called by BoostedModule) finds
-            // AxeXxxObject types regardless of which OnGameDataLoaded subscriber runs first.
-            AxeRegistration.RegisterSpellObjectTypes();
+            // BloodXxxObject types regardless of which OnGameDataLoaded subscriber runs first.
+            BloodRegistration.RegisterSpellObjectTypes();
 
             // Subscribe to the framework's game-data-loaded event so spell registration
             // always happens after GameDataInitializer has finished snapshotting the table
@@ -43,19 +43,19 @@ namespace AxeElement
             var manager = Globals.spell_manager;
             if (manager == null)
             {
-                Plugin.Log.LogWarning("[AxeModule] OnGameDataLoaded: spell_manager is null, skipping registration");
+                Plugin.Log.LogWarning("[BloodModule] OnGameDataLoaded: spell_manager is null, skipping registration");
                 return;
             }
 
             var spellTable = manager.spell_table;
             if (spellTable == null)
             {
-                Plugin.Log.LogWarning("[AxeModule] OnGameDataLoaded: spell_table is null, skipping registration");
+                Plugin.Log.LogWarning("[BloodModule] OnGameDataLoaded: spell_table is null, skipping registration");
                 return;
             }
 
-            AxeRegistration.RegisterSpells(manager, spellTable);
-            AxeRegistration.RegisterAxeSpellsWithModSystem(spellTable);
+            BloodRegistration.RegisterSpells(manager, spellTable);
+            BloodRegistration.RegisterBloodSpellsWithModSystem(spellTable);
         }
     }
 }

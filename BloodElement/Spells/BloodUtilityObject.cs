@@ -1,11 +1,11 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using DG.Tweening;
 using UnityEngine;
 
-namespace AxeElement
+namespace BloodElement
 {
-    public class AxeUtilityObject : SpellObject
+    public class BloodUtilityObject : SpellObject
     {
         private const float ORBIT_RADIUS   = 4f;
         private const float ANGULAR_SPEED  = 180f;   // degrees/s — full orbit in ~2.0 s
@@ -30,7 +30,7 @@ namespace AxeElement
         private bool dying;
         private Dictionary<int, float> hitCooldowns = new Dictionary<int, float>();
 
-        public AxeUtilityObject()
+        public BloodUtilityObject()
         {
             this.DAMAGE     = HIT_DAMAGE;
             this.RADIUS     = HIT_RADIUS;  // hit detection sphere radius; modifiable via SpellModificationSystem
@@ -50,14 +50,14 @@ namespace AxeElement
             this.deathTimer = Time.time + LIFETIME;
         }
 
-        // ── Called by AxeUtility.SpawnGlaive on the caster ─────────────────
+        // ── Called by BloodUtility.SpawnGlaive on the caster ─────────────────
         public void Init(Identity identity, float startAngle)
         {
             this.isOwnerClient = true;
             this.InitRemote(identity.owner, identity.gameObject, startAngle);
         }
 
-        // ── Called on EVERY client (via AxeUtility.SpawnGlaiveLocal) ────────
+        // ── Called on EVERY client (via BloodUtility.SpawnGlaiveLocal) ────────
         public void InitRemote(int owner, GameObject wizardGo, float startAngle)
         {
             this.localSpellObjectStart(owner, wizardGo, startAngle);
@@ -76,7 +76,7 @@ namespace AxeElement
                     new Vector3(Mathf.Sin(rad), 0.2f, Mathf.Cos(rad)) * ORBIT_RADIUS;
             }
 
-            AxeColorUtility.ApplyCrimsonColor(base.gameObject);
+            BloodColorUtility.ApplyCrimsonColor(base.gameObject);
 
             if (this.sp != null)
                 this.sp.PlaySoundComponentInstantiate("event:/sfx/metal/glaive-cast", 5f);

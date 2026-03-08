@@ -1,11 +1,11 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using DG.Tweening;
 using UnityEngine;
 
-namespace AxeElement
+namespace BloodElement
 {
-    public class AxeMovementObject : SpellObject
+    public class BloodMovementObject : SpellObject
     {
         private enum Phase { BackStep, Dash, Done }
 
@@ -23,7 +23,7 @@ namespace AxeElement
         private HashSet<int> hitOwners = new HashSet<int>();
         private bool dying;
 
-        public AxeMovementObject()
+        public BloodMovementObject()
         {
             this.DAMAGE     = 4f;
             this.POWER      = 30f;

@@ -1,13 +1,13 @@
-using System;
+﻿using System;
 using UnityEngine;
 
-namespace AxeElement
+namespace BloodElement
 {
-    public class AxePrimary : Spell
+    public class BloodPrimary : Spell
     {
         public override void Initialize(Identity identity, Vector3 position, Quaternion rotation, float curve, int spellIndex, bool selfCast, SpellName spellNameForCooldown)
         {
-            Plugin.Log.LogInfo($"[AxePrimary] Initialize: owner={identity?.owner}, pos={position}, curve={curve}, spellIndex={spellIndex}, curveM={this.curveMultiplier}, vel={this.initialVelocity}");
+            Plugin.Log.LogInfo($"[BloodPrimary] Initialize: owner={identity?.owner}, pos={position}, curve={curve}, spellIndex={spellIndex}, curveM={this.curveMultiplier}, vel={this.initialVelocity}");
             try
             {
                 var go = GameUtility.Instantiate("Objects/Reflex", position + Spell.skillshotOffset, rotation, 0);
@@ -17,16 +17,16 @@ namespace AxeElement
                 {
                     _impact = original.impact;
                 }
-                Plugin.Log.LogInfo($"[AxePrimary] Prefab fields: impact={_impact != null}");
+                Plugin.Log.LogInfo($"[BloodPrimary] Prefab fields: impact={_impact != null}");
                 UnityEngine.Object.DestroyImmediate(original);
-                var comp = go.AddComponent<AxePrimaryObject>();
+                var comp = go.AddComponent<BloodPrimaryObject>();
                 comp.impact = _impact;
                 comp.Init(identity.owner, curve * this.curveMultiplier, this.initialVelocity);
-                Plugin.Log.LogInfo($"[AxePrimary] Spawned successfully, effective curve={curve * this.curveMultiplier}, vel={this.initialVelocity}");
+                Plugin.Log.LogInfo($"[BloodPrimary] Spawned successfully, effective curve={curve * this.curveMultiplier}, vel={this.initialVelocity}");
             }
             catch (System.Exception ex)
             {
-                Plugin.Log.LogError($"[AxePrimary] Initialize FAILED: {ex}");
+                Plugin.Log.LogError($"[BloodPrimary] Initialize FAILED: {ex}");
             }
         }
 
