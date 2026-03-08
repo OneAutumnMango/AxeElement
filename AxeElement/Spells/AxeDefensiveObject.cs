@@ -12,6 +12,12 @@ namespace AxeElement
 
         private const float COUNTER_DAMAGE = 5f;
 
+        public AxeDefensiveObject()
+        {
+            // Wire base field so SpellModificationSystem can scale it.
+            this.DAMAGE = COUNTER_DAMAGE;
+        }
+
         // From Double Strike prefab.
         public UnityEngine.Object impact;
         public ParticleSystem distortionTrail;
@@ -245,7 +251,7 @@ namespace AxeElement
             {
                 UnitStatus us = attackerGo.GetComponent<UnitStatus>();
                 if (us != null)
-                    us.ApplyDamage(COUNTER_DAMAGE, this.id.owner, 62);
+                    us.ApplyDamage(this.DAMAGE, this.id.owner, 62);
             }
 
             // Apply bleed to the attacker.
