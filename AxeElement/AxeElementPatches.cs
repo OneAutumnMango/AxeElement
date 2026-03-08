@@ -117,24 +117,6 @@ namespace AxeElement
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    // SpellManager.Awake — register all 7 Axe spells after the vanilla
-    // spells have been populated.
-    // ─────────────────────────────────────────────────────────────────────────
-    [HarmonyPatch(typeof(SpellManager), "Awake")]
-    public static class AxeSpellManagerPatch
-    {
-        [HarmonyPostfix]
-        public static void Postfix(SpellManager __instance)
-        {
-            var spellTable = Traverse.Create(__instance)
-                .Field("spell_table")
-                .GetValue<Dictionary<SpellName, Spell>>();
-
-            AxeRegistration.RegisterSpells(__instance, spellTable);
-        }
-    }
-
-    // ─────────────────────────────────────────────────────────────────────────
     // WizardStatus.rpcApplyDamage — notify AxeDefensive objects
     // whenever the wizard takes damage.
     // ─────────────────────────────────────────────────────────────────────────

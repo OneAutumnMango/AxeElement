@@ -1,6 +1,11 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using HarmonyLib;
+using MageQuitModFramework.Data;
+using MageQuitModFramework.Spells;
+using MageQuitModFramework.Utilities;
 using UnityEngine;
 
 namespace AxeElement
@@ -412,6 +417,126 @@ namespace AxeElement
                 spell.icon = icon;
             if (metalVideos.TryGetValue(button, out var video))
                 spell.video = video;
+        }
+
+        // ── SpellModificationSystem integration ─────────────────────────────────
+        // Maps each Axe SpellName to the concrete SpellObject type whose constructor
+        // sets the class-level attribute defaults (DAMAGE, RADIUS, POWER, Y_POWER).
+        private static readonly (SpellName name, Type objectType)[] AxeSpellObjectMap =
+        [
+            (Axe.AxePrimary,   typeof(AxePrimaryObject)),
+            (Axe.AxeMovement,  typeof(AxeMovementObject)),
+            (Axe.AxeMelee,     typeof(AxeMeleeObject)),
+            (Axe.AxeSecondary, typeof(AxeSecondaryObject)),
+            (Axe.AxeDefensive, typeof(AxeDefensiveObject)),
+            (Axe.AxeUtility,   typeof(AxeUtilityObject)),
+            (Axe.AxeUltimate,  typeof(AxeUltimateObject)),
+        ];
+
+        private static readonly string[] ClassAttrFields = ["DAMAGE", "RADIUS", "POWER", "Y_POWER"];
+
+        private static readonly (SpellName spell, string displayName)[] AxeDisplayNames =
+        [
+            (Axe.AxePrimary,   "Rend"),
+            (Axe.AxeMovement,  "Lunge"),
+            (Axe.AxeMelee,     "Bleed"),
+            (Axe.AxeSecondary, "Wild Axes"),
+            (Axe.AxeDefensive, "Riposte"),
+            (Axe.AxeUtility,   "Blade Storm"),
+            (Axe.AxeUltimate,  "Sanguine Aura"),
+        ];
+
+        /// <summary>
+        /// Registers human-readable display names for all Axe spell names.
+        /// Called at mod load so friendly names are available before game data is ready.
+        /// </summary>
+        public static void RegisterSpellDisplayNames()
+        {
+            foreach (var (spell, displayName) in AxeDisplayNames)
+                SpellNameRegistry.Register(spell, displayName);
+        }
+
+        /// <summary>
+        /// Registers all Axe spells with the MageQuitModFramework SpellModificationSystem.
+        /// Must be called after <see cref="RegisterSpells"/> so the entries exist in spellTable.
+        /// Safe to call every round — the framework re-creates its default table each round,
+        /// so we re-inject the Axe entries every time.
+        /// </summary>
+        public static void RegisterAxeSpellsWithModSystem(Dictionary<SpellName, Spell> spellTable)
+        {
+            var defaultTable = SpellModificationSystem.Default();
+            if (defaultTable == null)
+            {
+                Plugin.Log.LogWarning("[AxeReg] SpellModificationSystem default table is null; " +
+                                      "Axe spells won't have modifier support this round");
+                return;
+            }
+
+            foreach (var (spellName, objectType) in AxeSpellObjectMap)
+            {
+                if (!spellTable.TryGetValue(spellName, out var spell))
+                {
+                    Plugin.Log.LogWarning($"[AxeReg] {spellName} missing from spell table; skipping modifier registration");
+                    continue;
+                }
+
+                // Read class-level attributes from a fresh constructor call on the SpellObject type.
+                // The constructor sets DAMAGE/RADIUS/POWER/Y_POWER to their design defaults.
+                // This mirrors what GameDataInitializer.PopulateDefaultClassAttributes does for
+                // vanilla spells — but those iterate Enum.GetValues(SpellName) which excludes
+                // our out-of-range SpellName values, so we do it manually here.
+                var classAttrs = new Dictionary<string, float>();
+                try
+                {
+                    var obj = Activator.CreateInstance(objectType) as SpellObject;
+                    foreach (var field in ClassAttrFields)
+                    {
+                        try
+                        {
+                            classAttrs[field] = GameModificationHelpers.GetPrivateField<float>(obj, field);
+                        }
+                        catch
+                        {
+                            classAttrs[field] = 0f;
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Plugin.Log.LogWarning($"[AxeReg] Could not instantiate {objectType.Name} for attribute defaults: {ex.Message}");
+                    foreach (var field in ClassAttrFields)
+                        classAttrs[field] = 0f;
+                }
+
+                float GetAttr(string key) => classAttrs.TryGetValue(key, out var v) ? v : 0f;
+
+                var mods = new SpellModifiers
+                {
+                    DAMAGE          = new AttributeModifier(GetAttr("DAMAGE")),
+                    RADIUS          = new AttributeModifier(GetAttr("RADIUS")),
+                    POWER           = new AttributeModifier(GetAttr("POWER")),
+                    Y_POWER         = new AttributeModifier(GetAttr("Y_POWER")),
+                    cooldown        = new AttributeModifier(spell.cooldown),
+                    windUp          = new AttributeModifier(spell.windUp),
+                    windDown        = new AttributeModifier(spell.windDown),
+                    initialVelocity = new AttributeModifier(spell.initialVelocity),
+                    HEAL            = new AttributeModifier(0f),
+                };
+
+                // Inject into the live default table so it can be used as a basis for
+                // named tables (e.g. RegisterTable("myMod") copies from default).
+                defaultTable.Modifiers[spellName] = mods;
+
+                // Mirror into the framework's canonical snapshots so any code that reads
+                // GameDataInitializer.DefaultSpellTable / DefaultClassAttributes also sees Axe.
+                GameDataInitializer.DefaultSpellTable[spellName]        = spell;
+                GameDataInitializer.DefaultClassAttributes[spellName]   = classAttrs;
+
+                Plugin.Log.LogInfo($"[AxeReg] Registered {spellName} with SpellModificationSystem " +
+                                   $"(DAMAGE={GetAttr("DAMAGE")}, cooldown={spell.cooldown})");
+            }
+
+            Plugin.Log.LogInfo("[AxeReg] Axe spells registered with SpellModificationSystem");
         }
     }
 }
